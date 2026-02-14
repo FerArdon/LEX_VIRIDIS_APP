@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# LEX VIRIDIS Específico
+temp_pdfs/
+cache/
+logs/*.log
+*.bak
+*~
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Datos sensibles
+.env
+*.pem
+*.key
+
+# Base de datos (opcional, quitar si quieres versionar)
+# LEX_VIRIDIS_DB/*.db
+
+# Documentos PDF (muy grandes para Git)
+COMPENDIO LEYES FEMA/

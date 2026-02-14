@@ -1,0 +1,15 @@
+# Dependencias principales para LEX VIRIDIS
+# Nucleo
+flet>=0.21.0
+
+# PDF y Procesamiento
+PyMuPDF>=1.24.0
+Pillow>=10.2.0
+
+# IA en la Nube (Gemini)
+google-generativeai>=0.3.0
+
+# Utilidades
+psutil>=5.9.8
+numpy>=1.24.0
+requests

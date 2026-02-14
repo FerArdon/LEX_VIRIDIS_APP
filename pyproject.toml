@@ -1,0 +1,45 @@
+[project]
+name = "lex-viridis"
+version = "3.0.0"
+description = "Buscador Juridico Ambiental de Honduras"
+requires-python = ">=3.11"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+exclude = [
+    ".venv",
+    "build",
+    "dist",
+    "__pycache__",
+    "scripts",
+    "web/frontend/node_modules",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = [
+    "E722",   # bare-except (se corregira en Fase 4)
+    "E501",   # line-too-long (se corregira gradualmente)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["lexviridis"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+exclude = [
+    "scripts/",
+    "web/frontend/",
+    "\\.venv/",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"

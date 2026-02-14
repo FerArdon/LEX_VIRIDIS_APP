@@ -1,0 +1,13 @@
+# Núcleo GUI y backend
+tk
+ttkbootstrap
+
+# PDF y gráficos
+PyMuPDF==1.23.22
+Pillow==10.2.0
+
+# IA local (Ollama)
+ollama  # Ejecutado vía CLI, pero se documenta su uso
+
+# Utilidades y sistema
+psutil==5.9.8

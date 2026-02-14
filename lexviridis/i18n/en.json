@@ -1,0 +1,60 @@
+{
+    "app": {
+        "name": "LEX VIRIDIS",
+        "subtitle": "Environmental Legal Compendium of Honduras"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "search": "Search",
+        "ai_assistant": "AI Assistant",
+        "favorites": "Favorites",
+        "library": "Library",
+        "study": "Study",
+        "settings": "Settings"
+    },
+    "search": {
+        "placeholder": "Search environmental legislation...",
+        "button": "Search",
+        "no_results": "No results found for '{query}'",
+        "results_count": "{count} results found",
+        "recent": "Results for:",
+        "tips": [
+            "Forest Law",
+            "Environmental License",
+            "Protected Areas"
+        ]
+    },
+    "favorites": {
+        "title": "Favorites",
+        "add": "Add to Favorites",
+        "remove": "Remove from Favorites",
+        "empty": "You have no favorites yet",
+        "added": "Added to favorites"
+    },
+    "export": {
+        "pdf": "Export to PDF",
+        "word": "Export to Word",
+        "success": "Exported successfully",
+        "error": "Export error"
+    },
+    "common": {
+        "close": "Close",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "loading": "Loading...",
+        "error": "Error",
+        "success": "Success",
+        "welcome": "Welcome",
+        "user": "User"
+    },
+    "settings": {
+        "title": "System Settings",
+        "ui_themes": "Interface & Themes",
+        "database": "Database & Backups",
+        "language": "Language",
+        "cloud": "Cloud Sync",
+        "accessibility": "Accessibility"
+    }
+}

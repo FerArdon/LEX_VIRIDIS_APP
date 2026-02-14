@@ -1,0 +1,209 @@
+===============================================================================
+                    LEX VIRIDIS - GUÍA PARA AGREGAR NUEVOS DOCUMENTOS
+                         Buscador Jurídico Ambiental de Honduras
+                                    v1.1.0
+===============================================================================
+
+🆕 CÓMO AGREGAR NUEVAS LEYES Y DOCUMENTOS A LEX VIRIDIS
+
+Esta guía explica el proceso completo para agregar nuevos documentos legales
+a la base de datos de LEX VIRIDIS y regenerar el ejecutable e instalador.
+
+📋 PROCESO PASO A PASO:
+=======================
+
+1️⃣ AGREGAR EL DOCUMENTO PDF:
+-----------------------------
+
+a) Ubicar el directorio:
+   📁 C:\Users\frard\OneDrive\LEX_VIRIDIS_APP\COMPENDIO LEYES FEMA\
+
+b) Copiar el nuevo documento PDF:
+   - Asegúrese de que el archivo esté en formato PDF
+   - Use un nombre descriptivo y consistente
+   - Ejemplo: "DL-XXX-2025_hn - Nueva Ley Ambiental.pdf"
+
+c) Verificar el archivo:
+   - El PDF debe ser legible y no estar protegido
+   - Debe contener texto seleccionable (no solo imágenes)
+
+2️⃣ REGENERAR EL ÍNDICE DE BÚSQUEDA:
+-----------------------------------
+
+a) Eliminar índices existentes:
+   ```
+   del "data\index\text_index.pkl"
+   del "data\index\text_index_v1.1.pkl"
+   ```
+
+b) Ejecutar la aplicación para regenerar índice:
+   ```
+   python run_lexviridis.py
+   ```
+   
+   - La aplicación detectará automáticamente el nuevo documento
+   - Creará un nuevo índice incluyendo el contenido del PDF
+   - Este proceso puede tomar varios minutos
+
+c) Verificar la indexación:
+   - Busque términos específicos del nuevo documento
+   - Confirme que aparecen en los resultados
+
+3️⃣ ACTUALIZAR ESTADÍSTICAS:
+----------------------------
+
+a) Contar documentos actualizados:
+   - Verificar el número total de PDFs en la carpeta
+   - Actualizar las estadísticas en los archivos de información
+
+b) Archivos a actualizar:
+   - LEX_VIRIDIS_EJECUTABLE_INFO.txt
+   - LEX_VIRIDIS_INSTALADOR_INFO.txt
+   - README_INSTALACION.txt
+   - INSTRUCCIONES_USO.txt
+
+4️⃣ REGENERAR EL EJECUTABLE:
+----------------------------
+
+a) Ejecutar el script de construcción:
+   ```
+   python build_executable.py
+   ```
+
+b) Verificar el nuevo ejecutable:
+   - Tamaño del archivo (puede haber aumentado)
+   - Fecha de modificación actualizada
+   - Funcionamiento correcto
+
+c) Probar el ejecutable:
+   - Ejecutar LEX_VIRIDIS.exe
+   - Buscar términos del nuevo documento
+   - Verificar que el resaltado funciona
+
+5️⃣ REGENERAR EL INSTALADOR:
+----------------------------
+
+a) Ejecutar Inno Setup:
+   ```
+   & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" LEX_VIRIDIS_Setup_Simple.iss
+   ```
+
+b) Verificar el nuevo instalador:
+   - Tamaño actualizado del instalador
+   - Inclusión del nuevo documento
+   - Funcionamiento del proceso de instalación
+
+📊 ACTUALIZACIÓN DE ESTADÍSTICAS:
+=================================
+
+Cuando agregue nuevos documentos, actualice estos números:
+
+ANTES (ejemplo actual):
+- Documentos: 164 archivos PDF
+- Páginas: 6,782 páginas procesadas
+- Términos: 52,745 términos únicos
+- Tamaño índice: 3.67 GB
+
+DESPUÉS (calcular nuevos valores):
+- Documentos: [NUEVO_TOTAL] archivos PDF
+- Páginas: [NUEVO_TOTAL] páginas procesadas
+- Términos: [NUEVO_TOTAL] términos únicos
+- Tamaño índice: [NUEVO_TAMAÑO] GB
+
+🔧 ARCHIVOS QUE REQUIEREN ACTUALIZACIÓN:
+========================================
+
+1. **LEX_VIRIDIS_EJECUTABLE_INFO.txt**:
+   - Línea: "Base de datos de 164 documentos legales"
+   - Línea: "6,782 páginas indexadas"
+   - Línea: "52,745 términos únicos"
+
+2. **LEX_VIRIDIS_INSTALADOR_INFO.txt**:
+   - Sección: "BASE DE DATOS LEGAL"
+   - Estadísticas del sistema
+
+3. **README_INSTALACION.txt**:
+   - Sección: "CARACTERÍSTICAS PRINCIPALES"
+   - Números de documentos y páginas
+
+4. **INSTRUCCIONES_USO.txt**:
+   - Referencias a cantidad de documentos
+   - Ejemplos de búsqueda si es relevante
+
+⚠️ CONSIDERACIONES IMPORTANTES:
+===============================
+
+🔍 CALIDAD DEL DOCUMENTO:
+- Verificar que el PDF tenga texto seleccionable
+- Evitar documentos escaneados de baja calidad
+- Asegurar que el contenido sea relevante para búsquedas ambientales
+
+📏 IMPACTO EN TAMAÑO:
+- Cada documento aumenta el tamaño del ejecutable
+- El instalador también crecerá proporcionalmente
+- Considerar el impacto en tiempo de descarga/instalación
+
+🔄 TIEMPO DE PROCESAMIENTO:
+- La regeneración del índice puede tomar tiempo considerable
+- Documentos grandes requieren más tiempo de procesamiento
+- Planificar actualizaciones durante períodos de menor uso
+
+🧪 PRUEBAS NECESARIAS:
+- Verificar que el nuevo documento aparece en búsquedas
+- Confirmar que el resaltado funciona correctamente
+- Probar diferentes términos de búsqueda del nuevo documento
+- Verificar que no se rompieron funcionalidades existentes
+
+📝 EJEMPLO PRÁCTICO:
+====================
+
+Supongamos que quiere agregar "Decreto 123-2025 - Nueva Ley de Cambio Climático":
+
+1. Copiar: "DECRETO-123-2025_hn - Ley Cambio Climatico.pdf" 
+   → COMPENDIO LEYES FEMA\
+
+2. Eliminar índices antiguos y regenerar:
+   ```
+   del data\index\*.pkl
+   python run_lexviridis.py
+   ```
+
+3. Buscar términos como "cambio climático", "emisiones", "carbono"
+
+4. Actualizar estadísticas:
+   - 164 → 165 documentos
+   - Actualizar páginas y términos según corresponda
+
+5. Regenerar ejecutable e instalador
+
+6. Probar funcionalidad completa
+
+🔄 AUTOMATIZACIÓN FUTURA:
+=========================
+
+Para facilitar este proceso, se podría crear un script automatizado:
+
+```python
+# Ejemplo de script futuro: update_database.py
+def add_new_document(pdf_path):
+    # 1. Copiar PDF a directorio
+    # 2. Regenerar índice automáticamente
+    # 3. Actualizar estadísticas
+    # 4. Regenerar ejecutable
+    # 5. Regenerar instalador
+    pass
+```
+
+📞 SOPORTE:
+===========
+
+Si encuentra problemas durante el proceso:
+1. Verificar que todos los archivos estén en su lugar
+2. Revisar los logs de error en la consola
+3. Asegurar que tiene permisos de escritura
+4. Contactar al equipo de desarrollo si persisten problemas
+
+===============================================================================
+                        ¡MANTENGA LEX VIRIDIS ACTUALIZADO!
+                    Buscador Jurídico Ambiental de Honduras
+===============================================================================

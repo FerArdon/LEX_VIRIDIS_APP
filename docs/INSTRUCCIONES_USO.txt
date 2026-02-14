@@ -1,0 +1,71 @@
+===============================================================================
+                    LEX VIRIDIS v1.1.0 - INSTRUCCIONES DE USO
+                         Buscador Jurídico Ambiental de Honduras
+===============================================================================
+
+¡Felicidades! LEX VIRIDIS está listo para usar.
+
+PRIMEROS PASOS:
+==============
+
+1. INICIAR LA APLICACIÓN
+   - Ejecute el script principal desde su entorno virtual:
+     python run_lexviridis.py
+
+2. PRIMERA EJECUCIÓN
+   - La aplicación mostrará una pantalla de carga mientras indexa los documentos.
+   - El índice de búsqueda se cargará automáticamente.
+
+CÓMO USAR LEX VIRIDIS:
+=====================
+
+🔍 REALIZAR BÚSQUEDAS:
+
+   BÚSQUEDA SIMPLE:
+   - Escriba una palabra clave (ej: "agua") y presione Enter o clic en "Buscar".
+   
+   BÚSQUEDA AVANZADA:
+   - Use comillas para frases exactas: "impacto ambiental".
+
+✨ ASISTENTE IA (Analizar con IA):
+
+   - Después de una búsqueda, aparecerá el botón "Analizar con IA".
+   - Al hacer clic, se abrirá un chat interactivo.
+   - La IA usará los documentos encontrados como contexto.
+   - Puede hacer preguntas específicas sobre los resultados (ej: "¿Cuál es la multa máxima según estos artículos?").
+   - NOTA: Requiere API Key de Google Gemini (ver Configuración).
+
+⚙️ CONFIGURACIÓN (Engranaje):
+
+   - Haga clic en el ícono de engranaje en la esquina superior derecha.
+   - Aquí puede ingresar su API Key de Gemini.
+   - Puede ver el estado de la base de datos (número de documentos).
+   - Puede usar "Reconstruir Índice" si agrega nuevos PDFs manualmente a la carpeta "COMPENDIO LEYES FEMA".
+
+� VER RESULTADOS:
+
+   - Los resultados muestran el nombre del archivo, página y un extracto.
+   - Haga clic en la TARJETA de un resultado para abrir el PDF.
+   - El documento se abrirá y el sistema resaltará el término buscado.
+   
+TIPOS DE DOCUMENTOS INCLUIDOS:
+=============================
+El compendio se ubica en la carpeta "COMPENDIO LEYES FEMA" e incluye:
+- Ley General del Ambiente
+- Ley Forestal
+- Código Penal (Decreto 130-2017 y reformas recientes 59-2024)
+- Tratados Internacionales (Ramsar, París, Basilea, etc.)
+- Acuerdos y Reglamentos relevantes.
+
+SOLUCIÓN DE PROBLEMAS COMUNES:
+=============================
+
+🔧 SI LA IA NO RESPONDE:
+   - Verifique su conexión a internet.
+   - Verifique su API Key en Configuración.
+   - Si recibe un error "429 Quota Exceeded", espere 1 minuto e intente nuevamente (límite de versión gratuita).
+
+🔧 SI NO ENCUENTRA UN DOCUMENTO NUEVO:
+   - Vaya a Configuración -> Reconstruir Índice.
+
+¡Gracias por usar LEX VIRIDIS!

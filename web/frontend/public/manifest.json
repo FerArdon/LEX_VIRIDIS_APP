@@ -1,0 +1,17 @@
+{
+    "name": "LEX VIRIDIS | Legislación Ambiental",
+    "short_name": "LEX VIRIDIS",
+    "description": "Sistema de consulta legal ambiental para Honduras",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#15803d",
+    "icons": [
+        {
+            "src": "https://cdn-icons-png.flaticon.com/512/2913/2913520.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}
