@@ -215,7 +215,7 @@ class LexViridisShell:
                     ft.Container(height=20),
 
                     # Login fields
-                    ft.Text("Iniciar Sesión", size=18, weight="bold", color=Theme.TEXT),
+                    ft.Text("Iniciar Sesión", size=18, weight="bold", color=Theme.TEXT_PRIMARY),
                     ft.Container(height=10),
                     user_field,
                     ft.Container(height=15),
