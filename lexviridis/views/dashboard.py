@@ -1,3 +1,4 @@
+import logging
 import flet as ft
 
 from ..design_system import Colors, Radius, Spacing, Theme, UIComponents
@@ -15,8 +16,21 @@ class DashboardView(ft.Container):
         self._build_ui()
 
     def _build_ui(self):
-        # Fetch stats
-        stats = self.stats_repo.get_dashboard_stats()
+        # Fetch stats con manejo de errores
+        try:
+            stats = self.stats_repo.get_dashboard_stats()
+        except Exception as e:
+            logging.error(f"Error obteniendo dashboard stats: {e}")
+            # Stats por defecto si falla
+            stats = {
+                'total_normas': 0,
+                'total_articulos': 0,
+                'total_favoritos': 0,
+                'total_busquedas': 0,
+                'distribucion_tipo': {},
+                'top_searches': [],
+                'timeline_busquedas': []
+            }
 
         # Hero Header
         hero = UIComponents.hero_header(
@@ -80,73 +94,28 @@ class DashboardView(ft.Container):
         ], spacing=Spacing.MD)
 
     def _build_distribution_chart(self, stats):
-        pie_sections = []
-        colors_list = [Colors.GREEN_700, Colors.TEAL_700, Colors.AMBER_700, Colors.BLUE_700, Colors.GREY_500]
-
-        dist = stats.get('distribucion_tipo', {})
-        for i, (tipo, count) in enumerate(dist.items()):
-            if i >= 5: break
-            pie_sections.append(ft.PieChartSection(
-                value=count,
-                title=f"{tipo[:10]}",
-                title_style=ft.TextStyle(size=10, color=Colors.WHITE, weight="bold"),
-                color=colors_list[i % len(colors_list)],
-                radius=100
-            ))
-
-        return UIComponents.card(
-            ft.Column([
-                ft.Text("Distribución por Tipo", weight="bold"),
-                ft.Container(
-                    ft.PieChart(sections=pie_sections, sections_space=2, center_space_radius=80),
-                    height=500, alignment=ft.Alignment(0, 0)
-                )
-            ])
+        # TODO: PieChart y PieChartSection han cambiado en Flet reciente.
+        # Deshabilitado temporalmente para permitir arranque. 
+        # Implementar nuevo ft.PieChart cuando se estabilice la API.
+        
+        return ft.Container(
+             content=ft.Text("Gráfico de Estadísticas (Próximamente)", color=Theme.TEXT_SECONDARY),
+             alignment=ft.Alignment(0,0),
+             height=200
         )
 
     def _build_top_searches_chart(self, stats):
-        bar_groups = []
-        top_searches = stats.get('top_searches', [])
-
-        for i, (_query, freq) in enumerate(top_searches[:6]):
-            bar_groups.append(ft.BarChartGroup(
-                x=i,
-                bar_rods=[ft.BarChartRod(from_y=0, to_y=freq, color=Theme.PRIMARY, width=15)]
-            ))
-
-        return UIComponents.card(
-            ft.Column([
-                ft.Text("Top Búsquedas", weight="bold"),
-                ft.Container(
-                    ft.BarChart(
-                        bar_groups=bar_groups,
-                        bottom_axis=ft.ChartAxis(
-                            labels=[ft.ChartAxisLabel(value=i, label=ft.Text(top_searches[i][0][:15], size=10, rotate=45)) for i in range(len(bar_groups))],
-                        ),
-                    ),
-                    height=500, padding=20
-                )
-            ])
+        # TODO: BarChart ha cambiado en Flet reciente.
+        return ft.Container(
+             content=ft.Text("Gráfico de Búsquedas (Próximamente)", color=Theme.TEXT_SECONDARY),
+             alignment=ft.Alignment(0,0),
+             height=200
         )
 
     def _build_timeline_chart(self, stats):
-        data_points = []
-        timeline = stats.get('timeline_busquedas', [])
-
-        for i, (_fecha, count) in enumerate(timeline):
-            data_points.append(ft.LineChartDataPoint(i, count))
-
-        return UIComponents.card(
-            ft.Column([
-                ft.Text("Actividad de Búsqueda (Últimos 7 días)", weight="bold"),
-                ft.Container(
-                    ft.LineChart(
-                        data_series=[ft.LineChartData(data_points=data_points, color=Theme.SECONDARY, curved=True, stroke_width=4)],
-                        bottom_axis=ft.ChartAxis(
-                            labels=[ft.ChartAxisLabel(value=i, label=ft.Text(timeline[i][0][5:] if timeline else "", size=10)) for i in range(len(data_points))]
-                        )
-                    ),
-                    height=450, padding=20
-                )
-            ])
+        # TODO: LineChart ha cambiado en Flet reciente.
+        return ft.Container(
+             content=ft.Text("Línea de Tiempo (Próximamente)", color=Theme.TEXT_SECONDARY),
+             alignment=ft.Alignment(0,0),
+             height=200
         )

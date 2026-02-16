@@ -76,12 +76,12 @@ class ThemeManager:
                 primary=self.current_scheme.primary,
                 secondary=self.current_scheme.secondary,
                 surface=self.current_scheme.surface,
-                background=self.current_scheme.background,
+                # background=self.current_scheme.background, # Deprecated
                 error=self.current_scheme.error,
                 on_primary="#FFFFFF",
                 on_secondary="#FFFFFF",
                 on_surface=self.current_scheme.text_primary,
-                on_background=self.current_scheme.text_primary,
+                # on_background=self.current_scheme.text_primary, # Deprecated
             ),
             visual_density="comfortable",
         )

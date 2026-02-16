@@ -13,6 +13,23 @@ import time
 
 import flet as ft
 
+# Monkey Patch para compatibilidad con versiones antiguas de Flet que no tienen page.open
+if not hasattr(ft.Page, "open"):
+    def _page_open_patch(self, control):
+        if isinstance(control, ft.SnackBar):
+            self.snack_bar = control
+            control.open = True
+            self.update()
+        elif isinstance(control, ft.AlertDialog):
+            self.dialog = control
+            control.open = True
+            self.update()
+        else:
+            print(f"WARNING: page.open called with unsupported control: {type(control)}")
+    
+    ft.Page.open = _page_open_patch
+    print("DEBUG: Applied monkey patch for ft.Page.open")
+
 # App Core
 from .app.dependencies import DependencyContainer
 from .app.navigation import NavigationManager
@@ -51,12 +68,15 @@ class LexViridisShell:
         # 1. Initialize Dependencies
         self.deps = DependencyContainer(page)
 
-        # 2. State
+        # 2. Backend ready event for synchronization
+        self.backend_ready = threading.Event()
+
+        # 3. State
         self.current_user = None
         self.license_info = None
         self.license_watchdog = None
 
-        # 3. Check License & Start
+        # 4. Check License & Start
         self._check_license_and_start()
 
     def _setup_page(self):
@@ -71,16 +91,26 @@ class LexViridisShell:
         self.page.window_maximized = True
 
     def _check_license_and_start(self):
+        print("DEBUG: Checking license on startup...")
         self.license_info = check_license_on_startup(self.page)
+        print(f"DEBUG: License check result: {self.license_info}")
 
         if self.license_info and self.license_info.get("valid"):
+            print("DEBUG: License valid. Starting watchdog and login UI...")
             self._start_watchdog()
             self._show_login_ui()
             # Initialize backend in background
-            threading.Thread(target=self._init_backend_async, daemon=True).start()
+            print("DEBUG: Starting backend init thread...")
+            def _init_and_signal():
+                self._init_backend_async()
+                self.backend_ready.set()  # Señalizar que está listo
+                print("DEBUG: Backend initialization completed and signaled")
+            threading.Thread(target=_init_and_signal, daemon=True).start()
         elif self.license_info and self.license_info.get("expired"):
+            print("DEBUG: License expired.")
             LicenseExpiredDialog.show(self.page, on_renew=self._show_activation, on_exit=lambda: self.page.window_close())
         else:
+            print("DEBUG: No valid license. Showing activation screen.")
             self._show_activation()
 
     def _start_watchdog(self):
@@ -94,7 +124,7 @@ class LexViridisShell:
         print(f"SECURITY ALERT: {reason}")
         # Intentar mostrar mensaje y cerrar
         # Nota: Acceder a UI desde thread puede requerir page.run_task si estuviera disponible, 
-        # o simplemente usar page.open si Flet maneja concurrencia (lo hace parcialmente).
+
         # Para ser seguros, matamos la app tras un breve delay o log.
         logging.critical(f"License invalidated at runtime: {reason}")
         try:
@@ -108,7 +138,10 @@ class LexViridisShell:
             self.license_info = lic_data
             self._start_watchdog()
             self._show_login_ui()
-            threading.Thread(target=self._init_backend_async, daemon=True).start()
+            def _init_and_signal():
+                self._init_backend_async()
+                self.backend_ready.set()
+            threading.Thread(target=_init_and_signal, daemon=True).start()
 
         screen = LicenseActivationScreen(self.page, on_success)
         self.page.clean()
@@ -123,38 +156,46 @@ class LexViridisShell:
             logging.error(f"Backend init error: {e}")
 
     def _show_login_ui(self):
-        self.page.clean()
-        self.page.window_maximized = False
-        self.page.window_width, self.page.window_height = 450, 600
-        self.page.update()
+        try:
+            print("DEBUG: _show_login_ui started")
+            self.page.clean()
+            self.page.window_maximized = False
+            self.page.window_width, self.page.window_height = 450, 600
+            self.page.update()
+            print("DEBUG: Page cleaned and resized")
 
-        user_field = ft.TextField(label="Usuario", prefix_icon="person", width=300)
-        pass_field = ft.TextField(label="Contraseña", password=True, can_reveal_password=True, prefix_icon="lock", width=300,
-                                 on_submit=lambda _: self._handle_login(user_field.value, pass_field.value))
+            user_field = ft.TextField(label="Usuario", prefix_icon="person", width=300)
+            pass_field = ft.TextField(label="Contraseña", password=True, can_reveal_password=True, prefix_icon="lock", width=300,
+                                     on_submit=lambda _: self._handle_login(user_field.value, pass_field.value))
 
-        logo_path = _get_asset_path("LEXVIRIDIS_WHITE_BG.png")
-
-        login_card = ft.Container(
-            content=ft.Column([
-                ft.Container(content=ft.Image(src=str(logo_path), width=80, height=80, fit="contain"),
-                             padding=10, bgcolor="#FFFFFF", border_radius=40, shadow=ft.BoxShadow(blur_radius=10, color=Colors.with_opacity(0.1, Colors.BLACK))),
-                ft.Text("Inicia Sesión", size=Typography.TITLE, weight="bold"),
-                ft.Text("Acceso exclusivo para personal autorizado", size=Typography.CAPTION, color=Theme.TEXT_SECONDARY),
-                ft.Container(height=Spacing.MD),
-                user_field, pass_field,
-                ft.Container(height=Spacing.SM),
-                UIComponents.primary_button("Entrar", on_click=lambda _: self._handle_login(user_field.value, pass_field.value), width=300),
-            ], horizontal_alignment="center", spacing=Spacing.SM),
-            bgcolor=Theme.SURFACE, padding=Spacing.XL, border_radius=Radius.LG, border=ft.border.all(1, Theme.BORDER),
-        )
-        self.page.add(ft.Container(login_card, alignment=ft.Alignment(0, 0), expand=True))
-        self.page.update()
+            # Simplified login UI for debugging
+            login_card = ft.Container(
+                content=ft.Column([
+                    ft.Icon(ft.Icons.LOCK, size=80, color=Theme.PRIMARY),
+                    ft.Text("Inicia Sesión", size=20, weight="bold"),
+                    user_field,
+                    pass_field,
+                    ft.ElevatedButton("Entrar", on_click=lambda _: self._handle_login(user_field.value, pass_field.value)),
+                ], horizontal_alignment="center", spacing=20),
+                bgcolor=Theme.SURFACE,
+                padding=30,
+                border_radius=10,
+            )
+            print("DEBUG: Adding simplified login_card to page")
+            self.page.add(ft.Container(login_card, alignment=ft.Alignment(0, 0), expand=True))
+            self.page.update()
+            print("DEBUG: _show_login_ui completed")
+        except Exception as e:
+            import traceback
+            print(f"ERROR in _show_login_ui: {e}")
+            traceback.print_exc()
 
     def _handle_login(self, user, pwd):
         # Wait for auth manager if not ready (simple poll)
-        if not self.deps.auth_manager:
-            self.page.open(ft.SnackBar(ft.Text("El sistema se está iniciando, intenta en unos segundos...")))
-            return
+        # Compatibility fix for page.open
+        self.page.snack_bar = ft.SnackBar(ft.Text("El sistema se está iniciando, intenta en unos segundos..."))
+        self.page.snack_bar.open = True
+        self.page.update()
 
         # Demo Admin creation
         try:
@@ -168,9 +209,24 @@ class LexViridisShell:
             self.current_user = user_obj
             self._show_main_ui()
         else:
-            self.page.open(ft.SnackBar(ft.Text("Credenciales incorrectas"), bgcolor=Theme.ERROR))
+            self.page.snack_bar = ft.SnackBar(ft.Text("Credenciales incorrectas"), bgcolor=Theme.ERROR)
+            self.page.snack_bar.open = True
+            self.page.update()
 
     def _show_main_ui(self):
+        # Esperar a que el backend esté listo (timeout 10 segundos)
+        print("DEBUG: Waiting for backend to be ready...")
+        if not self.backend_ready.wait(timeout=10):
+            print("ERROR: Backend initialization timeout")
+            self.page.snack_bar = ft.SnackBar(
+                ft.Text("Error: El sistema no pudo inicializarse. Reinicie la aplicación."),
+                bgcolor=Theme.ERROR
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+            return
+
+        print("DEBUG: Backend ready, building main UI...")
         self.page.window_maximized = True
         self.page.clean()
 
@@ -252,10 +308,14 @@ class LexViridisShell:
             if resolved_path and resolved_path.exists():
                 PDFViewerFixed.open_pdf_simple(resolved_path)
             else:
-                self.page.open(ft.SnackBar(ft.Text(f"PDF no encontrado: {path_str}"), bgcolor=Theme.ERROR))
+                self.page.snack_bar = ft.SnackBar(ft.Text(f"PDF no encontrado: {path_str}"), bgcolor=Theme.ERROR)
+                self.page.snack_bar.open = True
+                self.page.update()
                 logging.warning(f"PDF not found: {path_str}")
         except Exception as e:
-            self.page.open(ft.SnackBar(ft.Text(f"Error abriendo PDF: {e}"), bgcolor=Theme.ERROR))
+            self.page.snack_bar = ft.SnackBar(ft.Text(f"Error abriendo PDF: {e}"), bgcolor=Theme.ERROR)
+            self.page.snack_bar.open = True
+            self.page.update()
 
     def _open_article_detail(self, article, query=""):
         # Replace content area with detail view
@@ -265,7 +325,9 @@ class LexViridisShell:
 
     def _change_language(self, lang_code):
         i18n.set_language(lang_code)
-        self.page.open(ft.SnackBar(ft.Text("Idioma cambiado"), bgcolor=Theme.SUCCESS))
+        self.page.snack_bar = ft.SnackBar(ft.Text("Idioma cambiado"), bgcolor=Theme.SUCCESS)
+        self.page.snack_bar.open = True
+        self.page.update()
         self._show_main_ui() # Re-render
 
 def main(page: ft.Page):

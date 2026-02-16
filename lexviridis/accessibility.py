@@ -20,7 +20,7 @@ class AccessibilityManager:
                     primary=ft.Colors.YELLOW,
                     surface=ft.Colors.BLACK,
                     on_surface=ft.Colors.YELLOW,
-                    background=ft.Colors.BLACK,
+                    # background=ft.Colors.BLACK, # Deprecated
                 )
             )
         else:

@@ -145,6 +145,7 @@ def create_theme() -> ft.Theme:
                 secondary=Theme.SECONDARY,
                 surface=Theme.SURFACE,
                 error=Theme.ERROR,
+                # background=Theme.BACKGROUND # Deprecated in newer Flet versions
             ),
             visual_density="comfortable",
         )
@@ -174,14 +175,19 @@ class UIComponents:
         #         _StateClass.HOVERED: Theme.PRIMARY_LIGHT,
         #         _StateClass.DISABLED: Theme.TEXT_DISABLED,
         #     }
+        content_controls = []
+        if icon:
+            content_controls.append(ft.Icon(icon, color=Theme.TEXT_ON_PRIMARY))
+        content_controls.append(ft.Text(text, color=Theme.TEXT_ON_PRIMARY))
+
         return ft.ElevatedButton(
-            text=text,
-            icon=icon,
+            content=ft.Row(content_controls, alignment=ft.MainAxisAlignment.CENTER, spacing=Spacing.SM),
+            # icon=icon, # Removed to avoid conflict with content
             on_click=on_click,
             disabled=disabled,
             style=ft.ButtonStyle(
                 bgcolor=bgcolor_val,
-                color=Theme.TEXT_ON_PRIMARY,
+                # color=Theme.TEXT_ON_PRIMARY, # Color handled in Text/Icon
                 padding=ft.padding.symmetric(horizontal=Spacing.LG, vertical=Spacing.MD),
                 shape=ft.RoundedRectangleBorder(radius=Radius.MD),
                 elevation=2,
@@ -191,12 +197,17 @@ class UIComponents:
 
     @staticmethod
     def secondary_button(text: str, on_click=None, icon=None, **kwargs) -> ft.OutlinedButton:
+        content_controls = []
+        if icon:
+            content_controls.append(ft.Icon(icon, color=Theme.PRIMARY))
+        content_controls.append(ft.Text(text, color=Theme.PRIMARY))
+
         return ft.OutlinedButton(
-            text=text,
-            icon=icon,
+            content=ft.Row(content_controls, alignment=ft.MainAxisAlignment.CENTER, spacing=Spacing.SM),
+            # icon=icon,
             on_click=on_click,
             style=ft.ButtonStyle(
-                color=Theme.PRIMARY,
+                # color=Theme.PRIMARY,
                 padding=ft.padding.symmetric(horizontal=Spacing.LG, vertical=Spacing.MD),
                 shape=ft.RoundedRectangleBorder(radius=Radius.MD),
                 side=ft.BorderSide(width=1.5, color=Theme.PRIMARY),
@@ -206,12 +217,17 @@ class UIComponents:
 
     @staticmethod
     def text_button(text: str, on_click=None, icon=None, **kwargs) -> ft.TextButton:
+        content_controls = []
+        if icon:
+            content_controls.append(ft.Icon(icon, color=Theme.PRIMARY))
+        content_controls.append(ft.Text(text, color=Theme.PRIMARY))
+        
         return ft.TextButton(
-            text=text,
-            icon=icon,
+            content=ft.Row(content_controls, alignment=ft.MainAxisAlignment.CENTER, spacing=Spacing.SM, tight=True),
+            # icon=icon,
             on_click=on_click,
             style=ft.ButtonStyle(
-                color=Theme.PRIMARY,
+                # color=Theme.PRIMARY,
                 padding=ft.padding.symmetric(horizontal=Spacing.MD, vertical=Spacing.SM),
             ),
             **kwargs

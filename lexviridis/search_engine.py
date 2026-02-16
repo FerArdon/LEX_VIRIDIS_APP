@@ -534,13 +534,18 @@ class SearchEngine:
 
                 results.append({
                     'id': row['articulo_id'],
+                    'numero_articulo': row['numero_articulo'],
+                    'norma_titulo': row['titulo_norma'],
+                    'contenido': row['contenido_completo'],       # ✅ Para ArticleDetailView
+                    'archivo_pdf': row['archivo_pdf'],
                     'file': row['archivo_pdf'] or "Desconocido",
                     'page': row['pagina'] or 1,
+                    'pagina': row['pagina'] or 1,                  # ✅ Alias
                     'relevance': round(abs(row['rank']) * 10, 1),
                     'context': f"Art. {row['numero_articulo']}: {snippet_md}",
                     'term': query,
                     'matches': matches_count,
-                    'is_high_relevance': abs(row['rank']) < 5.0 # Rank bajo en FTS5 significa más relevante
+                    'is_high_relevance': abs(row['rank']) < 5.0
                 })
 
             results.sort(key=lambda x: x['relevance'], reverse=True)

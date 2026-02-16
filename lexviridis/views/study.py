@@ -180,6 +180,7 @@ class StudyView(ft.Container):
         dlg.open = False
         self.study_manager.delete_all_flashcards(self.user_id)
 
-        self.page.open(ft.SnackBar(ft.Text("Progreso de estudio reiniciado correctamente."), bgcolor=Theme.SUCCESS))
-        self._build_ui()
+        self.page.snack_bar = ft.SnackBar(ft.Text("Progreso de estudio reiniciado correctamente."), bgcolor=Theme.SUCCESS)
+        self.page.snack_bar.open = True
         self.page.update()
+        self._build_ui()
