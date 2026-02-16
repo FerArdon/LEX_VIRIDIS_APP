@@ -47,7 +47,7 @@ class SearchHistoryView(ft.Container):
                 icon="download",
                 on_click=lambda _: self._export_history()
             ),
-            UIComponents.outlined_button(
+            UIComponents.secondary_button(
                 "Limpiar Historial",
                 icon="delete_outline",
                 on_click=lambda _: self._confirm_clear_history()
