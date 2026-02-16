@@ -31,16 +31,18 @@ def normalize_text(text: str) -> str:
 def normalize_path(path_str: str) -> Path:
     """
     Normaliza rutas corrigiendo corrupción de caracteres común en OneDrive/Windows.
-    Ej: 'VlRlDlS' -> 'VIRIDIS', 'COMPENDlO' -> 'COMPENDIO'
+    Ej: 'VlRlDlS' -> 'VIRIDIS', 'COMPENDlO' -> 'COMPENDIO', 'LEX_VlRlDlS APP' -> 'LEX_VIRIDIS_APP'
     """
     if not path_str:
         return Path(".")
-    
+
     # 1. Correcciones específicas
     fixed_str = str(path_str).replace("VlRlDlS", "VIRIDIS") \
                              .replace("COMPENDlO", "COMPENDIO") \
-                             .replace("lLEX", "LEX") # Variante reportada
-    
+                             .replace("lLEX", "LEX") \
+                             .replace("LEX_VIRIDIS APP", "LEX_VIRIDIS_APP") \
+                             .replace("COMPENDIO LEYES FEMA", "COMPENDIO_LEYES_FEMA")
+
     return Path(fixed_str)
 
 # -----------------------------
@@ -128,6 +130,31 @@ def find_pdf_path(filename_or_path: str) -> Path | None:
     # 1. Ruta directa
     if path.exists() and path.is_file():
         return path
+
+    # 1.5. Si la ruta original contenía OneDrive, buscar en ubicaciones de OneDrive
+    if 'OneDrive' in str(filename_or_path):
+        onedrive_bases = [
+            Path(r"C:\Users\frard\OneDrive\LEX_VIRIDIS_APP"),
+            Path(r"F:\LEX_VIRIDIS_APP"),
+        ]
+
+        name = path.name
+        for base in onedrive_bases:
+            if base.exists():
+                # Buscar en COMPENDIO_LEYES_FEMA
+                candidate = base / "COMPENDIO_LEYES_FEMA" / name
+                if candidate.exists():
+                    logging.info(f"✓ PDF found in OneDrive: {candidate}")
+                    return candidate
+
+                # Búsqueda recursiva en OneDrive (puede ser lenta)
+                try:
+                    matches = list(base.rglob(name))
+                    if matches:
+                        logging.info(f"✓ PDF found via OneDrive recursive search: {matches[0]}")
+                        return matches[0]
+                except Exception:
+                    pass
 
     # Necesitamos config para saber el directorio base
     # Importamos aquí para evitar ciclos
