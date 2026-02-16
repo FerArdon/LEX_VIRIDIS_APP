@@ -1,4 +1,6 @@
 import threading
+from datetime import datetime
+from pathlib import Path
 
 import flet as ft
 
@@ -179,6 +181,13 @@ class AIChatView(ft.Container):
                     ft.Row([
                         ft.Icon("auto_awesome", size=16, color=Theme.PRIMARY),
                         ft.Text("Respuesta Inteligente", size=12, weight="bold", color=Theme.PRIMARY),
+                        ft.Container(expand=True),
+                        ft.IconButton(
+                            icon="download",
+                            icon_size=16,
+                            tooltip="Exportar respuesta a TXT",
+                            on_click=lambda e, q=text, r=result: self._export_response(q, r)
+                        )
                     ]),
                     ft.Divider(height=1, color=Theme.BORDER),
                     ft.Markdown(result['answer'], selectable=True),
@@ -226,3 +235,80 @@ class AIChatView(ft.Container):
         )
         self.chat_messages.controls.append(ft.Row([bubble], alignment=ft.MainAxisAlignment.START))
         self.update()
+
+    def _export_response(self, question: str, result: dict):
+        """Exporta la respuesta de IA a un archivo de texto plano."""
+        try:
+            # Crear directorio de exportaciones si no existe
+            export_dir = Path.home() / "Documents" / "LEX_VIRIDIS" / "Exportaciones_IA"
+            export_dir.mkdir(parents=True, exist_ok=True)
+
+            # Generar nombre de archivo con timestamp
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"consulta_ia_{timestamp}.txt"
+            filepath = export_dir / filename
+
+            # Formatear contenido
+            content = []
+            content.append("=" * 80)
+            content.append("LEX VIRIDIS - Consulta Asistente Legal IA")
+            content.append("=" * 80)
+            content.append(f"\nFecha: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+            content.append("\n" + "-" * 80)
+            content.append("PREGUNTA:")
+            content.append("-" * 80)
+            content.append(f"\n{question}\n")
+            content.append("-" * 80)
+            content.append("RESPUESTA:")
+            content.append("-" * 80)
+            content.append(f"\n{result['answer']}\n")
+
+            # Agregar fuentes si existen
+            sources = result.get('sources', [])
+            if sources:
+                content.append("-" * 80)
+                content.append("FUENTES CONSULTADAS:")
+                content.append("-" * 80)
+                for i, source in enumerate(sources, 1):
+                    file = source.get('file', 'Desconocido')
+                    article_id = source.get('id', '?')
+                    content.append(f"\n{i}. {file} (Artículo {article_id})")
+
+            content.append("\n" + "=" * 80)
+            content.append("Generado por LEX VIRIDIS - Sistema de Investigación Legal Ambiental")
+            content.append("Copyright © 2026 FEMA Honduras")
+            content.append("=" * 80)
+
+            # Guardar archivo
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(content))
+
+            # Mostrar confirmación
+            if hasattr(self, 'page') and self.page:
+                self.page.snack_bar = ft.SnackBar(
+                    ft.Text(f"✓ Respuesta exportada: {filename}"),
+                    bgcolor=Theme.SUCCESS
+                )
+                self.page.snack_bar.open = True
+                self.page.update()
+
+            # Abrir carpeta de exportaciones
+            import os
+            import platform
+            if platform.system() == 'Windows':
+                os.startfile(export_dir)
+            elif platform.system() == 'Darwin':  # macOS
+                os.system(f'open "{export_dir}"')
+            else:  # Linux
+                os.system(f'xdg-open "{export_dir}"')
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            if hasattr(self, 'page') and self.page:
+                self.page.snack_bar = ft.SnackBar(
+                    ft.Text(f"Error al exportar: {e}"),
+                    bgcolor=Theme.ERROR
+                )
+                self.page.snack_bar.open = True
+                self.page.update()
