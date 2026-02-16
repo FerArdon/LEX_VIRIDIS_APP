@@ -1,14 +1,14 @@
 # lexviridis/persistence.py
 
-import json
 import hashlib
+import json
+import logging
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional, Dict, Any
-import logging
 
 from .config import config
 from .utils import normalize_text
+
 
 # -----------------------------
 # Base para manejo de datos JSON
@@ -22,7 +22,7 @@ class DataManager:
     def _load_data(self):
         if self.filepath.exists():
             try:
-                with open(self.filepath, 'r', encoding='utf-8') as f:
+                with open(self.filepath, encoding='utf-8') as f:
                     return json.load(f)
             except Exception as e:
                 logging.warning(f"Archivo corrupto {self.filepath}: {e}")
@@ -49,14 +49,14 @@ class SearchCache(DataManager):
     def _default_data(self):
         return {}
 
-    def _generate_key(self, terms: List[str]) -> str:
+    def _generate_key(self, terms: list[str]) -> str:
         key = "_".join(sorted(t.lower() for t in terms))
         return hashlib.md5(key.encode('utf-8')).hexdigest()
 
-    def get(self, terms: List[str]) -> Optional[List[dict]]:
+    def get(self, terms: list[str]) -> list[dict] | None:
         return self._data.get(self._generate_key(terms))
 
-    def set(self, terms: List[str], results: List[dict]):
+    def set(self, terms: list[str], results: list[dict]):
         key = self._generate_key(terms)
         self._data[key] = results
         if len(self._data) > self.max_cache_size:
@@ -74,7 +74,7 @@ class SearchHistory(DataManager):
     def _default_data(self):
         return []
 
-    def add(self, terms: List[str]):
+    def add(self, terms: list[str]):
         if not terms: return
         timestamp = datetime.now().isoformat()
         normalized = sorted(normalize_text(t) for t in terms)
@@ -83,7 +83,7 @@ class SearchHistory(DataManager):
             self._data = self._data[-self.max_size:]
             self._save_data()
 
-    def get(self) -> List[dict]:
+    def get(self) -> list[dict]:
         return list(self._data)
 
     def clear(self):
@@ -112,7 +112,7 @@ class FavoritesManager(DataManager):
     def is_favorite(self, path: str) -> bool:
         return path in self._data
 
-    def get_all(self) -> Dict[str, dict]:
+    def get_all(self) -> dict[str, dict]:
         return self._data
 
 # -----------------------------
@@ -124,7 +124,7 @@ class AutoBackup:
         self.dir.mkdir(parents=True, exist_ok=True)
         self.max_backups = 30
 
-    def save(self, terms: List[str], results: List[dict]):
+    def save(self, terms: list[str], results: list[dict]):
         if not results: return
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         slug = "_".join(terms[:3]).replace(" ", "_")[:50]
