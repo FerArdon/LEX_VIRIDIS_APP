@@ -26,6 +26,24 @@ def normalize_text(text: str) -> str:
     return text
 
 # -----------------------------
+# Normalización de Rutas (OneDrive/Windows Fix)
+# -----------------------------
+def normalize_path(path_str: str) -> Path:
+    """
+    Normaliza rutas corrigiendo corrupción de caracteres común en OneDrive/Windows.
+    Ej: 'VlRlDlS' -> 'VIRIDIS', 'COMPENDlO' -> 'COMPENDIO'
+    """
+    if not path_str:
+        return Path(".")
+    
+    # 1. Correcciones específicas
+    fixed_str = str(path_str).replace("VlRlDlS", "VIRIDIS") \
+                             .replace("COMPENDlO", "COMPENDIO") \
+                             .replace("lLEX", "LEX") # Variante reportada
+    
+    return Path(fixed_str)
+
+# -----------------------------
 # Supresor de stderr temporal
 # -----------------------------
 @contextlib.contextmanager
@@ -101,12 +119,11 @@ def find_pdf_path(filename_or_path: str) -> Path | None:
     if not filename_or_path:
         return None
 
-    # Limpiar el path de caracteres confusos de OneDrive/Windows
-    cleaned_path = filename_or_path.replace('VlRlDlS', 'VIRIDIS')
-    cleaned_path = cleaned_path.replace('COMPENDlO', 'COMPENDIO')
-    cleaned_path = cleaned_path.replace('COMPENDIO LEYES FEMA', 'COMPENDIO_LEYES_FEMA')
-
-    path = Path(cleaned_path)
+    # Usar normalización centralizada
+    path = normalize_path(filename_or_path)
+    # Corrección legacy específica de find_pdf_path si es necesario
+    if 'COMPENDIO LEYES FEMA' in str(path):
+        path = Path(str(path).replace('COMPENDIO LEYES FEMA', 'COMPENDIO_LEYES_FEMA'))
 
     # 1. Ruta directa
     if path.exists() and path.is_file():

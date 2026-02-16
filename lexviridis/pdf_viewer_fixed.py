@@ -66,7 +66,10 @@ class PDFViewerFixed:
         Versión mejorada para ejecutables.
         """
         try:
-            # Validar PDF
+            # Validar PDF (Normalizando ruta primero)
+            from .utils import normalize_path
+            pdf_path = normalize_path(str(pdf_path))
+
             if not pdf_path.exists():
                 raise FileNotFoundError(f"PDF no encontrado: {pdf_path}")
 
@@ -124,9 +127,17 @@ class PDFViewerFixed:
 
             # [SECURITY] Validar acceso
             from .pdf_limiter import PDFAccessManager
+            # Normalizar antes de chequear seguridad y existencia
+            from .utils import normalize_path
+            pdf_path = normalize_path(str(pdf_path))
+
             if not PDFAccessManager.can_access_pdf(pdf_path, "simple_view"):
                  logging.warning(f"⛔ [SECURITY] Acceso denegado a PDF: {pdf_path.name}")
                  raise PermissionError(f"Acceso denegado a documento: {pdf_path.name}")
+
+            # Validar existencia post-normalización
+            if not pdf_path.exists():
+                 raise FileNotFoundError(f"PDF no encontrado: {pdf_path}")
 
             logging.info(f"[FIXED] Abriendo PDF simple: {pdf_path.name}")
             open_with_native_viewer(pdf_path)

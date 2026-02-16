@@ -166,14 +166,14 @@ class UIComponents:
 
     @staticmethod
     def primary_button(text: str, on_click=None, icon=None, disabled=False, **kwargs) -> ft.ElevatedButton:
-        _StateClass = getattr(ft, 'ControlState', getattr(ft, 'MaterialState', None))
+        # _StateClass = getattr(ft, 'ControlState', getattr(ft, 'MaterialState', None))
         bgcolor_val = Theme.PRIMARY
-        if _StateClass:
-            bgcolor_val = {
-                _StateClass.DEFAULT: Theme.PRIMARY,
-                _StateClass.HOVERED: Theme.PRIMARY_LIGHT,
-                _StateClass.DISABLED: Theme.TEXT_DISABLED,
-            }
+        # if _StateClass:
+        #     bgcolor_val = {
+        #         _StateClass.DEFAULT: Theme.PRIMARY,
+        #         _StateClass.HOVERED: Theme.PRIMARY_LIGHT,
+        #         _StateClass.DISABLED: Theme.TEXT_DISABLED,
+        #     }
         return ft.ElevatedButton(
             text=text,
             icon=icon,

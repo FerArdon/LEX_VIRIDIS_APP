@@ -28,6 +28,10 @@ class PDFAccessManager:
         """
         Verifica si se permite el acceso al PDF.
         """
+        # Normalizar path primero
+        from .utils import normalize_path
+        pdf_path = normalize_path(str(pdf_path))
+
         try:
             # 1. Verificar licencia
             if not LicenseManager:
