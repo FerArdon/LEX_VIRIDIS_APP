@@ -161,29 +161,113 @@ class LexViridisShell:
             print("DEBUG: _show_login_ui started")
             self.page.clean()
             self.page.window_maximized = False
-            self.page.window_width, self.page.window_height = 450, 600
+            self.page.window_width, self.page.window_height = 500, 650
+            self.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+            self.page.vertical_alignment = ft.MainAxisAlignment.CENTER
             self.page.update()
             print("DEBUG: Page cleaned and resized")
 
-            user_field = ft.TextField(label="Usuario", prefix_icon="person", width=300)
-            pass_field = ft.TextField(label="Contraseña", password=True, can_reveal_password=True, prefix_icon="lock", width=300,
-                                     on_submit=lambda _: self._handle_login(user_field.value, pass_field.value))
+            # Logo
+            logo_path = _get_asset_path("LEXVIRIDIS_WHITE_BG.png")
+            logo = ft.Image(src=str(logo_path), width=120, height=120, fit=ft.ImageFit.CONTAIN)
 
-            # Simplified login UI for debugging
+            user_field = ft.TextField(
+                label="Usuario",
+                prefix_icon="person",
+                width=350,
+                border_radius=Radius.MD,
+                text_size=14
+            )
+            pass_field = ft.TextField(
+                label="Contraseña",
+                password=True,
+                can_reveal_password=True,
+                prefix_icon="lock",
+                width=350,
+                border_radius=Radius.MD,
+                text_size=14,
+                on_submit=lambda _: self._handle_login(user_field.value, pass_field.value)
+            )
+
+            # Login card with professional design
             login_card = ft.Container(
                 content=ft.Column([
-                    ft.Icon(ft.Icons.LOCK, size=80, color=Theme.PRIMARY),
-                    ft.Text("Inicia Sesión", size=20, weight="bold"),
+                    # Logo section
+                    ft.Container(content=logo, padding=ft.padding.only(bottom=10)),
+
+                    # Title
+                    ft.Text(
+                        "LEX VIRIDIS",
+                        size=28,
+                        weight="bold",
+                        color=Theme.PRIMARY,
+                        text_align="center"
+                    ),
+                    ft.Text(
+                        "Compendio Legal Ambiental",
+                        size=14,
+                        color=Theme.TEXT_SECONDARY,
+                        text_align="center"
+                    ),
+
+                    ft.Container(height=20),
+                    ft.Divider(height=1, color=Theme.BORDER),
+                    ft.Container(height=20),
+
+                    # Login fields
+                    ft.Text("Iniciar Sesión", size=18, weight="bold", color=Theme.TEXT),
+                    ft.Container(height=10),
                     user_field,
+                    ft.Container(height=15),
                     pass_field,
-                    ft.ElevatedButton("Entrar", on_click=lambda _: self._handle_login(user_field.value, pass_field.value)),
-                ], horizontal_alignment="center", spacing=20),
+                    ft.Container(height=25),
+
+                    # Login button
+                    ft.ElevatedButton(
+                        "Entrar",
+                        width=350,
+                        height=45,
+                        style=ft.ButtonStyle(
+                            bgcolor=Theme.PRIMARY,
+                            color="white",
+                            shape=ft.RoundedRectangleBorder(radius=Radius.MD)
+                        ),
+                        on_click=lambda _: self._handle_login(user_field.value, pass_field.value)
+                    ),
+
+                    ft.Container(height=20),
+
+                    # Footer
+                    ft.Text(
+                        "FEMA Honduras © 2026",
+                        size=12,
+                        color=Theme.TEXT_SECONDARY,
+                        text_align="center"
+                    ),
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=0
+                ),
                 bgcolor=Theme.SURFACE,
-                padding=30,
-                border_radius=10,
+                padding=40,
+                border_radius=Radius.LG,
+                shadow=ft.BoxShadow(
+                    blur_radius=20,
+                    spread_radius=2,
+                    color=Colors.with_opacity(0.1, Colors.BLACK)
+                ),
+                width=450,
             )
-            print("DEBUG: Adding simplified login_card to page")
-            self.page.add(ft.Container(login_card, alignment=ft.Alignment(0, 0), expand=True))
+
+            print("DEBUG: Adding centered login_card to page")
+            # Center the login card both horizontally and vertically
+            self.page.add(
+                ft.Container(
+                    content=login_card,
+                    alignment=ft.alignment.center,
+                    expand=True
+                )
+            )
             self.page.update()
             print("DEBUG: _show_login_ui completed")
         except Exception as e:
