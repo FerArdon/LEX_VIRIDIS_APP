@@ -10,6 +10,7 @@ Module: ui_v2.py
 import logging
 import threading
 import time
+from pathlib import Path
 
 import flet as ft
 
@@ -279,9 +280,28 @@ class LexViridisShell:
             on_change=lambda e: self.nav_manager.navigate_to(e.control.selected_index)
         )
 
+        # Profile picture or default icon
+        profile_pic = self.current_user.get('profile_picture')
+        if profile_pic and Path(profile_pic).exists():
+            avatar = ft.CircleAvatar(
+                foreground_image_src=str(profile_pic),
+                radius=18,
+                content=ft.Icon("person", size=20)
+            )
+        else:
+            avatar = ft.CircleAvatar(
+                bgcolor=Theme.PRIMARY,
+                radius=18,
+                content=ft.Icon("person", size=20, color="white")
+            )
+
         header = ft.Container(
             content=ft.Row([
-                ft.Icon("person"),
+                ft.Container(
+                    content=avatar,
+                    on_click=lambda _: self._show_profile_dialog(),
+                    tooltip="Click para cambiar foto de perfil"
+                ),
                 ft.Text(f" {self.current_user['username'].upper()}", weight="bold"),
                 ft.Container(expand=True),
                 ft.IconButton("logout", icon_color=Theme.ERROR, on_click=lambda _: self._show_login_ui())
@@ -342,6 +362,130 @@ class LexViridisShell:
         self.page.snack_bar.open = True
         self.page.update()
         self._show_main_ui() # Re-render
+
+    def _show_profile_dialog(self):
+        """Muestra un diálogo para cambiar la foto de perfil."""
+        file_picker = ft.FilePicker(on_result=self._on_profile_picture_selected)
+        self.page.overlay.append(file_picker)
+        self.page.update()
+
+        def pick_file(e):
+            file_picker.pick_files(
+                dialog_title="Seleccionar foto de perfil",
+                allowed_extensions=["png", "jpg", "jpeg", "gif"],
+                allow_multiple=False
+            )
+
+        def remove_picture(e):
+            """Elimina la foto de perfil actual."""
+            try:
+                self.deps.auth_manager.update_profile_picture(self.current_user['id'], None)
+                self.current_user['profile_picture'] = None
+                self.page.snack_bar = ft.SnackBar(
+                    ft.Text("✓ Foto de perfil eliminada"),
+                    bgcolor=Theme.SUCCESS
+                )
+                self.page.snack_bar.open = True
+                self.page.update()
+                dialog.open = False
+                self.page.update()
+                self._show_main_ui()  # Refresh UI
+            except Exception as ex:
+                self.page.snack_bar = ft.SnackBar(
+                    ft.Text(f"Error: {ex}"),
+                    bgcolor=Theme.ERROR
+                )
+                self.page.snack_bar.open = True
+                self.page.update()
+
+        # Get current profile picture
+        current_pic = self.current_user.get('profile_picture')
+        if current_pic and Path(current_pic).exists():
+            current_avatar = ft.CircleAvatar(
+                foreground_image_src=str(current_pic),
+                radius=50,
+                content=ft.Icon("person", size=40)
+            )
+        else:
+            current_avatar = ft.CircleAvatar(
+                bgcolor=Theme.PRIMARY,
+                radius=50,
+                content=ft.Icon("person", size=40, color="white")
+            )
+
+        dialog = ft.AlertDialog(
+            title=ft.Text("Foto de Perfil"),
+            content=ft.Column([
+                ft.Container(
+                    content=current_avatar,
+                    alignment=ft.alignment.center
+                ),
+                ft.Container(height=Spacing.MD),
+                ft.Text(
+                    "Selecciona una imagen (PNG, JPG, JPEG, GIF)",
+                    size=12,
+                    color=Theme.TEXT_SECONDARY,
+                    text_align="center"
+                ),
+            ], tight=True, horizontal_alignment="center"),
+            actions=[
+                ft.TextButton("Seleccionar imagen", on_click=pick_file),
+                ft.TextButton("Eliminar foto", on_click=remove_picture) if current_pic else None,
+                ft.TextButton("Cancelar", on_click=lambda e: self._close_dialog(dialog)),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+
+        self.page.dialog = dialog
+        dialog.open = True
+        self.page.update()
+
+    def _on_profile_picture_selected(self, e: ft.FilePickerResultEvent):
+        """Maneja la selección de la foto de perfil."""
+        if not e.files:
+            return
+
+        try:
+            source_path = Path(e.files[0].path)
+
+            # Create profile pictures directory
+            profile_dir = Path.home() / "Documents" / "LEX_VIRIDIS" / "ProfilePictures"
+            profile_dir.mkdir(parents=True, exist_ok=True)
+
+            # Copy image to profile directory
+            dest_path = profile_dir / f"user_{self.current_user['id']}_{source_path.name}"
+
+            import shutil
+            shutil.copy2(source_path, dest_path)
+
+            # Update database
+            self.deps.auth_manager.update_profile_picture(self.current_user['id'], str(dest_path))
+            self.current_user['profile_picture'] = str(dest_path)
+
+            # Show success message
+            self.page.snack_bar = ft.SnackBar(
+                ft.Text("✓ Foto de perfil actualizada"),
+                bgcolor=Theme.SUCCESS
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+
+            # Refresh UI
+            self._show_main_ui()
+
+        except Exception as ex:
+            logging.error(f"Error actualizando foto de perfil: {ex}")
+            self.page.snack_bar = ft.SnackBar(
+                ft.Text(f"Error: {ex}"),
+                bgcolor=Theme.ERROR
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+
+    def _close_dialog(self, dialog):
+        """Cierra un diálogo."""
+        dialog.open = False
+        self.page.update()
 
 def main(page: ft.Page):
     LexViridisShell(page)

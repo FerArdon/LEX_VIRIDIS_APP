@@ -97,7 +97,15 @@ class AuthManager:
         conn = self.db_manager.get_connection()
         try:
             cursor = conn.cursor()
-            cursor.execute("SELECT id, username, password_salt, password_hash, email FROM usuarios WHERE username = ?", (username,))
+            # Try to get profile_picture if column exists
+            has_profile_pic = False
+            try:
+                cursor.execute("SELECT id, username, password_salt, password_hash, email, profile_picture FROM usuarios WHERE username = ?", (username,))
+                has_profile_pic = True
+            except Exception:
+                # Fallback if profile_picture column doesn't exist
+                cursor.execute("SELECT id, username, password_salt, password_hash, email FROM usuarios WHERE username = ?", (username,))
+
             user = cursor.fetchone()
             if user and self.verify_password(password, user['password_salt'], user['password_hash']):
                 token = secrets.token_urlsafe(32)
@@ -105,12 +113,24 @@ class AuthManager:
                 cursor.execute("INSERT INTO sesiones (user_id, token, expires_at) VALUES (?, ?, ?)",
                              (user['id'], token, expires.strftime("%Y-%m-%d %H:%M:%S")))
                 conn.commit()
-                return {
+
+                result = {
                     'id': user['id'],
                     'username': user['username'],
                     'email': user['email'],
                     'token': token
                 }
+
+                # Add profile_picture if column exists
+                if has_profile_pic:
+                    try:
+                        result['profile_picture'] = user['profile_picture']
+                    except (KeyError, IndexError):
+                        result['profile_picture'] = None
+                else:
+                    result['profile_picture'] = None
+
+                return result
             return None
         finally:
             conn.close()
@@ -240,5 +260,30 @@ class AuthManager:
         except Exception as e:
             logging.error(f"Error recuperando cuenta: {e}")
             return False
+        finally:
+            conn.close()
+
+    def update_profile_picture(self, user_id: int, image_path: str) -> bool:
+        """Actualiza la foto de perfil del usuario."""
+        conn = self.db_manager.get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE usuarios SET profile_picture = ? WHERE id = ?", (image_path, user_id))
+            conn.commit()
+            return True
+        except Exception as e:
+            logging.error(f"Error actualizando foto de perfil: {e}")
+            return False
+        finally:
+            conn.close()
+
+    def get_profile_picture(self, user_id: int) -> str | None:
+        """Obtiene la ruta de la foto de perfil del usuario."""
+        conn = self.db_manager.get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT profile_picture FROM usuarios WHERE id = ?", (user_id,))
+            result = cursor.fetchone()
+            return result['profile_picture'] if result else None
         finally:
             conn.close()
