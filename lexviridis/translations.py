@@ -1,25 +1,26 @@
 
 import json
-from pathlib import Path
 from datetime import datetime
-import locale
+from pathlib import Path
+
 
 class Translations:
     """Gestor de traducciones para Lex Viridis."""
-    
+
     def __init__(self):
         self.current_language = self.load_language()
         self.translations = self.load_translations(self.current_language)
-    
+
     def load_language(self) -> str:
         config_file = Path.home() / ".lexviridis" / "language.json"
         if config_file.exists():
             try:
                 with open(config_file) as f:
                     return json.load(f).get('language', 'es')
-            except: pass
+            except (json.JSONDecodeError, OSError, KeyError):
+                pass
         return 'es'
-    
+
     def _get_i18n_dir(self) -> Path:
         """Obtiene directorio i18n compatible con .exe y desarrollo."""
         try:
@@ -39,9 +40,9 @@ class Translations:
         try:
             with open(trans_file, encoding='utf-8') as f:
                 return json.load(f)
-        except:
+        except (json.JSONDecodeError, OSError, UnicodeDecodeError):
             return {}
-    
+
     def t(self, key: str, **kwargs) -> str:
         keys = key.split('.')
         value = self.translations
@@ -53,9 +54,10 @@ class Translations:
         if isinstance(value, str) and kwargs:
             try:
                 return value.format(**kwargs)
-            except: pass
+            except (KeyError, ValueError):
+                pass
         return str(value)
-    
+
     def set_language(self, language: str):
         self.current_language = language
         self.translations = self.load_translations(language)
@@ -66,14 +68,14 @@ class Translations:
 
 class Formatter:
     """Formateador localizado para Lex Viridis."""
-    
+
     @staticmethod
     def format_date(date: datetime, lang: str = 'es', format_type: str = 'short') -> str:
         if lang == 'es':
             return date.strftime("%d/%m/%Y") if format_type == 'short' else date.strftime("%d de %B de %Y")
         else:
             return date.strftime("%m/%d/%Y") if format_type == 'short' else date.strftime("%B %d, %Y")
-    
+
     @staticmethod
     def format_number(number: float, lang: str = 'es') -> str:
         if lang == 'es':

@@ -1,8 +1,7 @@
 
 import json
 from enum import Enum
-from datetime import datetime
-from typing import Dict, List, Optional
+
 
 class EventType(Enum):
     SEARCH_EXECUTED = "search_executed"
@@ -16,11 +15,11 @@ class EventType(Enum):
 
 class AnalyticsTracker:
     """Rastreador de eventos de usuario."""
-    
+
     def __init__(self, db_manager):
         self.db_manager = db_manager
 
-    def track_event(self, event_type: EventType, properties: Dict = None, user_id: int = None, session_id: str = None):
+    def track_event(self, event_type: EventType, properties: dict = None, user_id: int = None, session_id: str = None):
         """Registra un evento en la base de datos."""
         conn = self.db_manager.get_connection()
         try:
@@ -41,31 +40,31 @@ class AnalyticsTracker:
 
 class AnalyticsReporter:
     """Genera reportes y métricas de uso."""
-    
+
     def __init__(self, db_manager):
         self.db_manager = db_manager
 
-    def get_kpis(self, start_date: str, end_date: str) -> Dict:
+    def get_kpis(self, start_date: str, end_date: str) -> dict:
         conn = self.db_manager.get_connection()
         try:
             cursor = conn.cursor()
             metrics = {}
-            
+
             # Búsquedas totales
-            cursor.execute("SELECT COUNT(*) FROM analytics_events WHERE event_type = ? AND timestamp BETWEEN ? AND ?", 
+            cursor.execute("SELECT COUNT(*) FROM analytics_events WHERE event_type = ? AND timestamp BETWEEN ? AND ?",
                          (EventType.SEARCH_EXECUTED.value, start_date, end_date))
             metrics['total_searches'] = cursor.fetchone()[0]
-            
+
             # Usuarios únicos
-            cursor.execute("SELECT COUNT(DISTINCT user_id) FROM analytics_events WHERE timestamp BETWEEN ? AND ?", 
+            cursor.execute("SELECT COUNT(DISTINCT user_id) FROM analytics_events WHERE timestamp BETWEEN ? AND ?",
                          (start_date, end_date))
             metrics['active_users'] = cursor.fetchone()[0]
-            
+
             return metrics
         finally:
             conn.close()
 
-    def get_funnel(self) -> Dict:
+    def get_funnel(self) -> dict:
         conn = self.db_manager.get_connection()
         try:
             cursor = conn.cursor()
@@ -74,7 +73,7 @@ class AnalyticsReporter:
             searches = cursor.fetchone()[0]
             cursor.execute("SELECT COUNT(*) FROM analytics_events WHERE event_type = ?", (EventType.SEARCH_RESULT_CLICKED.value,))
             clicks = cursor.fetchone()[0]
-            
+
             return {
                 'searches': searches,
                 'clicks': clicks,
@@ -83,12 +82,12 @@ class AnalyticsReporter:
         finally:
             conn.close()
 
-    def get_heatmap(self) -> List[List[int]]:
+    def get_heatmap(self) -> list[list[int]]:
         conn = self.db_manager.get_connection()
         try:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT 
+                SELECT
                     CAST(strftime('%w', timestamp) AS INTEGER) as day,
                     CAST(strftime('%H', timestamp) AS INTEGER) as hour,
                     COUNT(*) as count

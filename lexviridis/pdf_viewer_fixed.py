@@ -70,6 +70,14 @@ class PDFViewerFixed:
             if not pdf_path.exists():
                 raise FileNotFoundError(f"PDF no encontrado: {pdf_path}")
 
+            # [SECURITY] Validar acceso
+            from .pdf_limiter import PDFAccessManager
+            if not PDFAccessManager.can_access_pdf(pdf_path, "highlight_view"):
+                 logging.warning(f"⛔ [SECURITY] Acceso denegado a PDF: {pdf_path.name}")
+                 # Podríamos lanzar excepción, pero para UX es mejor fallar silenciosamente o mostrar error
+                 # Aquí lanzamos error para que el caller maneje
+                 raise PermissionError(f"Acceso denegado a documento: {pdf_path.name}")
+
             logging.info(f"[FIXED] Abriendo PDF: {pdf_path.name}, página {page_number}, término: '{search_term}'")
 
             # Usar directorio temporal confiable
@@ -113,6 +121,12 @@ class PDFViewerFixed:
             if not pdf_path.exists():
                 logging.error(f"PDF no encontrado: {pdf_path}")
                 raise FileNotFoundError(f"PDF no encontrado: {pdf_path}")
+
+            # [SECURITY] Validar acceso
+            from .pdf_limiter import PDFAccessManager
+            if not PDFAccessManager.can_access_pdf(pdf_path, "simple_view"):
+                 logging.warning(f"⛔ [SECURITY] Acceso denegado a PDF: {pdf_path.name}")
+                 raise PermissionError(f"Acceso denegado a documento: {pdf_path.name}")
 
             logging.info(f"[FIXED] Abriendo PDF simple: {pdf_path.name}")
             open_with_native_viewer(pdf_path)

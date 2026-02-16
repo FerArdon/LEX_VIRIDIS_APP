@@ -1,6 +1,7 @@
 """Test rápido de imports y rutas para validar correcciones de empaquetado."""
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 errors = []
@@ -23,7 +24,7 @@ except Exception as e:
 
 # Test 3: search_engine
 try:
-    from lexviridis.search_engine import SearchEngine, DB_PATH
+    from lexviridis.search_engine import DB_PATH
     ok.append(f"3. search_engine OK - DB_PATH: {DB_PATH}")
 except Exception as e:
     errors.append(f"3. search_engine FAIL: {e}")
@@ -49,7 +50,7 @@ try:
     v_init = __version__
     v_config = cfg.APP_VERSION
     if v_init == v_config == "3.0.0":
-        ok.append(f"6. version OK - all 3.0.0")
+        ok.append("6. version OK - all 3.0.0")
     else:
         errors.append(f"6. version MISMATCH - __init__:{v_init}, config:{v_config}")
 except Exception as e:
@@ -85,9 +86,9 @@ try:
     import importlib
     spec = importlib.util.find_spec("lexviridis.ui_v2")
     if spec:
-        ok.append(f"9. ui_v2 module found OK")
+        ok.append("9. ui_v2 module found OK")
     else:
-        errors.append(f"9. ui_v2 module NOT FOUND")
+        errors.append("9. ui_v2 module NOT FOUND")
 except Exception as e:
     errors.append(f"9. ui_v2 FAIL: {e}")
 

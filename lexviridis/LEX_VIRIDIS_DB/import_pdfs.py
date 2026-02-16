@@ -1,10 +1,10 @@
 
-import sqlite3
-import os
-import re
-import fitz  # PyMuPDF
-from pathlib import Path
 import logging
+import re
+import sqlite3
+from pathlib import Path
+
+import fitz  # PyMuPDF
 
 # Configuración
 BASE_DIR = Path(r"c:\Users\frard\OneDrive\LEX_VIRIDIS_APP")
@@ -42,14 +42,14 @@ class PDFImporter:
         """Intenta inferir metadatos del nombre del archivo."""
         # Patrón simple: "Tipo Numero Titulo.pdf"
         # Ej: "Decreto 104-93 Ley General del Ambiente.pdf"
-        
+
         tipo = "Desconocido"
         numero = ""
         titulo = filename.replace(".pdf", "")
         categoria = "General"
 
         lower_name = filename.lower()
-        
+
         if "decreto" in lower_name:
             tipo = "Decreto"
         elif "ley" in lower_name:
@@ -58,7 +58,7 @@ class PDFImporter:
             tipo = "Acuerdo"
         elif "reglamento" in lower_name:
             tipo = "Reglamento"
-        
+
         if "forestal" in lower_name: categoria = "Forestal"
         elif "agua" in lower_name: categoria = "Agua"
         elif "penal" in lower_name: categoria = "Penal"
@@ -77,15 +77,15 @@ class PDFImporter:
         Soporta: "ARTÍCULO 1.", "Art. 1", "ARTICULO PRIMERO:-"
         """
         articles = []
-        
+
         # Patrón para el inicio de un artículo
         # Captura 1: Etiqueta (Artículo, Art.)
         # Captura 2: Número (1, 32-A, Primero)
         # Captura 3: Separador (.-, :, etc, opcional)
         pattern = r'(?:ART[ÍI]CULO|Art\.)\s*((?:\d+(?:-[A-Za-z])?)|(?:PRIMERO|SEGUNDO|TERCERO|CUARTO|QUINTO|SEXTO|SEPTIMO|OCTAVO|NOVENO|DECIMO))\s*[\.\:\-]*'
-        
+
         matches = list(re.finditer(pattern, full_text, re.IGNORECASE))
-        
+
         if not matches:
              # Fallback simple si no encuentra estructura clara
              return []
@@ -93,21 +93,21 @@ class PDFImporter:
         for i in range(len(matches)):
             start_idx = matches[i].end()
             article_num = matches[i].group(1).upper()
-            
+
             # El contenido va hasta el inicio del siguiente match o el final del texto
             if i < len(matches) - 1:
                 end_idx = matches[i+1].start()
             else:
                 end_idx = len(full_text)
-            
+
             content = full_text[start_idx:end_idx].strip()
-            
+
             # Limpieza básica
             content = self.clean_text(content)
-            
+
             if content:
                 articles.append((article_num, content))
-        
+
         return articles
 
     def process_pdf(self, pdf_path):
@@ -124,7 +124,7 @@ class PDFImporter:
             for page in doc:
                 full_text += page.get_text() + "\n"
             doc.close()
-            
+
             if not full_text.strip():
                 logging.warning(f"⚠️ PDF vacío o imagen escaneada (OCR requerido): {filename}")
                 return
@@ -133,13 +133,13 @@ class PDFImporter:
             # Verificar si ya existe por título para no duplicar (o borrar previo)
             self.cursor.execute("SELECT id FROM normas WHERE titulo = ?", (titulo,))
             res = self.cursor.fetchone()
-            
+
             if res:
                 norma_id = res[0]
                 logging.info(f"   ℹ️ Actualizando norma existente (ID: {norma_id})")
                 self.cursor.execute("DELETE FROM articulos WHERE norma_id = ?", (norma_id,))
                 self.cursor.execute("""
-                    UPDATE normas SET texto_completo = ?, archivo_pdf = ? 
+                    UPDATE normas SET texto_completo = ?, archivo_pdf = ?
                     WHERE id = ?
                 """, (self.clean_text(full_text), str(pdf_path), norma_id))
             else:
@@ -152,7 +152,7 @@ class PDFImporter:
 
             # 4. Extraer e Insertar Artículos
             articles = self.extract_articles(full_text)
-            
+
             if articles:
                 logging.info(f"   📝 Encontrados {len(articles)} artículos.")
                 for num, content in articles:
@@ -162,7 +162,7 @@ class PDFImporter:
                     """, (norma_id, num, content))
             else:
                 logging.warning("   ⚠️ No se detectaron artículos estructurados. Se confía en FTS sobre el texto completo.")
-                
+
         except Exception as e:
             logging.error(f"❌ Error procesando {filename}: {e}")
 
@@ -170,17 +170,17 @@ class PDFImporter:
         if not self.pdf_dir.exists():
             logging.error(f"Directorio PDF no encontrado: {self.pdf_dir}")
             return
-            
+
         self.connect_db()
-        
+
         logging.info("🚀 Iniciando importación masiva...")
-        
+
         pdfs = list(self.pdf_dir.glob("*.pdf"))
         logging.info(f"📚 Total PDFs encontrados: {len(pdfs)}")
-        
+
         for pdf in pdfs:
             self.process_pdf(pdf)
-            
+
         self.close_db()
         logging.info("\n✨ Importación completada.")
 

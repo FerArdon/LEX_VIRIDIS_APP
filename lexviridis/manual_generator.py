@@ -1,20 +1,21 @@
 import logging
 import re
 from pathlib import Path
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import inch
+from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer
 
 # Reutilizamos constantes de estilo si existen, si no definimos nuevas
 # Intenta importar de pdf_exporter si es posible para consistencia
 try:
-    from .pdf_exporter import VERDE_PRIMARIO, GRIS_TEXTO, PDFExporter
+    from .pdf_exporter import GRIS_TEXTO, VERDE_PRIMARIO, PDFExporter
     STYLES_AVAILABLE = True
 except ImportError:
     try:
-        from pdf_exporter import VERDE_PRIMARIO, GRIS_TEXTO, PDFExporter
+        from pdf_exporter import GRIS_TEXTO, VERDE_PRIMARIO, PDFExporter
         STYLES_AVAILABLE = True
     except ImportError:
         STYLES_AVAILABLE = False
@@ -23,7 +24,7 @@ except ImportError:
 
 class ManualGenerator:
     """Generador de Manual PDF desde Markdown."""
-    
+
     def __init__(self, output_dir: Path = None):
         self.output_dir = output_dir or Path("docs")
         self.output_dir.mkdir(exist_ok=True)
@@ -71,7 +72,7 @@ class ManualGenerator:
 
         content = md_path.read_text(encoding='utf-8')
         output_path = self.output_dir / "Manual_Usuario_LexViridis.pdf"
-        
+
         doc = SimpleDocTemplate(
             str(output_path),
             pagesize=letter,
@@ -82,14 +83,14 @@ class ManualGenerator:
         )
 
         story = []
-        
+
         # Procesar líneas
         lines = content.split('\n')
         for line in lines:
             line = line.strip()
             if not line:
                 continue
-                
+
             if line.startswith('# '):
                 story.append(Paragraph(line[2:], self.styles['ManualTitle']))
                 story.append(Spacer(1, 10))
@@ -109,7 +110,7 @@ class ManualGenerator:
                     if not img_real_path.exists():
                         # Buscar en assets si no está en root
                         img_real_path = Path("assets") / img_path_str
-                    
+
                     if img_real_path.exists():
                         try:
                             # Ajustar tamaño max

@@ -1,9 +1,8 @@
 
-import os
 
 file_path = r"c:\Users\frard\OneDrive\LEX_VIRIDIS_APP\lexviridis\ui_v2.py"
 
-with open(file_path, "r", encoding="utf-8") as f:
+with open(file_path, encoding="utf-8") as f:
     lines = f.readlines()
 
 start_idx = -1
@@ -18,11 +17,11 @@ for i, line in enumerate(lines):
 
 if start_idx != -1 and end_idx != -1:
     print(f"Replacing lines {start_idx} to {end_idx}")
-    
+
     new_code = """        # Inicializar componentes UI primero
         self.library_list = ft.ListView(expand=True, spacing=Spacing.SM, padding=ft.padding.only(top=Spacing.MD))
         self.library_filter = "Todos"
-        
+
         # Lógica de renderizado de lista
         def render_list():
             self.library_list.controls.clear()
@@ -32,7 +31,7 @@ if start_idx != -1 and end_idx != -1:
                     items_to_show.extend(lista)
             else:
                 items_to_show = grupos.get(self.library_filter, [])
-            
+
             for norma in items_to_show:
                 tipo = norma['tipo'] or ''
                 if 'Decreto' in tipo:
@@ -47,7 +46,7 @@ if start_idx != -1 and end_idx != -1:
                 else:
                     icon = ft.icons.DESCRIPTION
                     color = Theme.TEXT_SECONDARY
-                
+
                 card = ft.Container(
                     content=ft.Row([
                         ft.Container(
@@ -144,7 +143,7 @@ if start_idx != -1 and end_idx != -1:
                             content=ft.Text(cite, size=12),
                             padding=Spacing.MD, bgcolor=Theme.SURFACE_VARIANT, border_radius=Radius.SM
                         ))
-                
+
                 bib_content.controls = [
                     ft.Row([
                         ft.Text("Mi Bibliografía Legal", weight="bold", size=18),
@@ -166,26 +165,26 @@ if start_idx != -1 and end_idx != -1:
             ft.Divider(height=1),
             tab_content
         ], expand=True)
-        
+
         # Renderizado inicial
         render_list()
         self.page.update()
 
     """
-    
+
     # We replace lines start_idx to end_idx (exclusive of end_idx, I want to insert BEFORE _render_study_view)
     # Actually end_idx is where _render_study_view starts.
     # We need to preserve _render_study_view.
-    
+
     # Check indentation
     # Original lines have indentation. My new_code has indentation?
     # I copied it with 8 spaces indentation which matches the class method level.
-    
+
     new_lines = lines[:start_idx] + [new_code] + lines[end_idx:]
-    
+
     with open(file_path, "w", encoding="utf-8") as f:
         f.writelines(new_lines)
-    
+
     print("Sucessfully patched ui_v2.py")
 else:
     print("Could not find start or end markers")

@@ -3,8 +3,9 @@ LEX VIRIDIS - Sistema de Diseño Profesional
 Elementos UI consistentes, colores y tipografía.
 """
 
+
 import flet as ft
-from dataclasses import dataclass
+
 
 # === APILADO DE COLORES SEGURO (COMPATIBILIDAD FLET <0.21 y >=0.21) ===
 class SafeColors:
@@ -13,7 +14,7 @@ class SafeColors:
     BLACK = "black"
     WHITE = "white"
     TRANSPARENT = "transparent"
-    
+
     # Material Colors (Definidos explícitamente para estabilidad)
     GREEN_700 = "#388E3C"
     GREEN_600 = "#43A047"
@@ -34,10 +35,10 @@ class SafeColors:
     GREEN_50 = "#E8F5E9"
     GREEN_400 = "#66BB6A"
     GREY_500 = "#9E9E9E"
-    
+
     # Opacidad (Aproximación Hex si no existe en versión antigua)
-    BLACK87 = "#DD000000" 
-    
+    BLACK87 = "#DD000000"
+
     @staticmethod
     def with_opacity(opacity: float, color: str) -> str:
         """Aplica opacidad de manera segura."""
@@ -45,7 +46,7 @@ class SafeColors:
             return ft.Colors.with_opacity(opacity, color)
         except AttributeError:
             # Fallback simple si falla la función
-            return color 
+            return color
 
 Colors = SafeColors
 
@@ -53,33 +54,33 @@ Colors = SafeColors
 # === TEMA DE COLORES ===
 class Theme:
     """Paleta de colores institucional."""
-    
+
     # Primarios (Verde Legal/Ambiental)
     PRIMARY = "#1B5E20"
     PRIMARY_LIGHT = "#4CAF50"
     PRIMARY_DARK = "#0D3818"
-    
+
     # Secundarios
     SECONDARY = "#00695C"      # Teal profundo
     ACCENT = "#D4AF37"         # Dorado institucional
-    
+
     # Estados
     SUCCESS = "#2E7D32"
     WARNING = "#F57C00"
     ERROR = "#C62828"
     INFO = "#0288D1"
-    
+
     # Neutrales
     BACKGROUND = "#FAFAFA"
     SURFACE = "#FFFFFF"
     SURFACE_VARIANT = "#F5F5F5"
-    
+
     # Texto
     TEXT_PRIMARY = "#212121"
     TEXT_SECONDARY = "#757575"
     TEXT_DISABLED = "#BDBDBD"
     TEXT_ON_PRIMARY = "#FFFFFF"
-    
+
     # Bordes
     BORDER = "#E0E0E0"
     DIVIDER = "#EEEEEE"
@@ -88,7 +89,7 @@ class Theme:
 # === TIPOGRAFÍA ===
 class Typography:
     """Sistema de tipografía consistente."""
-    
+
     # Tamaños
     DISPLAY = 40
     HEADLINE = 28
@@ -97,7 +98,7 @@ class Typography:
     BODY = 15
     CAPTION = 13
     OVERLINE = 11
-    
+
     # Pesos
     LIGHT = ft.FontWeight.W_300
     REGULAR = ft.FontWeight.W_400
@@ -109,7 +110,7 @@ class Typography:
 # === ESPACIADO ===
 class Spacing:
     """Sistema de espaciado 8pt grid."""
-    
+
     NONE = 0
     XXS = 2
     XS = 4
@@ -124,7 +125,7 @@ class Spacing:
 # === RADIOS ===
 class Radius:
     """Radios de borde consistentes."""
-    
+
     NONE = 0
     SM = 4
     MD = 8
@@ -162,7 +163,7 @@ def create_theme() -> ft.Theme:
 
 class UIComponents:
     """Fábrica de componentes UI consistentes."""
-    
+
     @staticmethod
     def primary_button(text: str, on_click=None, icon=None, disabled=False, **kwargs) -> ft.ElevatedButton:
         _StateClass = getattr(ft, 'ControlState', getattr(ft, 'MaterialState', None))
@@ -215,12 +216,12 @@ class UIComponents:
             ),
             **kwargs
         )
-    
+
     @staticmethod
     def card(content, padding=Spacing.MD, elevation=1, on_click=None, **kwargs) -> ft.Container:
         shadow_blur = 4 if elevation == 1 else 8 if elevation == 2 else 12
         shadow_opacity = 0.08 if elevation == 1 else 0.12 if elevation == 2 else 0.16
-        
+
         return ft.Container(
             content=content,
             bgcolor=Theme.SURFACE,
@@ -236,7 +237,7 @@ class UIComponents:
             animate=ft.Animation(200, "easeOut"),
             **kwargs
         )
-    
+
     @staticmethod
     def search_field(hint_text="Buscar...", on_submit=None, on_change=None) -> ft.TextField:
         return ft.TextField(
@@ -252,7 +253,7 @@ class UIComponents:
             on_submit=on_submit,
             on_change=on_change,
         )
-    
+
     @staticmethod
     def chip(label: str, selected=False, on_click=None, icon=None) -> ft.Chip:
         return ft.Chip(
@@ -264,23 +265,23 @@ class UIComponents:
             ),
             on_click=on_click,
         )
-    
+
     @staticmethod
     def divider() -> ft.Divider:
         return ft.Divider(height=1, color=Theme.DIVIDER)
-    
+
     @staticmethod
     def heading(text: str, level: int = 1, color=None) -> ft.Text:
         sizes = {1: Typography.HEADLINE, 2: Typography.TITLE, 3: Typography.SUBTITLE}
         weights = {1: Typography.BOLD, 2: Typography.SEMIBOLD, 3: Typography.MEDIUM}
-        
+
         return ft.Text(
             text,
             size=sizes.get(level, Typography.TITLE),
             weight=weights.get(level, Typography.MEDIUM),
             color=color or Theme.TEXT_PRIMARY,
         )
-    
+
     @staticmethod
     def body_text(text: str, secondary=False) -> ft.Text:
         return ft.Text(
@@ -288,7 +289,7 @@ class UIComponents:
             size=Typography.BODY,
             color=Theme.TEXT_SECONDARY if secondary else Theme.TEXT_PRIMARY,
         )
-    
+
     @staticmethod
     def caption(text: str) -> ft.Text:
         return ft.Text(
@@ -296,7 +297,7 @@ class UIComponents:
             size=Typography.CAPTION,
             color=Theme.TEXT_SECONDARY,
         )
-    
+
     @staticmethod
     def icon_badge(icon, color=None, size=24) -> ft.Container:
         return ft.Container(
@@ -305,7 +306,7 @@ class UIComponents:
             border_radius=Radius.MD,
             padding=Spacing.SM,
         )
-    
+
     @staticmethod
     def progress_indicator(size=40) -> ft.ProgressRing:
         return ft.ProgressRing(
@@ -314,7 +315,7 @@ class UIComponents:
             color=Theme.PRIMARY,
             stroke_width=3,
         )
-    
+
     @staticmethod
     def empty_state(icon, title: str, subtitle: str, action_text: str = None, on_action=None) -> ft.Container:
         controls = [
@@ -323,13 +324,13 @@ class UIComponents:
             ft.Text(title, size=Typography.TITLE, weight=Typography.SEMIBOLD, color=Theme.TEXT_PRIMARY),
             ft.Text(subtitle, size=Typography.BODY, color=Theme.TEXT_SECONDARY, text_align=ft.TextAlign.CENTER),
         ]
-        
+
         if action_text and on_action:
             controls.extend([
                 ft.Container(height=Spacing.LG),
                 UIComponents.secondary_button(action_text, on_click=on_action),
             ])
-        
+
         return ft.Container(
             content=ft.Column(
                 controls,
@@ -339,7 +340,7 @@ class UIComponents:
             expand=True,
             padding=Spacing.XL,
         )
-    
+
     @staticmethod
     def error_state(title: str, message: str, on_retry=None) -> ft.Container:
         return UIComponents.empty_state(
@@ -349,7 +350,7 @@ class UIComponents:
             action_text="Reintentar" if on_retry else None,
             on_action=on_retry,
         )
-    
+
     @staticmethod
     def loading_state(message: str = "Cargando...") -> ft.Container:
         return ft.Container(
@@ -361,7 +362,7 @@ class UIComponents:
             alignment=ft.Alignment(0, 0),
             expand=True,
         )
-    
+
     @staticmethod
     def hero_header(image_src: str, title: str, subtitle: str) -> ft.Container:
         return ft.Container(
@@ -397,10 +398,10 @@ class UIComponents:
 
 class ResultCard(ft.Container):
     """Tarjeta de resultado de búsqueda profesional."""
-    
+
     def __init__(self, result: dict, on_click=None, on_pdf_click=None):
         from pathlib import Path
-        
+
         # Lógica para determinar el título a mostrar:
         # 1. 'titulo' explícito (ej: desde Novedades)
         # 2. Nombre de archivo limpio si existe
@@ -408,11 +409,11 @@ class ResultCard(ft.Container):
         raw_file = result.get('file', 'Desconocido')
         file_name = Path(raw_file).name if raw_file else "Desconocido"
         display_title = result.get('titulo') or file_name
-        
+
         page = result.get('page', 1)
         relevance = result.get('relevance', 0)
         context = result.get('context', '...')
-        
+
         # Determinar icono según tipo
         if "Decreto" in str(display_title) or "Decreto" in file_name:
             icon = ft.Icons.GAVEL
@@ -426,16 +427,16 @@ class ResultCard(ft.Container):
         else:
             icon = ft.Icons.DESCRIPTION
             icon_color = Theme.TEXT_SECONDARY
-        
+
         # Contenido
         relevance_stars = ""
         # Convertir relevancia a estrellas (0-10 -> 0-5 estrellas)
         num_stars = min(5, max(0, int(relevance / 2)))
         relevance_stars = "⭐" * num_stars + "☆" * (5 - num_stars)
-        
+
         matches = result.get('matches', 0)
         is_norma = result.get('is_norma', False)
-        
+
         # Construir fila de metadatos condicionalmente
         meta_row_controls = []
         if not is_norma:
@@ -487,7 +488,7 @@ class ResultCard(ft.Container):
             ) if result.get('file') != "Desconocido" else ft.Container(),
             ft.Icon(ft.Icons.CHEVRON_RIGHT, color=Theme.TEXT_DISABLED),
         ], alignment=ft.MainAxisAlignment.START)
-        
+
         super().__init__(
             content=content,
             bgcolor=Theme.SURFACE,
@@ -504,7 +505,7 @@ class ResultCard(ft.Container):
             animate=ft.Animation(200, "easeOut"),
             border=ft.border.all(1, Theme.BORDER),
         )
-    
+
     def _on_hover(self, e):
         if e.data == "true":
             self.border = ft.border.all(1, Theme.PRIMARY)

@@ -1,5 +1,13 @@
-
 """
+LEX VIRIDIS - Sistema de Investigación Legal Ambiental
+Copyright © 2026 Fiscalía Especial del Medio Ambiente (FEMA) - Honduras.
+Todos los derechos reservados.
+
+PROPRIETARY SOFTWARE - Unauthorized use prohibited
+SOFTWARE PROPIETARIO - Uso no autorizado prohibido
+
+Module: search_engine.py
+
 Motor de búsqueda optimizado para LEX VIRIDIS.
 
 Incluye:
@@ -10,16 +18,16 @@ Incluye:
 - Logging con métricas de rendimiento
 """
 
-import sqlite3
+import hashlib
 import logging
 import re
+import sqlite3
 import time
-from typing import List, Dict, Tuple, Optional
-from pathlib import Path
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from functools import lru_cache
-import hashlib
+from pathlib import Path
+
+from .license_check import requires_valid_license
 
 # Configurar logger
 search_logger = logging.getLogger("lexviridis.search")
@@ -69,7 +77,7 @@ class SearchStatus(Enum):
 @dataclass
 class SearchResult:
     status: SearchStatus
-    results: List[Dict]
+    results: list[dict]
     message: str
     query: str
     duration_ms: float
@@ -81,28 +89,28 @@ class SearchResult:
 
 class QueryValidator:
     @staticmethod
-    def validate(query: str) -> Tuple[bool, str]:
+    def validate(query: str) -> tuple[bool, str]:
         if not query or not query.strip():
             return False, "Ingresa un término de búsqueda"
-        
+
         query = query.strip()
-        
+
         if len(query) < MIN_QUERY_LENGTH:
             return False, f"Mínimo {MIN_QUERY_LENGTH} caracteres"
-        
+
         if len(query) > MAX_QUERY_LENGTH:
             return False, f"Máximo {MAX_QUERY_LENGTH} caracteres"
-        
+
         if not ALLOWED_CHARS_PATTERN.match(query):
             invalid_chars = set(c for c in query if not re.match(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s\-\.]', c))
             return False, f"Caracteres no permitidos: {' '.join(invalid_chars)}"
-        
+
         query_upper = query.upper()
         for keyword in SQL_KEYWORDS:
             if keyword in query_upper:
                 search_logger.warning(f"⚠️ SQL injection attempt: '{query}'")
                 return False, "Término no válido"
-        
+
         return True, ""
 
     @staticmethod
@@ -114,24 +122,24 @@ class QueryValidator:
 class DatabaseManager:
     _instance = None
     _connection_pool = None
-    
+
     def __new__(cls, db_path: Path = DB_PATH):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._initialized = False
         return cls._instance
-    
+
     def __init__(self, db_path: Path = DB_PATH):
         if self._initialized:
             return
         self.db_path = db_path
         self._validate_database()
         self._initialized = True
-    
+
     def _validate_database(self):
         if not self.db_path.exists():
             raise FileNotFoundError(f"BD no encontrada: {self.db_path}")
-        
+
         conn = sqlite3.connect(str(self.db_path))
         cursor = conn.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='normas'")
@@ -140,7 +148,7 @@ class DatabaseManager:
             raise ValueError("BD corrupta o vacía")
         conn.close()
         search_logger.info(f"✅ BD validada: {self.db_path.name}")
-    
+
     def get_connection(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.db_path), timeout=10, check_same_thread=False)
         conn.row_factory = sqlite3.Row
@@ -148,7 +156,7 @@ class DatabaseManager:
         conn.execute("PRAGMA cache_size = -16000")  # 16MB cache
         conn.execute("PRAGMA journal_mode = WAL")  # Modo WAL para mejor concurrencia
         conn.execute("PRAGMA synchronous = NORMAL")
-        
+
         return conn
 
     def initialize_tables(self):
@@ -163,7 +171,7 @@ class DatabaseManager:
     def _init_extra_tables(self, conn):
         """Inicializa tablas para estadísticas y favoritos."""
         cursor = conn.cursor()
-        
+
         # Historial de búsquedas
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS historial_busquedas (
@@ -172,7 +180,7 @@ class DatabaseManager:
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        
+
         # Historial de vistas
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS articulos_vistos (
@@ -182,7 +190,7 @@ class DatabaseManager:
                 FOREIGN KEY (articulo_id) REFERENCES articulos(id)
             )
         """)
-        
+
         # Favoritos
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS favoritos (
@@ -194,7 +202,7 @@ class DatabaseManager:
                 FOREIGN KEY (articulo_id) REFERENCES articulos(id)
             )
         """)
-        
+
         # Tags de favoritos
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS favoritos_tags (
@@ -292,38 +300,38 @@ class DatabaseManager:
             cursor.execute("ALTER TABLE usuarios ADD COLUMN recovery_enabled BOOLEAN DEFAULT FALSE")
             conn.commit()
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_analytics_user ON analytics_events(user_id)")
-        
+
         conn.commit()
 
 
 # === CACHÉ DE RESULTADOS ===
 class SearchCache:
     """Caché LRU thread-safe para resultados de búsqueda."""
-    
+
     def __init__(self, maxsize: int = CACHE_SIZE):
         self._cache = {}
         self._order = []
         self._maxsize = maxsize
-    
+
     def _make_key(self, query: str, page: int, page_size: int) -> str:
         return hashlib.md5(f"{query.lower()}:{page}:{page_size}".encode()).hexdigest()
-    
-    def get(self, query: str, page: int = 1, page_size: int = DEFAULT_PAGE_SIZE) -> Optional[List[Dict]]:
+
+    def get(self, query: str, page: int = 1, page_size: int = DEFAULT_PAGE_SIZE) -> list[dict] | None:
         key = self._make_key(query, page, page_size)
         return self._cache.get(key)
-    
-    def set(self, query: str, results: List[Dict], page: int = 1, page_size: int = DEFAULT_PAGE_SIZE):
+
+    def set(self, query: str, results: list[dict], page: int = 1, page_size: int = DEFAULT_PAGE_SIZE):
         key = self._make_key(query, page, page_size)
-        
+
         if key in self._cache:
             self._order.remove(key)
         elif len(self._cache) >= self._maxsize:
             oldest = self._order.pop(0)
             del self._cache[oldest]
-        
+
         self._cache[key] = results
         self._order.append(key)
-    
+
     def clear(self):
         self._cache.clear()
         self._order.clear()
@@ -333,11 +341,11 @@ class SearchEngine:
     """Motor de búsqueda optimizado con caché y paginación."""
 
     def __init__(self, text_index=None):
-        self.db_manager: Optional[DatabaseManager] = None
+        self.db_manager: DatabaseManager | None = None
         self._is_ready = False
-        self._init_error: Optional[str] = None
+        self._init_error: str | None = None
         self._cache = SearchCache()
-        
+
         try:
             self.db_manager = DatabaseManager(DB_PATH)
             self.db_manager.initialize_tables()  # Asegurar tablas y migraciones
@@ -352,7 +360,7 @@ class SearchEngine:
         return self._is_ready
 
     @property
-    def init_error(self) -> Optional[str]:
+    def init_error(self) -> str | None:
         return self._init_error
 
     def _normalize_accents(self, text: str) -> str:
@@ -362,39 +370,41 @@ class SearchEngine:
             result = result.replace(orig, repl)
         return result
 
-    def _expand_query_with_synonyms(self, query: str) -> List[str]:
+    def _expand_query_with_synonyms(self, query: str) -> list[str]:
         words = query.lower().split()
         expanded = []
-        
+
         for word in words:
             word_norm = self._normalize_accents(word)
             found = False
-            
-            for base, synonyms in SINONIMOS.items():
+
+            for _base, synonyms in SINONIMOS.items():
                 norm_synonyms = [self._normalize_accents(s) for s in synonyms]
                 if word_norm in norm_synonyms:
                     expanded.extend(synonyms)
                     found = True
                     break
-            
+
             if not found:
                 expanded.append(word)
-        
+
         return list(dict.fromkeys(expanded))
 
-    def search(self, query: str, operator: str = "OR", limit: int = DEFAULT_PAGE_SIZE, offset: int = 0) -> List[Dict]:
+    @requires_valid_license
+    def search(self, query: str, operator: str = "OR", limit: int = DEFAULT_PAGE_SIZE, offset: int = 0) -> list[dict]:
         """Búsqueda simple (interfaz compatible)."""
         result = self.search_safe(query, operator, page=1, page_size=limit)
         return result.results
 
+    @requires_valid_license
     def search_safe(self, query: str, operator: str = "OR", page: int = 1, page_size: int = DEFAULT_PAGE_SIZE) -> SearchResult:
         """Búsqueda segura con caché, validación y paginación."""
         start_time = time.perf_counter()
-        
+
         # Registrar búsqueda en historial
         import threading
         threading.Thread(target=self._log_search, args=(query,), daemon=True).start()
-        
+
         if not self._is_ready:
             return SearchResult(
                 status=SearchStatus.DB_ERROR,
@@ -402,7 +412,7 @@ class SearchEngine:
                 message=self._init_error or "Motor no disponible",
                 query=query, duration_ms=0, total_found=0
             )
-        
+
         # Validar
         is_valid, error_msg = QueryValidator.validate(query)
         if not is_valid:
@@ -411,9 +421,9 @@ class SearchEngine:
                 results=[], message=error_msg,
                 query=query, duration_ms=0, total_found=0
             )
-        
+
         clean_query = QueryValidator.sanitize(query)
-        
+
         # Verificar caché
         cached = self._cache.get(clean_query, page, page_size)
         if cached is not None:
@@ -426,7 +436,7 @@ class SearchEngine:
                 query=query, duration_ms=duration, total_found=len(cached),
                 page=page, page_size=page_size, cached=True
             )
-        
+
         # Ejecutar búsqueda
         try:
             # Manejo especial para Novedades
@@ -434,12 +444,12 @@ class SearchEngine:
                 results = self._get_latest_norms(limit=20)
             else:
                 results = self._execute_search(clean_query, operator, page, page_size)
-            
+
             duration = (time.perf_counter() - start_time) * 1000
-            
+
             # Guardar en caché
             self._cache.set(clean_query, results, page, page_size)
-            
+
             if not results:
                 search_logger.info(f"🔍 Sin resultados: '{query}' ({duration:.2f}ms)")
                 return SearchResult(
@@ -447,7 +457,7 @@ class SearchEngine:
                     results=[], message="Sin resultados. Prueba otros términos.",
                     query=query, duration_ms=duration, total_found=0
                 )
-            
+
             search_logger.info(f"✅ '{query}' → {len(results)} resultados ({duration:.2f}ms)")
             return SearchResult(
                 status=SearchStatus.SUCCESS,
@@ -456,7 +466,7 @@ class SearchEngine:
                 query=query, duration_ms=duration, total_found=len(results),
                 page=page, page_size=page_size
             )
-            
+
         except sqlite3.Error as e:
             search_logger.error(f"❌ DB error: {e}")
             return SearchResult(
@@ -474,27 +484,27 @@ class SearchEngine:
                 total_found=0
             )
 
-    def _execute_search(self, query: str, operator: str, page: int, page_size: int) -> List[Dict]:
+    def _execute_search(self, query: str, operator: str, page: int, page_size: int) -> list[dict]:
         """Ejecuta búsqueda optimizada con paginación."""
         results = []
         conn = self.db_manager.get_connection()
         cursor = conn.cursor()
-        
+
         try:
             terms = self._expand_query_with_synonyms(query)
             fts_terms = [f'"{t}"' for t in terms if len(t) > 2]
-            
+
             if not fts_terms:
                 return []
-            
+
             fts_query = " OR ".join(fts_terms)
             offset = (page - 1) * page_size
-            
+
             # Utilizar la función snippet de FTS5 para fragmentos contextuales reales
             sql = """
-                SELECT 
+                SELECT
                     f.articulo_id,
-                    f.titulo_norma, 
+                    f.titulo_norma,
                     f.numero_articulo,
                     snippet(busqueda_fts, 1, '<b>', '</b>', '...', 30) as fragmento,
                     f.rank,
@@ -504,17 +514,17 @@ class SearchEngine:
                 FROM busqueda_fts f
                 JOIN articulos a ON f.articulo_id = a.id
                 JOIN normas n ON a.norma_id = n.id
-                WHERE busqueda_fts MATCH ? 
-                ORDER BY f.rank 
+                WHERE busqueda_fts MATCH ?
+                ORDER BY f.rank
                 LIMIT ? OFFSET ?
             """
-            
+
             cursor.execute(sql, (fts_query, page_size, offset))
-            
+
             for row in cursor.fetchall():
                 # Convertir snippet de FTS (<b>...</b>) a Markdown (**...**) para Flet
                 snippet_md = str(row['fragmento']).replace("<b>", "**").replace("</b>", "**")
-                
+
                 # Calcular número de ocurrencias
                 matches_count = 0
                 contenido_lower = str(row['contenido_completo']).lower()
@@ -532,9 +542,9 @@ class SearchEngine:
                     'matches': matches_count,
                     'is_high_relevance': abs(row['rank']) < 5.0 # Rank bajo en FTS5 significa más relevante
                 })
-            
+
             results.sort(key=lambda x: x['relevance'], reverse=True)
-            
+
             # Fallback: Si FTS no encuentra nada, buscar directamente en normas.titulo
             if not results:
                 search_logger.info(f"FTS sin resultados, intentando LIKE en normas.titulo para: {query}")
@@ -552,7 +562,7 @@ class SearchEngine:
                 """
                 like_term = f"%{query}%"
                 cursor.execute(like_sql, (like_term, like_term, page_size))
-                
+
                 for row in cursor.fetchall():
                     # Crear un resultado sintético desde la norma
                     results.append({
@@ -568,17 +578,17 @@ class SearchEngine:
                         'tipo_norma': row['tipo'],
                         'contenido': row['resumen'] or row['titulo'],
                     })
-            
+
         finally:
             conn.close()
-        
+
         return results
 
-    def get_article_by_id(self, article_id: int) -> Optional[Dict]:
+    def get_article_by_id(self, article_id: int) -> dict | None:
         """Obtiene un artículo completo por su ID."""
         conn = self.db_manager.get_connection()
         cursor = conn.cursor()
-        
+
         try:
             cursor.execute("""
                 SELECT a.id, a.numero_articulo, a.contenido, a.pagina, n.titulo as norma_titulo, n.archivo_pdf
@@ -586,7 +596,7 @@ class SearchEngine:
                 JOIN normas n ON a.norma_id = n.id
                 WHERE a.id = ?
             """, (article_id,))
-            
+
             row = cursor.fetchone()
             if row:
                 return dict(row)
@@ -632,24 +642,24 @@ class SearchEngine:
         finally:
             conn.close()
 
-    def get_search_suggestions(self, partial: str, limit: int = 5) -> List[str]:
+    def get_search_suggestions(self, partial: str, limit: int = 5) -> list[str]:
         """Obtiene sugerencias basadas en el historial."""
         if not partial or len(partial) < 2: return []
         conn = self.db_manager.get_connection()
         cursor = conn.cursor()
         try:
             cursor.execute("""
-                SELECT DISTINCT query 
-                FROM historial_busquedas 
-                WHERE query LIKE ? 
-                ORDER BY timestamp DESC 
+                SELECT DISTINCT query
+                FROM historial_busquedas
+                WHERE query LIKE ?
+                ORDER BY timestamp DESC
                 LIMIT ?
             """, (f"{partial}%", limit))
             return [row['query'] for row in cursor.fetchall()]
         finally:
             conn.close()
 
-    def _get_latest_norms(self, limit: int = 20) -> List[Dict]:
+    def _get_latest_norms(self, limit: int = 20) -> list[dict]:
         """Obtiene las normas más recientes."""
         conn = self.db_manager.get_connection()
         cursor = conn.cursor()
@@ -659,11 +669,11 @@ class SearchEngine:
             cursor.execute("""
                 SELECT id, titulo, fecha_publicacion, tipo, archivo_pdf,
                        (SELECT COUNT(*) FROM articulos WHERE norma_id = normas.id) as num_articulos
-                FROM normas 
-                ORDER BY fecha_publicacion DESC 
+                FROM normas
+                ORDER BY fecha_publicacion DESC
                 LIMIT ?
             """, (limit,))
-            
+
             for row in cursor.fetchall():
                 # Adaptar formato a resultado de búsqueda
                 results.append({
@@ -694,80 +704,80 @@ class SearchEngine:
             if days:
                 where_clause = " WHERE timestamp < DATE('now', '-' || ? || ' days')"
                 params = [days]
-            
+
             if tipo in ["busquedas", "todo"]:
                 conn.execute(f"DELETE FROM historial_busquedas{where_clause}", params)
             if tipo in ["vistas", "todo"]:
                 conn.execute(f"DELETE FROM articulos_vistos{where_clause}", params)
             if tipo in ["exportaciones", "todo"]:
                 conn.execute(f"DELETE FROM historial_exportaciones{where_clause}", params)
-            
+
             conn.commit()
         finally:
             conn.close()
 
     # === ESTADÍSTICAS ===
-    def get_dashboard_stats(self) -> Dict:
+    def get_dashboard_stats(self) -> dict:
         """Obtiene métricas para el dashboard."""
         conn = self.db_manager.get_connection()
         cursor = conn.cursor()
         stats = {}
-        
+
         try:
             # Stats generales
             cursor.execute("SELECT COUNT(*) FROM normas")
             stats['total_normas'] = cursor.fetchone()[0]
-            
+
             cursor.execute("SELECT COUNT(*) FROM articulos")
             stats['total_articulos'] = cursor.fetchone()[0]
-            
+
             cursor.execute("SELECT COUNT(*) FROM favoritos")
             stats['total_favoritos'] = cursor.fetchone()[0]
-            
+
             cursor.execute("SELECT COUNT(*) FROM historial_busquedas")
             stats['total_busquedas'] = cursor.fetchone()[0]
-            
+
             # Distribución por tipo de norma
             cursor.execute("""
-                SELECT tipo, COUNT(*) as count 
-                FROM normas 
-                GROUP BY tipo 
+                SELECT tipo, COUNT(*) as count
+                FROM normas
+                GROUP BY tipo
                 ORDER BY count DESC
             """)
             stats['distribucion_tipo'] = {row['tipo'] or 'Otros': row['count'] for row in cursor.fetchall()}
-            
+
             # Top búsquedas
             cursor.execute("""
-                SELECT query, COUNT(*) as frequency 
-                FROM historial_busquedas 
-                GROUP BY query 
-                ORDER BY frequency DESC 
+                SELECT query, COUNT(*) as frequency
+                FROM historial_busquedas
+                GROUP BY query
+                ORDER BY frequency DESC
                 LIMIT 10
             """)
             stats['top_searches'] = [(row['query'], row['frequency']) for row in cursor.fetchall()]
-            
+
             # Actividad última semana
             cursor.execute("""
-                SELECT DATE(timestamp) as fecha, COUNT(*) as count 
-                FROM historial_busquedas 
-                WHERE timestamp >= DATE('now', '-7 days') 
-                GROUP BY fecha 
+                SELECT DATE(timestamp) as fecha, COUNT(*) as count
+                FROM historial_busquedas
+                WHERE timestamp >= DATE('now', '-7 days')
+                GROUP BY fecha
                 ORDER BY fecha
             """)
             stats['timeline_busquedas'] = [(row['fecha'], row['count']) for row in cursor.fetchall()]
-            
+
             # Documentos más consultados
             cursor.execute("""
-                SELECT n.titulo, COUNT(*) as views 
-                FROM articulos_vistos av 
-                JOIN articulos a ON av.articulo_id = a.id 
-                JOIN normas n ON a.norma_id = n.id 
-                GROUP BY n.id 
-                ORDER BY views DESC 
+                SELECT n.titulo, COUNT(*) as views
+                FROM articulos_vistos av
+                JOIN articulos a ON av.articulo_id = a.id
+                JOIN normas n ON a.norma_id = n.id
+                GROUP BY n.id
+                ORDER BY views DESC
                 LIMIT 5
             """)
             stats['most_viewed'] = [(row['titulo'], row['views']) for row in cursor.fetchall()]
-            
+
             return stats
         finally:
             conn.close()
@@ -780,7 +790,7 @@ class SearchEngine:
         try:
             cursor.execute("SELECT id FROM favoritos WHERE articulo_id = ?", (article_id,))
             row = cursor.fetchone()
-            
+
             if row:
                 cursor.execute("DELETE FROM favoritos WHERE articulo_id = ?", (article_id,))
                 conn.commit()
@@ -805,21 +815,21 @@ class SearchEngine:
         conn = self.db_manager.get_connection()
         try:
             conn.execute("""
-                UPDATE favoritos 
-                SET nota = ?, fecha_modificado = CURRENT_TIMESTAMP 
+                UPDATE favoritos
+                SET nota = ?, fecha_modificado = CURRENT_TIMESTAMP
                 WHERE articulo_id = ?
             """, (nota, article_id))
             conn.commit()
         finally:
             conn.close()
 
-    def get_favorites(self) -> List[Dict]:
+    def get_favorites(self) -> list[dict]:
         """Obtiene la lista de artículos favoritos."""
         conn = self.db_manager.get_connection()
         cursor = conn.cursor()
         try:
             cursor.execute("""
-                SELECT 
+                SELECT
                     f.articulo_id as id,
                     f.nota,
                     f.fecha_agregado,
@@ -837,7 +847,7 @@ class SearchEngine:
         finally:
             conn.close()
 
-    def get_favorite_tags(self, article_id: int) -> List[str]:
+    def get_favorite_tags(self, article_id: int) -> list[str]:
         """Obtiene los tags de un favorito por articulo_id."""
         conn = self.db_manager.get_connection()
         cursor = conn.cursor()
@@ -845,7 +855,7 @@ class SearchEngine:
             cursor.execute("SELECT id FROM favoritos WHERE articulo_id = ?", (article_id,))
             row = cursor.fetchone()
             if not row: return []
-            
+
             cursor.execute("SELECT tag FROM favoritos_tags WHERE favorito_id = ?", (row['id'],))
             return [r['tag'] for r in cursor.fetchall()]
         finally:
@@ -859,7 +869,7 @@ class SearchEngine:
             cursor.execute("SELECT id FROM favoritos WHERE articulo_id = ?", (article_id,))
             row = cursor.fetchone()
             if not row: return
-            
+
             cursor.execute("INSERT INTO favoritos_tags (favorito_id, tag) VALUES (?, ?)", (row['id'], tag))
             conn.commit()
         finally:

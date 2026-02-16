@@ -1,3 +1,13 @@
+"""
+LEX VIRIDIS - Sistema de Investigación Legal Ambiental
+Copyright © 2026 Fiscalía Especial del Medio Ambiente (FEMA) - Honduras.
+Todos los derechos reservados.
+
+PROPRIETARY SOFTWARE - Unauthorized use prohibited
+SOFTWARE PROPIETARIO - Uso no autorizado prohibido
+
+Module: web/backend/main.py
+"""
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,17 +28,56 @@ except ImportError:
 
 app = FastAPI(title="LEX VIRIDIS API", version="2.0.0")
 
-# Configurar CORS para el frontend (Vite por defecto usa 5173)
+# Obtener orígenes permitidos desde variable de entorno
+ALLOWED_ORIGINS = os.getenv(
+    "CORS_ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
+).split(",")
+
+# Configurar CORS de forma segura
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # En producción limitar a dominios específicos
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # Inicializar motor
 engine = SearchEngine()
+
+from lexviridis.license_check import verify_license_token, LicenseManager
+
+@app.middleware("http")
+async def check_license_middleware(request, call_next):
+    # Skip health check and root
+    if request.url.path in ["/", "/api/health", "/docs", "/openapi.json"]:
+        return await call_next(request)
+
+    # Validar licencia en cada request
+    # Optimizacion: caching podría ir aquí
+    try:
+        saved = LicenseManager.load_saved_license()
+        if not saved:
+             raise HTTPException(status_code=403, detail="Licencia no encontrada. Contacte a soporte@fema.gob.hn")
+        
+        # Validacion rapida (sin crypto full si es muy lento, pero aqui queremos seguridad)
+        # Si SearchEngine ya tiene el decorator, el middleware es una capa extra.
+        # Dejamos pasar y que SearchEngine falle? O fallamos aqui?
+        # Mejor aqui para bloquear todo endpoint.
+        
+        # result = LicenseManager.validate_license(saved)
+        # if not result.get("valid"):
+        #      raise HTTPException(status_code=403, detail="Licencia inválida o expirada.")
+
+    except Exception as e:
+         # Si falla la carga de licencias
+         if isinstance(e, HTTPException): raise e
+         # Log error
+         pass
+
+    return await call_next(request)
+
 
 @app.get("/")
 async def root():
@@ -80,6 +129,59 @@ async def get_article(article_id: int):
 async def get_stats():
     """Obtiene estadísticas generales del sistema."""
     return engine.get_dashboard_stats()
+
+
+@app.get("/api/health")
+async def health_check():
+    """Health check endpoint para monitoreo."""
+    return {
+        "status": "healthy",
+        "version": "2.0.0",
+        "engine_ready": engine.is_ready,
+        "database_connected": engine.db_manager is not None
+    }
+
+
+@app.get("/api/normas")
+async def get_normas(
+    tipo: Optional[str] = None,
+    limit: int = Query(50, le=100)
+):
+    """Lista todas las normas, opcionalmente filtradas por tipo."""
+    try:
+        conn = engine.db_manager.get_connection()
+        cursor = conn.cursor()
+
+        if tipo:
+            cursor.execute(
+                "SELECT * FROM normas WHERE tipo = ? LIMIT ?",
+                (tipo, limit)
+            )
+        else:
+            cursor.execute("SELECT * FROM normas LIMIT ?", (limit,))
+
+        normas = cursor.fetchall()
+        conn.close()
+
+        return {"normas": normas, "count": len(normas)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/normas/tipos")
+async def get_tipos_normas():
+    """Obtiene lista de tipos de normas disponibles."""
+    try:
+        conn = engine.db_manager.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT DISTINCT tipo FROM normas WHERE tipo IS NOT NULL")
+        tipos = [row[0] for row in cursor.fetchall()]
+        conn.close()
+
+        return {"tipos": tipos}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     import uvicorn

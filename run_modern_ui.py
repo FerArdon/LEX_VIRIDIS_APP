@@ -16,6 +16,8 @@ if __name__ == "__main__":
         print("FATAL ERROR - LA APLICACIÓN NO PUDO INICIAR")
         print("="*50)
         traceback.print_exc()
+        with open("crash_log.txt", "w", encoding="utf-8") as f:
+            traceback.print_exc(file=f)
         print("="*50)
         print(f"Detalle: {e}")
         print("\nPor favor, tome una captura de esta pantalla y envíela a soporte.")

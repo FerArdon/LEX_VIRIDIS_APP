@@ -1,10 +1,9 @@
 
+import sys
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional, Dict
-import sys
-import os
-from pathlib import Path
 
 # Agregar el directorio raíz al path para importar lexviridis
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
@@ -43,9 +42,9 @@ async def search(
     """Búsqueda de artículos legales."""
     if not engine.is_ready:
         raise HTTPException(status_code=500, detail="Motor de búsqueda no disponible")
-    
+
     result = engine.search_safe(q, page=page, page_size=page_size)
-    
+
     if result.status == SearchStatus.SUCCESS:
         return {
             "query": q,
@@ -70,10 +69,10 @@ async def get_article(article_id: int):
     article = engine.get_article_by_id(article_id)
     if not article:
         raise HTTPException(status_code=404, detail="Artículo no encontrado")
-    
+
     # Registrar vista
     engine.log_article_view(article_id)
-    
+
     return article
 
 @app.get("/api/stats")

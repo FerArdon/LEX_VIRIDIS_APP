@@ -1,16 +1,18 @@
 # lexviridis/utils.py
 
-import re
-import sys
-import io
-import unicodedata
-import platform
-import subprocess
 import contextlib
 import gc
-import fitz  # PyMuPDF
-from pathlib import Path
+import io
 import logging
+import platform
+import re
+import subprocess
+import sys
+import unicodedata
+from pathlib import Path
+
+import fitz  # PyMuPDF
+
 
 # -----------------------------
 # Normalización de texto
@@ -84,3 +86,56 @@ def open_with_native_viewer(pdf_path: Path):
     except Exception as e:
         logging.error(f"Error abriendo PDF: {e}")
 
+
+# -----------------------------
+# Búsqueda inteligente de PDFs
+# -----------------------------
+def find_pdf_path(filename_or_path: str) -> Path | None:
+    """
+    Intenta localizar un PDF usando varias estrategias.
+    1. Ruta absoluta si existe.
+    2. En el directorio configurado de PDFs.
+    3. Búsqueda recursiva en el directorio de PDFs.
+    4. Normalización de caracteres confusos (OneDrive/Windows).
+    """
+    if not filename_or_path:
+        return None
+
+    # Limpiar el path de caracteres confusos de OneDrive/Windows
+    cleaned_path = filename_or_path.replace('VlRlDlS', 'VIRIDIS')
+    cleaned_path = cleaned_path.replace('COMPENDlO', 'COMPENDIO')
+    cleaned_path = cleaned_path.replace('COMPENDIO LEYES FEMA', 'COMPENDIO_LEYES_FEMA')
+
+    path = Path(cleaned_path)
+
+    # 1. Ruta directa
+    if path.exists() and path.is_file():
+        return path
+
+    # Necesitamos config para saber el directorio base
+    # Importamos aquí para evitar ciclos
+    from .config import config
+
+    pdf_dir = config.PDF_DIR
+    if not pdf_dir.exists():
+        logging.warning(f"PDF directory not found: {pdf_dir}")
+        return None
+
+    name = path.name
+
+    # 2. En directorio PDF raíz
+    candidate = pdf_dir / name
+    if candidate.exists():
+        return candidate
+
+    # 3. Búsqueda recursiva (costosa, usar con cuidado)
+    try:
+        matches = list(pdf_dir.rglob(name))
+        if matches:
+            logging.info(f"PDF found via recursive search: {matches[0]}")
+            return matches[0]
+    except Exception as e:
+        logging.warning(f"Error en búsqueda recursiva de PDF: {e}")
+
+    logging.warning(f"PDF not found: {name} in {pdf_dir}")
+    return None

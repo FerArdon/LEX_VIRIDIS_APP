@@ -1,4 +1,3 @@
-import sys
 import traceback
 
 if __name__ == "__main__":
@@ -8,7 +7,7 @@ if __name__ == "__main__":
         import flet as ft
         print("Importing UI...")
         from lexviridis.ui_v2 import main
-        
+
         print("Starting App...")
         ft.app(target=main)
     except Exception as e:

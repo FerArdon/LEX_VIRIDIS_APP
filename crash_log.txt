@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "c:\LEX_VIRIDIS_APP\run_modern_ui.py", line 10, in <module>
+    from lexviridis.ui_v2 import main
+  File "c:\LEX_VIRIDIS_APP\lexviridis\ui_v2.py", line 15, in <module>
+    from .views.dashboard import DashboardView
+  File "c:\LEX_VIRIDIS_APP\lexviridis\views\dashboard.py", line 2, in <module>
+    from flet import (
+ImportError: cannot import name 'PieChart' from 'flet' (C:\LEX_VIRIDIS_APP\.venv\Lib\site-packages\flet\__init__.py)

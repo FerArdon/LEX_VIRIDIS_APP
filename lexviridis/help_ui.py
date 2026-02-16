@@ -1,10 +1,12 @@
-import flet as ft
-from pathlib import Path
 import os
-from .design_system import Theme, UIComponents, Spacing
+import sys
+from pathlib import Path
+
+import flet as ft
+
+from .design_system import Spacing, Theme, UIComponents
 from .manual_generator import ManualGenerator
 
-import sys
 
 class HelpUI:
     def __init__(self, page: ft.Page):
@@ -16,17 +18,17 @@ class HelpUI:
         if hasattr(sys, '_MEIPASS'):
             return Path(sys._MEIPASS) / relative_path
         return Path(relative_path)
-        
+
     def build(self):
         """Construye y retorna la vista de ayuda con pestañas."""
-        
+
         # Hero Header
         hero = UIComponents.hero_header(
-            "hero_settings.png", 
-            "Centro de Ayuda", 
+            "hero_settings.png",
+            "Centro de Ayuda",
             "Documentación y soporte de Lex Viridis"
         )
-        
+
         # Tabs Container
         tabs = ft.Tabs(
             selected_index=0,
@@ -53,7 +55,7 @@ class HelpUI:
 
     def _build_manual_tab(self):
         """Construye el contenido de la pestaña del manual como Tutorial Interactivo."""
-        
+
         # Botón de acción flotante (FAB) para descargar PDF
         fab_container = ft.Container(
             content=ft.FloatingActionButton(
@@ -65,7 +67,7 @@ class HelpUI:
             padding=ft.padding.only(bottom=20, right=20),
             alignment=ft.alignment.bottom_right
         )
-        
+
         return ft.Stack([
             TutorialView(),
             fab_container
@@ -73,15 +75,15 @@ class HelpUI:
 
     def _build_about_tab(self):
         """Construye el contenido de la pestaña Acerca de."""
-        
+
         # Logo
         logo = ft.Image(
-            src=f"/assets/LEXVIRIDIS_WHITE_BG.png", 
-            width=150, 
-            height=150, 
+            src="/assets/LEXVIRIDIS_WHITE_BG.png",
+            width=150,
+            height=150,
             fit=ft.ImageFit.CONTAIN
         )
-        
+
         # Info
         info_column = ft.Column([
             ft.Text("LEX VIRIDIS", size=32, weight=ft.FontWeight.BOLD, color=Theme.PRIMARY),
@@ -121,20 +123,20 @@ class HelpUI:
         """Genera y abre el manual en PDF."""
         try:
             self.page.show_snack_bar(ft.SnackBar(ft.Text("Generando PDF..."), bgcolor=Theme.INFO))
-            
+
             generator = ManualGenerator()
             pdf_path = generator.generate_from_markdown(self.manual_path)
-            
+
             self.page.show_snack_bar(ft.SnackBar(
-                ft.Text(f"Manual exportado: {pdf_path.name}"), 
+                ft.Text(f"Manual exportado: {pdf_path.name}"),
                 action="Abrir",
                 on_action=lambda _: os.startfile(pdf_path),
                 bgcolor=Theme.SUCCESS
             ))
-            
+
             # Abrir automáticamente si es configuración por defecto
             os.startfile(pdf_path)
-            
+
         except Exception as e:
             self.page.show_snack_bar(ft.SnackBar(ft.Text(f"Error al exportar: {e}"), bgcolor=Theme.ERROR))
 
@@ -143,7 +145,7 @@ class TutorialView(ft.Container):
         super().__init__()
         self.expand = True
         self.current_scene = 0
-        
+
         self.scenes = [
             {
                 "image": "img_intro_hero.png",
@@ -195,7 +197,7 @@ class TutorialView(ft.Container):
             fit=ft.ImageFit.CONTAIN,
             border_radius=15,
         )
-        
+
         # Narration Controls
         self.title_text = ft.Text(
             value=self.scenes[self.current_scene]["title"],
@@ -204,17 +206,17 @@ class TutorialView(ft.Container):
             color=Theme.PRIMARY,
             text_align=ft.TextAlign.CENTER,
         )
-        
+
         self.narration_text = ft.Text(
             value=self.scenes[self.current_scene]["narration"],
             size=16,
             color=Theme.TEXT_SECONDARY,
             text_align=ft.TextAlign.CENTER,
         )
-        
+
         # Step Indicator
         self.step_text = ft.Text(
-            f"Paso {self.current_scene + 1} de {len(self.scenes)}", 
+            f"Paso {self.current_scene + 1} de {len(self.scenes)}",
             weight=ft.FontWeight.W_500,
             color=Theme.TEXT_SECONDARY
         )
@@ -231,7 +233,7 @@ class TutorialView(ft.Container):
                     bgcolor=Theme.SURFACE,
                     border_radius=20,
                     shadow=ft.BoxShadow(
-                        blur_radius=20, 
+                        blur_radius=20,
                         color=ft.colors.with_opacity(0.1, ft.colors.BLACK),
                         offset=ft.Offset(0, 10)
                     )

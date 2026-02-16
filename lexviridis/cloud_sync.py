@@ -1,14 +1,13 @@
 
-import json
 import threading
 import time
-from pathlib import Path
 from datetime import datetime
-import shutil
+from pathlib import Path
+
 
 class CloudSync:
     """Simulación y motor base para sincronización en la nube (Google Drive)."""
-    
+
     def __init__(self, db_manager):
         self.db_manager = db_manager
         self.local_dir = Path.home() / ".lexviridis"
@@ -26,11 +25,11 @@ class CloudSync:
     def sync_database(self, local_db_path: Path):
         """Sincroniza la base de datos local con la 'nube'."""
         if not self.creds: return "error_not_authenticated"
-        
+
         self.is_syncing = True
         try:
             # Simulación de subida/comparación
-            time.sleep(2) 
+            time.sleep(2)
             self.last_sync = datetime.now()
             return "success"
         finally:
@@ -46,7 +45,7 @@ class CloudSync:
                     if db_path.exists():
                         self.sync_database(db_path)
                 time.sleep(interval_minutes * 60)
-        
+
         threading.Thread(target=_job, daemon=True).start()
 
     def get_status(self):

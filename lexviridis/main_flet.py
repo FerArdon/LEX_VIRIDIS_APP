@@ -1,17 +1,19 @@
 
 import flet as ft
+
 Colors = getattr(ft, "Colors", getattr(ft, "colors", None))
 if Colors is None:
     raise ImportError("No se pudo cargar el módulo de colores de Flet.")
-from .search_engine import SearchEngine
-from .indexer import Indexer
-from .ia_gemini import GeminiClient, PromptGenerator
-from .config import config
 import logging
-from pathlib import Path
 import threading
-
 import time
+from pathlib import Path
+
+from .config import config
+from .ia_gemini import GeminiClient, PromptGenerator
+from .indexer import Indexer
+from .search_engine import SearchEngine
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -19,7 +21,7 @@ class LexViridisFletApp:
     def __init__(self, page: ft.Page):
         self.page = page
         self.setup_page()
-        
+
         # Estado
         self.search_results = []
         self.current_query = ""
@@ -27,10 +29,10 @@ class LexViridisFletApp:
         self.indexer = None
         self.engine = None
         self.gemini = None
-        
+
         # Componentes UI
         self.build_ui()
-        
+
         # Iniciar carga en background
         self.show_loading_screen()
         # Usar timer pequeño para dar tiempo a renderizar antes de bloquear (si fuera el caso)
@@ -45,7 +47,7 @@ class LexViridisFletApp:
             self.indexer.load_or_create_index()
             self.engine = SearchEngine(self.indexer.text_index)
             self.gemini = GeminiClient()
-            
+
             self.is_ready = True
             # Llamar a UI update de forma segura
             self.finalize_loading()
@@ -61,7 +63,7 @@ class LexViridisFletApp:
         try:
             if hasattr(self, 'loading_overlay') and self.loading_overlay in self.page.overlay:
                  self.page.overlay.remove(self.loading_overlay)
-            
+
             self.txt_search.disabled = False
             self.btn_search.disabled = False
             self.page.update()
@@ -81,7 +83,7 @@ class LexViridisFletApp:
             expand=True
         )
         self.page.overlay.append(self.loading_overlay)
-        
+
         # Deshabilitar inputs mientras carga
         self.txt_search.disabled = True
         self.btn_search.disabled = True
@@ -99,7 +101,7 @@ class LexViridisFletApp:
 
     def build_ui(self):
         """Construye la interfaz principal."""
-        
+
         # --- Header ---
         self.header = ft.Container(
             content=ft.Row(
@@ -123,20 +125,20 @@ class LexViridisFletApp:
             border_radius=10,
             prefix_icon=ft.Icons.SEARCH,
         )
-        
+
         self.btn_search = ft.ElevatedButton(
-            "Buscar", 
-            icon=ft.Icons.SEARCH, 
+            "Buscar",
+            icon=ft.Icons.SEARCH,
             on_click=self.perform_search,
             style=ft.ButtonStyle(
                 shape=ft.RoundedRectangleBorder(radius=10),
                 padding=20
             )
         )
-        
+
         self.btn_analyze = ft.ElevatedButton(
-            "Analizar con IA", 
-            icon=ft.Icons.AUTO_AWESOME, 
+            "Analizar con IA",
+            icon=ft.Icons.AUTO_AWESOME,
             on_click=self.start_ai_analysis,
             style=ft.ButtonStyle(
                 color=Colors.WHITE,
@@ -184,11 +186,11 @@ class LexViridisFletApp:
 
         # Ejecutar búsqueda (simulamos async para no bloquear UI, aunque el engine es sincrono)
         # Idealmente mover engine a un thread si es muy lento, pero el engine de python es rapido en memoria.
-        start_time = time.time()
+        time.time()
         self.search_results = self.engine.search(query, operator="AND")[:50] # Limit 50
-        
+
         self.display_results()
-        
+
         self.page.splash = None
         self.btn_analyze.visible = True
         self.results_container.visible = True
@@ -197,7 +199,7 @@ class LexViridisFletApp:
     def display_results(self):
         """Renderiza la lista de resultados."""
         self.results_list.controls.clear()
-        
+
         if not self.search_results:
             self.results_list.controls.append(
                 ft.Container(
@@ -213,7 +215,7 @@ class LexViridisFletApp:
 
         for res in self.search_results:
             file_name = Path(res['file']).name
-            
+
             card = ft.Card(
                 content=ft.Container(
                     content=ft.Column([
@@ -225,9 +227,9 @@ class LexViridisFletApp:
                         ),
                         ft.Container(
                             content=ft.Text(
-                                res.get('context', '...'), 
-                                size=12, 
-                                color=Colors.GREY_700, 
+                                res.get('context', '...'),
+                                size=12,
+                                color=Colors.GREY_700,
                                 text_align=ft.TextAlign.JUSTIFY
                             ),
                             padding=ft.padding.only(left=20, right=20, bottom=20)
@@ -243,7 +245,6 @@ class LexViridisFletApp:
         """Maneja la apertura del PDF."""
         # Por ahora usamos el viewer nativo del sistema ya que Flet no tiene visor PDF integrado simple.
         # Podríamos usar os.startfile o similar.
-        import os
         try:
              # En Windows esto abre con el visor predeterminado
              # Idealmente aquí integurariamos la lógica de resaltado de 'PDFViewerFixed'
@@ -260,7 +261,7 @@ class LexViridisFletApp:
         if not self.gemini.api_key:
             self.prompt_api_key()
             return
-            
+
         self.show_ai_dialog()
 
     def prompt_api_key(self):
@@ -277,7 +278,7 @@ class LexViridisFletApp:
                 self.show_ai_dialog() # Iniciar analisis inmediatamente
 
         txt_key = ft.TextField(label="Gemini API Key", password=True, can_reveal_password=True)
-        
+
         dlg = ft.AlertDialog(
             title=ft.Text("Configuración de IA"),
             content=ft.Column([
@@ -292,7 +293,7 @@ class LexViridisFletApp:
         self.page.dialog = dlg
         dlg.open = True
         self.page.update()
-    
+
     def show_ai_dialog(self):
         """Muestra el diálogo para consultar a la IA."""
         # Input para la pregunta del usuario
@@ -304,23 +305,23 @@ class LexViridisFletApp:
             max_lines=4,
             expand=True # TextField debe expandirse en el Row
         )
-        
+
         # Botón para enviar consulta
         btn_ask = ft.IconButton(
-            icon=ft.Icons.SEND, 
+            icon=ft.Icons.SEND,
             icon_color=Colors.TEAL,
             on_click=lambda e: self.run_ai_analysis(),
             tooltip="Consultar IA"
         )
-        
+
         # Área de respuesta
         self.response_text = ft.Markdown(
-            "Escribe tu consulta arriba y presiona enviar. La IA responderá basándose en los documentos encontrados.", 
+            "Escribe tu consulta arriba y presiona enviar. La IA responderá basándose en los documentos encontrados.",
             selectable=True,
             extension_set=ft.MarkdownExtensionSet.GITHUB_WEB
         )
         self.progress_bar = ft.ProgressBar(visible=False)
-        
+
         # Contenedor de respuesta scrollable
         scroll_content = ft.ListView(
             controls=[self.response_text],
@@ -328,7 +329,7 @@ class LexViridisFletApp:
             spacing=10,
             auto_scroll=False
         )
-        
+
         dlg = ft.AlertDialog(
             modal=True,
             title=ft.Row([ft.Icon(ft.Icons.AUTO_AWESOME, color=Colors.PURPLE), ft.Text("Asistente Legal IA")]),
@@ -367,10 +368,10 @@ class LexViridisFletApp:
             # Usar más contexto si es posible, digamos top 5
             for res in self.search_results[:5]:
                 context.append(f"DOC: {Path(res['file']).name}, PAG {res['page']}\n{res.get('context', '')}")
-            
+
             prompt = PromptGenerator.generar_analisis_caso(query, context)
             response = self.gemini.consultar(prompt)
-            
+
             self.response_text.value = response
             self.progress_bar.visible = False
             self.page.update()
@@ -380,20 +381,20 @@ class LexViridisFletApp:
     def close_ai_dialog(self):
         self.page.dialog.open = False
         self.page.update()
-        
+
     def open_settings(self, e):
         """Abre el panel de configuración."""
-        
+
         # 1. API Key Input
         current_key = self.gemini.api_key if self.gemini else ""
         txt_api_key = ft.TextField(
-            label="Gemini API Key", 
+            label="Gemini API Key",
             value=current_key,
-            password=True, 
+            password=True,
             can_reveal_password=True,
             expand=True
         )
-        
+
         def save_settings(e):
             new_key = txt_api_key.value.strip()
             if new_key:
@@ -415,10 +416,10 @@ class LexViridisFletApp:
                     # pero intentaremos actualizar un estado o simplemente imprimir.
                     # En Flet 0.21+ es mejor usar page.run_task o similar.
                     # Por ahora dejamos que el usuario vea el log o confíe.
-                
+
                 threading.Thread(target=_reindex, daemon=True).start()
                 self.close_dialog()
-                
+
             except Exception as ex:
                 self.show_snack(f"Error reindexando: {ex}", Colors.RED)
 
@@ -432,8 +433,8 @@ class LexViridisFletApp:
                     ft.Text("Base de Datos", weight=ft.FontWeight.BOLD),
                     ft.Text(f"Documentos indexados: {len(self.engine.text_index) if self.engine else 0}"),
                     ft.ElevatedButton(
-                        "Reconstruir Índice", 
-                        icon=ft.Icons.REFRESH, 
+                        "Reconstruir Índice",
+                        icon=ft.Icons.REFRESH,
                         color=Colors.ERROR,
                         on_click=reindex_db
                     )
@@ -463,7 +464,7 @@ class LexViridisFletApp:
 def main(page: ft.Page):
     print("Initializing Flet App...")
     try:
-        app = LexViridisFletApp(page)
+        LexViridisFletApp(page)
         print("Flet App initialized.")
     except Exception as e:
         print(f"Error initializing app: {e}")

@@ -4,10 +4,9 @@
 Ejecutar desde la raíz del proyecto.
 """
 
-import os
 import shutil
-from pathlib import Path
 from datetime import datetime, timedelta
+from pathlib import Path
 
 BASE_DIR = Path(r"c:\Users\frard\OneDrive\LEX_VIRIDIS_APP")
 
@@ -29,10 +28,10 @@ ARCHIVOS_ELIMINAR = [
     "diag_324.py",
     "fix_art324.py",
     "test_busqueda.py",
-    
+
     # Duplicados de requirements
     "requirements_updated.txt",
-    
+
     # Archivos de instalación extraños en lexviridis/
     "lexviridis/InstallationLog.txt",
     "lexviridis/components.xml",
@@ -44,7 +43,7 @@ ARCHIVOS_ELIMINAR = [
     "lexviridis/gpt4all-32.png",
     "lexviridis/gpt4all-48.png",
     "lexviridis/gpt4all.ico",
-    
+
     # Visor duplicado
     "lexviridis/pdf_viewer.py",  # Usar solo pdf_viewer_fixed.py
 ]
@@ -163,7 +162,7 @@ desktop.ini
 # Documentos PDF (muy grandes para Git)
 COMPENDIO LEYES FEMA/
 """
-    
+
     gitignore_path = BASE_DIR / ".gitignore"
     gitignore_path.write_text(gitignore_content, encoding='utf-8')
     print("   ✅ .gitignore creado")
@@ -173,14 +172,14 @@ def mostrar_resumen():
     print("\n" + "=" * 60)
     print("📊 RESUMEN FINAL")
     print("=" * 60)
-    
+
     # Contar archivos en raíz
     archivos_raiz = [f for f in BASE_DIR.iterdir() if f.is_file()]
     carpetas_raiz = [f for f in BASE_DIR.iterdir() if f.is_dir()]
-    
+
     print(f"   Archivos en raíz: {len(archivos_raiz)}")
     print(f"   Carpetas en raíz: {len(carpetas_raiz)}")
-    
+
     print("\n   📁 Estructura actual:")
     for item in sorted(BASE_DIR.iterdir()):
         if item.name.startswith('.'):
@@ -192,12 +191,12 @@ if __name__ == "__main__":
     print("=" * 60)
     print("🧹 LEX VIRIDIS - LIMPIEZA DEL PROYECTO")
     print("=" * 60)
-    
+
     limpiar_pycache()
     limpiar_archivos_especificos()
     limpiar_carpetas()
     limpiar_logs_viejos()
     crear_gitignore()
     mostrar_resumen()
-    
+
     print("\n✨ ¡Limpieza completada!")

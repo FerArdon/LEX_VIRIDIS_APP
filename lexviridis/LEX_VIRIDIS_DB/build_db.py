@@ -1,6 +1,5 @@
 
 import sqlite3
-import datetime
 from pathlib import Path
 
 DB_PATH = Path(r"c:\Users\frard\OneDrive\LEX_VIRIDIS_APP\LEX_VIRIDIS_DB\legislacion_ambiental.db")
@@ -88,12 +87,12 @@ def init_db():
         if DB_PATH.exists():
             print("⚠️ La base de datos ya existe. Creando backup...")
             # Aquí podríamos renombrarla, pero por ahora solo avisamos
-        
+
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        
+
         cursor.executescript(SCHEMA_SCRIPT)
-        
+
         conn.commit()
         conn.close()
         print("✅ Esquema creado exitosamente.")
@@ -109,7 +108,7 @@ SEED_DATA = [
     ("Congreso Nacional", "CN", "Congreso"),
     ("Secretaría de Recursos Naturales y Ambiente", "SERNA", "Ejecutivo"),
     ("Instituto de Conservación Forestal", "ICF", "Ejecutivo"),
-    
+
     # NORMAS (Muestras representativas)
     {
         "tipo": "Ley", "numero": "104-93", "titulo": "Ley General del Ambiente",
@@ -136,9 +135,9 @@ SEED_DATA = [
 def seed_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    
+
     print("\n🌱 Sembrando datos iniciales...")
-    
+
     # 1. Instituciones
     inst_map = {} # nombre -> id
     for nombre, siglas, tipo in [d for d in SEED_DATA if isinstance(d, tuple)]:
@@ -149,7 +148,7 @@ def seed_db():
             inst_map[nombre] = c.fetchone()[0]
         except Exception as e:
             print(f"Error insertando {nombre}: {e}")
-            
+
     # 2. Normas
     for item in [d for d in SEED_DATA if isinstance(d, dict)]:
         try:

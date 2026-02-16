@@ -1,7 +1,7 @@
 """Reconstruir índice FTS5 - Método Agresivo"""
+import shutil
 import sqlite3
 from pathlib import Path
-import shutil
 
 DB = Path(r"c:\Users\frard\OneDrive\LEX_VIRIDIS_APP\LEX_VIRIDIS_DB\legislacion_ambiental.db")
 DB_BACKUP = Path(r"c:\Users\frard\OneDrive\LEX_VIRIDIS_APP\LEX_VIRIDIS_DB\legislacion_ambiental_repair.db")

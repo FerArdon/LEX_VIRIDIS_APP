@@ -4,17 +4,19 @@ LEX VIRIDIS - Gestor de Tutorial y Onboarding
 Maneja la lógica de primera ejecución y el overlay informativo.
 """
 
-import flet as ft
 import json
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import flet as ft
+
 
 class TutorialManager:
     def __init__(self, page: ft.Page):
         self.page = page
         self.config_path = Path.home() / ".lexviridis" / "config.json"
         self.current_step = 0
-        
+
         self.steps = [
             {
                 "title": "¡Bienvenido a LEX VIRIDIS! 🌿",
@@ -52,10 +54,10 @@ class TutorialManager:
         if not self.config_path.exists():
             return True
         try:
-            with open(self.config_path, "r") as f:
+            with open(self.config_path) as f:
                 config = json.load(f)
                 return not config.get("tutorial_completed", False)
-        except:
+        except (json.JSONDecodeError, OSError, KeyError):
             return True
 
     def mark_completed(self):
@@ -66,7 +68,7 @@ class TutorialManager:
 
     def show_tutorial(self):
         self.current_step = 0
-        
+
         def next_step(e):
             if self.current_step < len(self.steps) - 1:
                 self.current_step += 1
@@ -93,7 +95,7 @@ class TutorialManager:
         message_text = ft.Text(size=16, text_align="center", color=ft.Colors.GREY_700)
         progress_text = ft.Text(size=12, color=ft.Colors.GREY_500)
         btn_next = ft.ElevatedButton(on_click=next_step, bgcolor=ft.Colors.GREEN_700, color="white")
-        
+
         dialog = ft.AlertDialog(
             modal=True,
             content=ft.Container(

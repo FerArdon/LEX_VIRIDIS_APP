@@ -14,12 +14,12 @@ for db_path in db_paths:
         print(f"\n=== Procesando: {db_path} ===")
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
-        
+
         # Ver tablas
         c.execute("SELECT name FROM sqlite_master WHERE type='table'")
         tables = [t[0] for t in c.fetchall()]
         print(f"Tablas: {tables[:10]}...")  # Solo primeras 10
-        
+
         # Limpiar tablas de stats
         stats_keywords = ['historial', 'busqueda', 'visto', 'analytics', 'activity', 'view', 'search', 'log']
         for table in tables:
@@ -30,7 +30,7 @@ for db_path in db_paths:
                     print(f"✓ Limpiada: {table}")
                 except Exception as e:
                     print(f"✗ Error: {e}")
-        
+
         conn.commit()
         conn.close()
 

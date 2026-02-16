@@ -1,0 +1,15 @@
+LEX VIRIDIS - AVISOS Y ATRIBUCIONES
+
+Este software utiliza las siguientes bibliotecas de terceros bajo sus
+respectivas licencias:
+
+- Python 3.11+ (PSF License)
+- Flet (Apache 2.0)
+- FastAPI (MIT)
+- SQLite (Public Domain)
+- Google Gemini API (Google Terms of Service)
+
+Ver requirements.txt para lista completa de dependencias.
+
+NOTA: Las licencias de terceros NO aplican al código propietario de
+LEX VIRIDIS, que permanece completamente propietario de FEMA Honduras.

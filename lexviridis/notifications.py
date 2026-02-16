@@ -1,7 +1,7 @@
 
-from datetime import datetime
-from typing import List, Optional, Dict
 import json
+from datetime import datetime
+
 
 class NotificationType:
     NUEVA_LEY = "nueva_ley"
@@ -15,7 +15,7 @@ class NotificationManager:
         self.db_manager = db_manager
         self.listeners = []
 
-    def send_notification(self, tipo: str, titulo: str, mensaje: str, data: Dict = None, url: str = None):
+    def send_notification(self, tipo: str, titulo: str, mensaje: str, data: dict = None, url: str = None):
         conn = self.db_manager.get_connection()
         try:
             data_str = json.dumps(data) if data else None
@@ -26,7 +26,7 @@ class NotificationManager:
             """, (tipo, titulo, mensaje, data_str, url))
             notif_id = cursor.lastrowid
             conn.commit()
-            
+
             # Notificar a listeners activos
             notif = {
                 "id": notif_id,
@@ -43,7 +43,7 @@ class NotificationManager:
         finally:
             conn.close()
 
-    def get_unread(self) -> List[Dict]:
+    def get_unread(self) -> list[dict]:
         conn = self.db_manager.get_connection()
         try:
             cursor = conn.cursor()
@@ -66,11 +66,11 @@ class NotificationManager:
     def create_reminder(self, titulo: str, mensaje: str, fecha_hora: datetime):
         import threading
         import time
-        
+
         def _wait_and_send():
             delay = (fecha_hora - datetime.now()).total_seconds()
             if delay > 0:
                 time.sleep(delay)
                 self.send_notification(NotificationType.RECORDATORIO, titulo, mensaje)
-        
+
         threading.Thread(target=_wait_and_send, daemon=True).start()

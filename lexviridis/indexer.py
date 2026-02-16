@@ -1,24 +1,25 @@
 # lexviridis/indexer.py
 
+import logging
 import pickle
 import threading
 from pathlib import Path
-from typing import Dict, List
-import logging
+
 import fitz
 
 from .config import config
-from .utils import normalize_text, suppress_stderr, PDFValidator, MemoryOptimizer
+from .utils import MemoryOptimizer, PDFValidator, normalize_text, suppress_stderr
+
 
 class Indexer:
     def __init__(self, update_callback=None):
-        self.text_index: Dict[str, Dict[int, str]] = {}
+        self.text_index: dict[str, dict[int, str]] = {}
         self.index_ready = False
         self.update_callback = update_callback  # Para GUI opcional
 
     def load_or_create_index(self, force_rebuild=False):
         should_reindex = True
-        last_modified: Dict[str, float] = {}
+        last_modified: dict[str, float] = {}
 
         if not force_rebuild and config.INDEX_FILE.exists():
             try:
@@ -41,7 +42,7 @@ class Indexer:
 
         self._save_index()
 
-    def _needs_update(self, old_modified: Dict[str, float]) -> bool:
+    def _needs_update(self, old_modified: dict[str, float]) -> bool:
         current_files = {str(p.resolve()): p.stat().st_mtime for p in config.PDF_DIR.glob("*.pdf")}
         for path, mtime in current_files.items():
             if path not in old_modified or old_modified[path] < mtime:
@@ -50,7 +51,7 @@ class Indexer:
             return True
         return False
 
-    def _create_new_index(self, last_modified: Dict[str, float]):
+    def _create_new_index(self, last_modified: dict[str, float]):
         self.text_index.clear()
         last_modified.clear()
 

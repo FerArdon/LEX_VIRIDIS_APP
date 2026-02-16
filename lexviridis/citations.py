@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+
 
 class CitationStyle(Enum):
     APA = "apa"
@@ -17,11 +17,11 @@ class LegalDocument:
     titulo: str
     fecha_publicacion: datetime
     institucion: str = "Congreso Nacional de Honduras"
-    articulo: Optional[str] = None
+    articulo: str | None = None
 
 class CitationGenerator:
     """Generador de citas legales automáticas."""
-    
+
     @staticmethod
     def generate(doc: LegalDocument, style: CitationStyle) -> str:
         if style == CitationStyle.APA:
@@ -62,9 +62,9 @@ class CitationGenerator:
 
 class BibliographyManager:
     """Gestiona una lista de documentos citados."""
-    
+
     def __init__(self):
-        self.entries: List[LegalDocument] = []
+        self.entries: list[LegalDocument] = []
 
     def add_entry(self, doc: LegalDocument):
         if not any(e.numero == doc.numero and e.articulo == doc.articulo for e in self.entries):
@@ -74,7 +74,7 @@ class BibliographyManager:
         if 0 <= index < len(self.entries):
             self.entries.pop(index)
 
-    def generate_all(self, style: CitationStyle) -> List[str]:
+    def generate_all(self, style: CitationStyle) -> list[str]:
         # Ordenar alfabéticamente por título
         sorted_docs = sorted(self.entries, key=lambda x: x.titulo)
         return [CitationGenerator.generate(d, style) for d in sorted_docs]

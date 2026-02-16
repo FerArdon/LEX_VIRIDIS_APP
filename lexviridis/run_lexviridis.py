@@ -1,5 +1,6 @@
 print("Importing main_flet...")
 from lexviridis.main_flet import main
+
 print("Importing flet...")
 import flet as ft
 

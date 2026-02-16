@@ -4,8 +4,8 @@ Test de Diagnóstico - LEX VIRIDIS
 Detecta dónde se congela la app
 """
 
-import sys
 import sqlite3
+import sys
 from pathlib import Path
 
 # Mock config or similar to get DB path
@@ -22,8 +22,7 @@ try:
     project_root = str(Path(__file__).parent.absolute())
     if project_root not in sys.path:
         sys.path.insert(0, project_root)
-    
-    from lexviridis.search_engine import SearchEngine
+
     print("✅ search_engine.py OK")
 except Exception as e:
     print(f"❌ ERROR importando search_engine: {e}")
@@ -46,45 +45,45 @@ try:
     conn = sqlite3.connect(DB_PATH, timeout=5.0)
     cursor = conn.cursor()
     print("✅ Conexión exitosa")
-    
+
     # Test 4: Verificar tablas
     print("\n[4/5] Verificando tablas...")
     cursor.execute("""
-        SELECT name FROM sqlite_master 
+        SELECT name FROM sqlite_master
         WHERE type='table'
         ORDER BY name
     """)
     tables = [row[0] for row in cursor.fetchall()]
-    
+
     print(f"📋 Tablas encontradas: {len(tables)}")
     for table in tables:
         print(f"   - {table}")
-    
+
     required_tables = ['normas', 'articulos']
     missing = [t for t in required_tables if t not in tables]
-    
+
     if missing:
         print(f"\n❌ TABLAS FALTANTES: {missing}")
         sys.exit(1)
     else:
         print("✅ Todas las tablas requeridas existen")
-    
+
     # Test 5: Contar documentos
     print("\n[5/5] Contando documentos...")
     cursor.execute("SELECT COUNT(*) FROM normas")
     normas_count = cursor.fetchone()[0]
-    
+
     cursor.execute("SELECT COUNT(*) FROM articulos")
     articulos_count = cursor.fetchone()[0]
-    
+
     print(f"✅ Documentos: {normas_count} normas, {articulos_count} artículos")
-    
+
     conn.close()
-    
+
     print("\n" + "=" * 60)
     print("✅ DIAGNÓSTICO COMPLETADO - TODO OK")
     print("=" * 60)
-    
+
 except sqlite3.OperationalError as e:
     print(f"❌ ERROR de SQLite: {e}")
 except Exception as e:

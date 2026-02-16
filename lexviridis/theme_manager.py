@@ -1,9 +1,10 @@
 
 import json
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+
 import flet as ft
+
 
 @dataclass
 class ColorScheme:
@@ -29,7 +30,7 @@ class Themes:
         surface_variant="#FAFAFA", text_primary="#212121", text_secondary="#757575",
         divider="#E0E0E0", border="#BDBDBD"
     )
-    
+
     DARK = ColorScheme(
         primary="#4CAF50", primary_light="#81C784", primary_dark="#2E7D32",
         secondary="#2196F3", background="#121212", surface="#1E1E1E",
@@ -48,9 +49,10 @@ class ThemeManager:
     def load_preference(self) -> str:
         if self.config_path.exists():
             try:
-                with open(self.config_path, "r") as f:
+                with open(self.config_path) as f:
                     return json.load(f).get("theme", "light")
-            except: pass
+            except (json.JSONDecodeError, OSError, KeyError):
+                pass
         return "light"
 
     def save_preference(self, theme_name: str):
@@ -65,8 +67,27 @@ class ThemeManager:
         self.apply_to_page()
 
     def apply_to_page(self):
-        s = self.current_scheme
-        # En Flet, el tema se aplica principalmente a través de ft.Theme
-        # Pero nuestras variables personalizadas necesitan actualizarse en el estado global si las usamos
+        # Aplicar colores personalizados del esquema activo
         self.page.theme_mode = ft.ThemeMode.LIGHT if self.current_theme_name == "light" else ft.ThemeMode.DARK
+
+        # Crear un tema completo con los colores personalizados
+        self.page.theme = ft.Theme(
+            color_scheme=ft.ColorScheme(
+                primary=self.current_scheme.primary,
+                secondary=self.current_scheme.secondary,
+                surface=self.current_scheme.surface,
+                background=self.current_scheme.background,
+                error=self.current_scheme.error,
+                on_primary="#FFFFFF",
+                on_secondary="#FFFFFF",
+                on_surface=self.current_scheme.text_primary,
+                on_background=self.current_scheme.text_primary,
+            ),
+            visual_density="comfortable",
+        )
+
+        # Aplicar color de fondo
+        self.page.bgcolor = self.current_scheme.background
+
+        # Forzar actualización completa
         self.page.update()

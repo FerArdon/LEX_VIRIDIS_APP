@@ -1,13 +1,10 @@
 
-import json
-from enum import Enum
-from datetime import datetime
-from typing import List, Dict, Optional
 import flet as ft
+
 
 class UserBehaviorAnalyzer:
     """Analiza el comportamiento del usuario para personalización."""
-    
+
     def __init__(self, db_manager):
         self.db_manager = db_manager
 
@@ -26,7 +23,7 @@ class UserBehaviorAnalyzer:
                 LIMIT 10
             """, (user_id,))
             patterns = cursor.fetchall()
-            
+
             # Categorías de interés
             categories = {}
             for row in patterns:
@@ -34,12 +31,12 @@ class UserBehaviorAnalyzer:
                 freq = row[1]
                 cat = self._classify_query(query)
                 categories[cat] = categories.get(cat, 0) + freq
-            
+
             return {
                 'frequent_queries': [(row[0], row[1]) for row in patterns],
                 'interest_categories': categories
             }
-        except Exception as e:
+        except Exception:
             # Si hay error (ej. tabla vacía), devolver patrones vacíos
             return {
                 'frequent_queries': [],
@@ -63,14 +60,14 @@ class UserBehaviorAnalyzer:
 
 class ProactiveSuggestions:
     """Genera sugerencias proactivas basadas en análisis."""
-    
+
     def __init__(self, analyzer):
         self.analyzer = analyzer
 
-    def get_suggestions(self, user_id: int, context: dict = None) -> List[dict]:
+    def get_suggestions(self, user_id: int, context: dict = None) -> list[dict]:
         patterns = self.analyzer.analyze_search_patterns(user_id)
         suggestions = []
-        
+
         # Sugerencia: Búsqueda frecuente
         if patterns['frequent_queries']:
             top_q = patterns['frequent_queries'][0][0]
@@ -81,7 +78,7 @@ class ProactiveSuggestions:
                 'data': top_q,
                 'priority': 5
             })
-            
+
         # Sugerencia: Categoría dominante
         cats = patterns['interest_categories']
         if cats:
@@ -94,14 +91,14 @@ class ProactiveSuggestions:
                     'data': top_cat,
                     'priority': 8
                 })
-        
+
         return sorted(suggestions, key=lambda x: x['priority'], reverse=True)[:3]
 
 class SmartShortcuts:
     """Genera atajos inteligentes."""
-    
+
     @staticmethod
-    def get_shortcuts(user_id: int, analyzer) -> List[dict]:
+    def get_shortcuts(user_id: int, analyzer) -> list[dict]:
         patterns = analyzer.analyze_search_patterns(user_id)
         shortcuts = []
         for q, _ in patterns['frequent_queries'][:4]:
