@@ -85,7 +85,13 @@ class AIChatView(ft.Container):
         ], expand=True)
 
     def _render_api_key_prompt(self):
-        api_input = ft.TextField(label="API Key de Gemini", password=True, can_reveal_password=True)
+        api_input = ft.TextField(
+            label="API Key de Gemini",
+            password=True,
+            can_reveal_password=True,
+            width=500,
+            hint_text="AIza..."
+        )
 
         def save_key(e):
             val = api_input.value
@@ -94,18 +100,61 @@ class AIChatView(ft.Container):
                 self._build_ui()
                 self.update()
 
+        def open_gemini_link(e):
+            import webbrowser
+            webbrowser.open("https://aistudio.google.com/app/apikey")
+
         self.content = ft.Container(
              content=ft.Column([
                 ft.Icon("key_outlined", size=64, color=Theme.SECONDARY),
+                ft.Container(height=Spacing.SM),
                 UIComponents.heading("Configurar Asistente IA", level=2),
-                UIComponents.body_text("Ingresa tu API Key de Google Gemini para habilitar el asistente.", secondary=True),
-                ft.Container(height=Spacing.LG),
-                ft.Container(content=api_input, width=400),
+                ft.Container(height=Spacing.SM),
+                UIComponents.body_text(
+                    "Ingresa tu API Key de Google Gemini para habilitar el asistente de IA.",
+                    secondary=True
+                ),
                 ft.Container(height=Spacing.MD),
-                UIComponents.primary_button("Guardar", on_click=save_key),
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+
+                # Instrucciones
+                UIComponents.card(
+                    ft.Column([
+                        ft.Row([
+                            ft.Icon("info_outline", size=20, color=Theme.INFO),
+                            ft.Text("¿Cómo obtener tu API Key?", weight="bold", size=14)
+                        ], spacing=8),
+                        ft.Container(height=Spacing.SM),
+                        ft.Text("1. Haz clic en el botón 'Obtener API Key' abajo", size=13),
+                        ft.Text("2. Inicia sesión con tu cuenta de Google", size=13),
+                        ft.Text("3. Haz clic en 'Create API Key' o 'Get API Key'", size=13),
+                        ft.Text("4. Copia la clave generada y pégala aquí", size=13),
+                        ft.Container(height=Spacing.SM),
+                        ft.TextButton(
+                            "🔗 Obtener API Key de Google Gemini",
+                            on_click=open_gemini_link,
+                            style=ft.ButtonStyle(
+                                color=Theme.PRIMARY,
+                            )
+                        ),
+                    ], spacing=4),
+                    padding=Spacing.MD
+                ),
+
+                ft.Container(height=Spacing.LG),
+                api_input,
+                ft.Container(height=Spacing.MD),
+                UIComponents.primary_button("Guardar", icon="save", on_click=save_key),
+                ft.Container(height=Spacing.SM),
+                ft.Text(
+                    "⚠️ La API Key se guardará localmente de forma segura",
+                    size=12,
+                    color=Theme.TEXT_SECONDARY,
+                    italic=True
+                ),
+            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=0),
             alignment=ft.Alignment(0, 0),
             expand=True,
+            padding=Spacing.XL
         )
 
     def send_message(self, text):
