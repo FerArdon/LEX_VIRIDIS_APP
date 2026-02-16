@@ -303,10 +303,22 @@ class LexViridisShell:
             path_str = article_or_norma.get('archivo_pdf') or article_or_norma.get('file')
 
             from .utils import find_pdf_path
+            from .pdf_viewer_fixed import open_pdf_with_highlight_fixed
+
             resolved_path = find_pdf_path(path_str)
 
             if resolved_path and resolved_path.exists():
-                PDFViewerFixed.open_pdf_simple(resolved_path)
+                # Obtener término de búsqueda y página si existen
+                search_term = article_or_norma.get('term', '')
+                page_number = article_or_norma.get('page', 1) or article_or_norma.get('pagina', 1)
+
+                # Si hay término de búsqueda, abrir con resaltado
+                if search_term:
+                    logging.info(f"Abriendo PDF con resaltado: {resolved_path}, página {page_number}, término '{search_term}'")
+                    open_pdf_with_highlight_fixed(resolved_path, page_number, search_term)
+                else:
+                    # Sin término de búsqueda, abrir simple
+                    PDFViewerFixed.open_pdf_simple(resolved_path, page_number)
             else:
                 self.page.snack_bar = ft.SnackBar(ft.Text(f"PDF no encontrado: {path_str}"), bgcolor=Theme.ERROR)
                 self.page.snack_bar.open = True
@@ -316,6 +328,7 @@ class LexViridisShell:
             self.page.snack_bar = ft.SnackBar(ft.Text(f"Error abriendo PDF: {e}"), bgcolor=Theme.ERROR)
             self.page.snack_bar.open = True
             self.page.update()
+            logging.error(f"Error opening PDF: {e}", exc_info=True)
 
     def _open_article_detail(self, article, query=""):
         # Replace content area with detail view
