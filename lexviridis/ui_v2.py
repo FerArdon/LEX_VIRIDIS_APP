@@ -424,6 +424,14 @@ class LexViridisShell:
                 content=ft.Icon("person", size=40, color="white")
             )
 
+        # Build actions list
+        actions = [
+            ft.TextButton("Seleccionar imagen", on_click=pick_file),
+        ]
+        if current_pic:
+            actions.append(ft.TextButton("Eliminar foto", on_click=remove_picture))
+        actions.append(ft.TextButton("Cancelar", on_click=lambda e: self._close_dialog(dialog)))
+
         dialog = ft.AlertDialog(
             title=ft.Text("Foto de Perfil"),
             content=ft.Column([
@@ -439,11 +447,7 @@ class LexViridisShell:
                     text_align="center"
                 ),
             ], tight=True, horizontal_alignment="center"),
-            actions=[
-                ft.TextButton("Seleccionar imagen", on_click=pick_file),
-                ft.TextButton("Eliminar foto", on_click=remove_picture) if current_pic else None,
-                ft.TextButton("Cancelar", on_click=lambda e: self._close_dialog(dialog)),
-            ],
+            actions=actions,
             actions_alignment=ft.MainAxisAlignment.END,
         )
 
