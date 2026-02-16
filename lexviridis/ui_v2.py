@@ -50,8 +50,8 @@ from .views.dashboard import DashboardView
 from .views.favorites import FavoritesView
 from .views.library import LibraryView
 from .views.search import SearchView
+from .views.search_history import SearchHistoryView
 from .views.settings import SettingsView
-from .views.study import StudyView
 
 
 def _get_asset_path(filename: str) -> str:
@@ -246,12 +246,10 @@ class LexViridisShell:
         # 4: Biblioteca
         self.nav_manager.register_route(4, lambda: LibraryView(self.deps.get_library_repository(), self._open_pdf))
 
-        # 5: Estudio
-        # Usar el current_user de LexViridisShell
-        user_id = 1
-        if self.current_user:
-             user_id = self.current_user.get('id', 1)
-        self.nav_manager.register_route(5, lambda: StudyView(self.deps.study_manager, user_id))
+        # 5: Historial de Búsquedas
+        self.nav_manager.register_route(5, lambda: SearchHistoryView(self.deps.search_engine, self._repeat_search_from_history))
+
+        # 6: Configuración
         self.nav_manager.register_route(6, lambda: SettingsView(self.deps, self._change_language))
 
         # Build Shell Layout
@@ -272,9 +270,9 @@ class LexViridisShell:
                 ft.NavigationRailDestination(icon="dashboard", label=i18n.t("nav.dashboard")),
                 ft.NavigationRailDestination(icon="search", label=i18n.t("nav.search")),
                 ft.NavigationRailDestination(icon="auto_awesome", label=i18n.t("nav.ai_assistant")),
-                ft.NavigationRailDestination(icon="star", label=i18n.t("nav.favorites")), # TODO
+                ft.NavigationRailDestination(icon="star", label=i18n.t("nav.favorites")),
                 ft.NavigationRailDestination(icon="library_books", label=i18n.t("nav.library")),
-                ft.NavigationRailDestination(icon="school", label=i18n.t("nav.study")), # TODO
+                ft.NavigationRailDestination(icon="history", label="Historial"),
                 ft.NavigationRailDestination(icon="settings", label=i18n.t("nav.settings")),
             ],
             on_change=lambda e: self.nav_manager.navigate_to(e.control.selected_index)
@@ -362,6 +360,19 @@ class LexViridisShell:
         self.page.snack_bar.open = True
         self.page.update()
         self._show_main_ui() # Re-render
+
+    def _repeat_search_from_history(self, query):
+        """Repite una búsqueda desde el historial navegando a la vista de búsqueda."""
+        # Navegar a la vista de búsqueda
+        self.nav_manager.navigate_to(1)
+        # La búsqueda se ejecutará automáticamente en la vista de búsqueda
+        # si implementamos un mecanismo de pre-fill
+        self.page.snack_bar = ft.SnackBar(
+            ft.Text(f"Buscar: {query}"),
+            bgcolor=Theme.INFO
+        )
+        self.page.snack_bar.open = True
+        self.page.update()
 
     def _show_profile_dialog(self):
         """Muestra un diálogo para cambiar la foto de perfil."""
