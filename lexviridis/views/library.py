@@ -269,6 +269,104 @@ class LibraryView(ft.Container):
             if self.page:
                 self.page.update()
 
+        def _extract_sections(text: str, clean_fn) -> list:
+            """
+            Extractor inteligente: detecta automáticamente la estructura
+            del documento y devuelve lista de (numero, contenido).
+
+            Estrategias en orden de prioridad:
+              1. ARTÍCULO / Art. N  → leyes y decretos
+              2. SECCIÓN / Sección N → reglamentos técnicos
+              3. CAPÍTULO N          → documentos por capítulos
+              4. N. TITULO en mayús  → planes y documentos técnicos
+              5. Fallback: bloques de párrafos de 300+ chars
+            """
+            import re as _re
+
+            # ── Estrategia 1: Artículos ──────────────────────────────────
+            pat1 = r'(?:ART[ÍI]CULO|ARTICULO|Art\.)\s*' \
+                   r'((?:\d+(?:-[A-Za-z])?)|(?:PRIMERO|SEGUNDO|TERCERO|CUARTO|QUINTO|SEXTO|SEPTIMO|OCTAVO|NOVENO|DECIMO))' \
+                   r'\s*[\.\:\-]?'
+            matches = list(_re.finditer(pat1, text, _re.IGNORECASE))
+            if len(matches) >= 2:
+                result = []
+                for i, m in enumerate(matches):
+                    end = matches[i+1].start() if i < len(matches)-1 else len(text)
+                    c = clean_fn(text[m.end():end].strip())
+                    if c:
+                        result.append((m.group(1).upper(), c))
+                return result
+
+            # ── Estrategia 2: Secciones ──────────────────────────────────
+            pat2 = r'(?:SECCI[ÓO]N|Sección)\s+(\d+[\.\-]?\d*)\s*[\.\:\-]?'
+            matches = list(_re.finditer(pat2, text, _re.IGNORECASE))
+            if len(matches) >= 2:
+                result = []
+                for i, m in enumerate(matches):
+                    end = matches[i+1].start() if i < len(matches)-1 else len(text)
+                    c = clean_fn(text[m.end():end].strip())
+                    if c:
+                        result.append((f"Sección {m.group(1)}", c))
+                return result
+
+            # ── Estrategia 3: Capítulos ───────────────────────────────────
+            pat3 = r'(?:CAP[ÍI]TULO|CAPITULO)\s+([IVXLCDM\d]+)\s*[\.\:\-]?'
+            matches = list(_re.finditer(pat3, text, _re.IGNORECASE))
+            if len(matches) >= 2:
+                result = []
+                for i, m in enumerate(matches):
+                    end = matches[i+1].start() if i < len(matches)-1 else len(text)
+                    c = clean_fn(text[m.end():end].strip())
+                    if c:
+                        result.append((f"Capítulo {m.group(1)}", c))
+                return result
+
+            # ── Estrategia 4: Secciones numeradas "1. TITULO" ────────────
+            # Cubre planes, informes, manuales: "1.\nINTRODUCCION"
+            # Exige título de al menos 8 chars para evitar listas cortas
+            pat4 = r'(?m)^(\d{1,2})\.\s*\n?\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{7,60})$'
+            matches = list(_re.finditer(pat4, text))
+            # Solo usar si hay suficientes secciones reales (mínimo 5)
+            if len(matches) >= 5:
+                result = []
+                for i, m in enumerate(matches):
+                    end = matches[i+1].start() if i < len(matches)-1 else len(text)
+                    c = clean_fn(text[m.end():end].strip())
+                    label = f"{m.group(1)}. {m.group(2).strip()}"
+                    if len(c) > 50:          # descartar secciones vacías o de lista
+                        result.append((label, c))
+                if len(result) >= 3:
+                    return result
+
+            # ── Estrategia 5: Subsecciones "1.1 Titulo" ──────────────────
+            pat5 = r'(?m)^(\d+\.\d+)\s+([A-ZÁÉÍÓÚÑ][^\n]{3,80})$'
+            matches = list(_re.finditer(pat5, text))
+            if len(matches) >= 2:
+                result = []
+                for i, m in enumerate(matches):
+                    end = matches[i+1].start() if i < len(matches)-1 else len(text)
+                    c = clean_fn(text[m.end():end].strip())
+                    label = f"{m.group(1)} {m.group(2).strip()}"
+                    if c:
+                        result.append((label, c))
+                return result
+
+            # ── Estrategia 6 (Fallback): Párrafos naturales ──────────────
+            # Divide por líneas en blanco dobles (estructura real del PDF).
+            # Garantiza que cualquier documento sea buscable en FTS.
+            paragraphs = _re.split(r'\n\s*\n', text)
+            blocks = []
+            block_num = 1
+            for para in paragraphs:
+                c = clean_fn(para.strip())
+                if len(c) > 80:   # ignorar párrafos muy cortos (cabeceras, números de página)
+                    blocks.append((f"Párrafo {block_num}", c))
+                    block_num += 1
+            # Si aún así no hay nada, un único bloque con todo el texto
+            if not blocks:
+                blocks.append(("Texto completo", clean_fn(text)))
+            return blocks
+
         def _run():
             try:
                 import re
@@ -330,18 +428,9 @@ class LibraryView(ft.Container):
                 if num_match:
                     numero = num_match.group(1)
 
-                # ── 4. Extraer artículos ─────────────────────────────────
-                _update("📝 Extrayendo artículos...")
-                pattern = r'(?:ART[ÍI]CULO|Art\.)\s*((?:\d+(?:-[A-Za-z])?)|(?:PRIMERO|SEGUNDO|TERCERO|CUARTO|QUINTO|SEXTO|SEPTIMO|OCTAVO|NOVENO|DECIMO))\s*[\.\:\-]*'
-                matches = list(re.finditer(pattern, full_text, re.IGNORECASE))
-                articles = []
-                for i, m in enumerate(matches):
-                    start_idx  = m.end()
-                    end_idx    = matches[i+1].start() if i < len(matches)-1 else len(full_text)
-                    content    = clean_text(full_text[start_idx:end_idx].strip())
-                    art_num    = m.group(1).upper()
-                    if content:
-                        articles.append((art_num, content))
+                # ── 4. Extraer secciones/artículos (detección automática) ──
+                _update("📝 Detectando estructura del documento...")
+                articles = _extract_sections(full_text, clean_text)
 
                 # ── 5. Insertar/actualizar en la BD ──────────────────────
                 _update(f"💾 Guardando norma ({len(articles)} artículos)...")
