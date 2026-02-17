@@ -621,12 +621,62 @@ class LibraryView(ft.Container):
                 # ── 6. Actualizar índice FTS5 ────────────────────────────
                 _update("🔎 Actualizando índice de búsqueda (FTS5)...")
 
-                # Eliminar entradas viejas de esta norma en FTS
-                cur.execute(
-                    "DELETE FROM busqueda_fts WHERE articulo_id IN (SELECT id FROM articulos WHERE norma_id=?)",
-                    (norma_id,)
-                )
-                # Re-insertar los nuevos artículos en FTS
+                # Asegurar que la tabla FTS existe con la estructura correcta
+                cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='busqueda_fts'")
+                fts_exists = cur.fetchone()
+
+                if not fts_exists:
+                    # Crear la tabla FTS desde cero
+                    cur.execute("""
+                        CREATE VIRTUAL TABLE busqueda_fts USING fts5(
+                            titulo_norma,
+                            contenido_articulo,
+                            numero_articulo,
+                            articulo_id UNINDEXED
+                        )
+                    """)
+                    conn.commit()
+                    # Poblar con todos los artículos existentes
+                    cur.execute("""
+                        INSERT INTO busqueda_fts(titulo_norma, contenido_articulo, numero_articulo, articulo_id)
+                        SELECT n.titulo, a.contenido, a.numero_articulo, a.id
+                        FROM articulos a
+                        JOIN normas n ON a.norma_id = n.id
+                    """)
+                    conn.commit()
+                else:
+                    # Tabla existe — verificar que tiene las columnas correctas (sin tags)
+                    cur.execute("SELECT sql FROM sqlite_master WHERE name='busqueda_fts'")
+                    fts_sql = cur.fetchone()[0]
+                    if 'tags' in fts_sql:
+                        # Migrar: reemplazar la tabla con una sin la columna tags
+                        cur.execute("DROP TABLE IF EXISTS busqueda_fts")
+                        cur.execute("""
+                            CREATE VIRTUAL TABLE busqueda_fts USING fts5(
+                                titulo_norma,
+                                contenido_articulo,
+                                numero_articulo,
+                                articulo_id UNINDEXED
+                            )
+                        """)
+                        conn.commit()
+                        # Repoblar con todos los artículos
+                        cur.execute("""
+                            INSERT INTO busqueda_fts(titulo_norma, contenido_articulo, numero_articulo, articulo_id)
+                            SELECT n.titulo, a.contenido, a.numero_articulo, a.id
+                            FROM articulos a
+                            JOIN normas n ON a.norma_id = n.id
+                        """)
+                        conn.commit()
+                    else:
+                        # Estructura correcta: solo actualizar esta norma
+                        cur.execute(
+                            "DELETE FROM busqueda_fts WHERE articulo_id IN "
+                            "(SELECT id FROM articulos WHERE norma_id=?)",
+                            (norma_id,)
+                        )
+
+                # Re-insertar los artículos de la norma recién importada
                 cur.execute("""
                     INSERT INTO busqueda_fts(titulo_norma, contenido_articulo, numero_articulo, articulo_id)
                     SELECT n.titulo, a.contenido, a.numero_articulo, a.id
