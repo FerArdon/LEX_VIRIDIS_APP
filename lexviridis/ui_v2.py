@@ -327,14 +327,18 @@ class LexViridisShell:
         # 3: Favoritos
         self.nav_manager.register_route(3, lambda: FavoritesView(self.deps.search_engine, self._open_article_detail))
 
-        # 4: Biblioteca
-        self.nav_manager.register_route(4, lambda: LibraryView(self.deps.get_library_repository(), self._open_pdf))
+        # 4: Casos y Expedientes
+        from .views.casos import CasosView
+        self.nav_manager.register_route(4, lambda: CasosView(self.deps.casos_repo, self._open_caso_detail, self.page))
 
-        # 5: Historial de Búsquedas
-        self.nav_manager.register_route(5, lambda: SearchHistoryView(self.deps.search_engine, self._repeat_search_from_history))
+        # 5: Biblioteca
+        self.nav_manager.register_route(5, lambda: LibraryView(self.deps.get_library_repository(), self._open_pdf))
 
-        # 6: Configuración
-        self.nav_manager.register_route(6, lambda: SettingsView(self.deps, self._change_language))
+        # 6: Historial de Búsquedas
+        self.nav_manager.register_route(6, lambda: SearchHistoryView(self.deps.search_engine, self._repeat_search_from_history))
+
+        # 7: Configuración
+        self.nav_manager.register_route(7, lambda: SettingsView(self.deps, self._change_language))
 
         # Build Shell Layout
         self._build_shell_layout()
@@ -355,6 +359,7 @@ class LexViridisShell:
                 ft.NavigationRailDestination(icon="search", label=i18n.t("nav.search")),
                 ft.NavigationRailDestination(icon="auto_awesome", label=i18n.t("nav.ai_assistant")),
                 ft.NavigationRailDestination(icon="star", label=i18n.t("nav.favorites")),
+                ft.NavigationRailDestination(icon="folder_special", label="Casos"),
                 ft.NavigationRailDestination(icon="library_books", label=i18n.t("nav.library")),
                 ft.NavigationRailDestination(icon="history", label="Historial"),
                 ft.NavigationRailDestination(icon="settings", label=i18n.t("nav.settings")),
@@ -435,6 +440,18 @@ class LexViridisShell:
     def _open_article_detail(self, article, query=""):
         # Replace content area with detail view
         view = ArticleDetailView(article, query, on_close=lambda: self.nav_manager.navigate_to(1), on_open_pdf=self._open_pdf)
+        self.content_area.content = view
+        self.page.update()
+
+    def _open_caso_detail(self, caso):
+        """Abre la vista de detalle de un caso."""
+        from .views.caso_detail import CasoDetailView
+        view = CasoDetailView(
+            caso,
+            self.deps.casos_repo,
+            on_close=lambda: self.nav_manager.navigate_to(4),
+            on_open_pdf=self._open_pdf
+        )
         self.content_area.content = view
         self.page.update()
 
@@ -539,7 +556,7 @@ class LexViridisShell:
         dialog.open = True
         self.page.update()
 
-    def _on_profile_picture_selected(self, e: ft.FilePickerResultEvent):
+    def _on_profile_picture_selected(self, e):
         """Maneja la selección de la foto de perfil."""
         if not e.files:
             return

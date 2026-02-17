@@ -11,6 +11,7 @@ from ..security import AuthManager
 # Import services and repositories
 from ..services.library_repository import LibraryRepository
 from ..services.stats_repository import StatsRepository
+from ..repositories.casos_repository import CasosRepository
 
 
 class DependencyContainer:
@@ -26,6 +27,7 @@ class DependencyContainer:
         self.db_manager = None
         self.library_repo = None
         self.stats_repo = None
+        self.casos_repo = None
         self.search_engine = None
         self.auth_manager = None
         self.gemini_client = None
@@ -48,6 +50,8 @@ class DependencyContainer:
         # 2. Repositories
         self.library_repo = LibraryRepository(self.db_manager)
         self.stats_repo = StatsRepository(self.db_manager)
+        db_casos_path = config.BASE_DIR / "LEX_VIRIDIS_DB" / "legislacion_ambiental.db"
+        self.casos_repo = CasosRepository(db_casos_path)
 
 
         # 3. Services
