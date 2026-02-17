@@ -15,6 +15,7 @@ class LibraryView(ft.Container):
         self.on_open_pdf = on_open_pdf
         self.library_filter = "Todos"
         self.view_mode = "detail" # list, grid, detail
+        self.search_query = ""    # búsqueda local dentro del catálogo
         self.page = None
         self._build_ui()
 
@@ -33,6 +34,36 @@ class LibraryView(ft.Container):
         toolbar = self._build_toolbar()
         filters = self._build_filters()
 
+        # Barra de búsqueda local del catálogo
+        self._search_field = ft.TextField(
+            hint_text="Buscar documento en el catálogo...",
+            prefix_icon="search",
+            border_radius=24,
+            height=44,
+            text_size=13,
+            border_color=Theme.BORDER,
+            focused_border_color=Theme.PRIMARY,
+            on_change=self._on_search_change,
+            expand=True,
+        )
+        self._search_count = ft.Text("", size=12, color=Theme.TEXT_SECONDARY)
+        self._clear_btn = ft.IconButton(
+            icon="close",
+            icon_size=16,
+            icon_color=Theme.TEXT_SECONDARY,
+            tooltip="Limpiar búsqueda",
+            visible=False,
+            on_click=self._clear_search,
+        )
+        search_bar = ft.Container(
+            content=ft.Row([
+                self._search_field,
+                self._clear_btn,
+                self._search_count,
+            ], spacing=Spacing.SM),
+            padding=ft.padding.symmetric(vertical=Spacing.SM),
+        )
+
         # Content Area
         self.content_list = ft.Container(expand=True)
         self._render_list()
@@ -44,7 +75,6 @@ class LibraryView(ft.Container):
                  content=ft.Row([
                     ft.Column([
                         UIComponents.heading("Biblioteca Digital", level=1, color=Theme.PRIMARY),
-                         # TODO: Get total count from somewhere or calculate
                         UIComponents.body_text("Catálogo Completo", secondary=True),
                     ], expand=True),
                     UIComponents.primary_button("Agregar PDF", icon="add", on_click=self._show_import_dialog),
@@ -53,7 +83,8 @@ class LibraryView(ft.Container):
             ),
             toolbar,
             filters,
-            ft.Container(self.content_list, expand=True, padding=ft.padding.only(top=Spacing.MD))
+            search_bar,
+            ft.Container(self.content_list, expand=True, padding=ft.padding.only(top=Spacing.SM))
         ], expand=True)
 
     def _build_toolbar(self):
@@ -90,6 +121,22 @@ class LibraryView(ft.Container):
 
         return ft.Row(chips, spacing=Spacing.SM, scroll=ft.ScrollMode.AUTO)
 
+    def _on_search_change(self, e):
+        """Filtra el catálogo mientras el usuario escribe."""
+        self.search_query = e.control.value.strip().lower()
+        self._clear_btn.visible = bool(self.search_query)
+        self._render_list()
+        self.update()
+
+    def _clear_search(self, e):
+        """Limpia la búsqueda y restaura el catálogo completo."""
+        self.search_query = ""
+        self._search_field.value = ""
+        self._clear_btn.visible = False
+        self._search_count.value = ""
+        self._render_list()
+        self.update()
+
     def _filter(self, tipo):
         self.library_filter = tipo
         self._render_list()
@@ -101,6 +148,7 @@ class LibraryView(ft.Container):
         self.update()
 
     def _render_list(self):
+        # 1. Filtro por tipo
         items_to_show = []
         if self.library_filter == "Todos":
             for _tipo, lista in sorted(self.grupos.items()):
@@ -108,7 +156,25 @@ class LibraryView(ft.Container):
         else:
             items_to_show = self.grupos.get(self.library_filter, [])
 
-        # Select Renderer based on view_mode
+        # 2. Filtro por búsqueda local (título o tipo)
+        if self.search_query:
+            q = self.search_query
+            items_to_show = [
+                n for n in items_to_show
+                if q in n.get('titulo', '').lower()
+                or q in n.get('tipo', '').lower()
+                or q in n.get('numero', '').lower()
+            ]
+            # Actualizar contador de resultados
+            total = len(items_to_show)
+            self._search_count.value = (
+                f"{total} resultado{'s' if total != 1 else ''}" if total else "Sin resultados"
+            )
+            self._search_count.color = Theme.PRIMARY if total else Theme.ERROR
+        else:
+            self._search_count.value = ""
+
+        # 3. Select Renderer based on view_mode
         if self.view_mode == "grid":
             content = self._render_grid_view(items_to_show)
         elif self.view_mode == "list":
