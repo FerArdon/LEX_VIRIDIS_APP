@@ -149,7 +149,12 @@ class LibraryView(ft.Container):
                             ft.Text(f"{norma.get('num_articulos', 0)} artículos", size=Typography.CAPTION, color=Theme.TEXT_SECONDARY),
                         ], spacing=Spacing.SM),
                     ], expand=True, spacing=Spacing.XXS),
-                    ft.IconButton("open_in_new", icon_color=Theme.PRIMARY, on_click=lambda e, n=norma: self.on_open_pdf(n)),
+                    ft.IconButton("open_in_new", icon_color=Theme.PRIMARY,
+                                  tooltip="Abrir PDF",
+                                  on_click=lambda e, n=norma: self.on_open_pdf(n)),
+                    ft.IconButton("delete", icon_color=Theme.ERROR,
+                                  tooltip="Eliminar de la biblioteca",
+                                  on_click=lambda e, n=norma: self._confirmar_eliminar_norma(n)),
                 ]),
                 bgcolor=Theme.SURFACE,
                 border_radius=Radius.MD,
@@ -187,6 +192,91 @@ class LibraryView(ft.Container):
             )
             lv.controls.append(tile)
         return lv
+
+    def _confirmar_eliminar_norma(self, norma):
+        """Muestra diálogo de confirmación y elimina la norma + FTS si se acepta."""
+        titulo = norma.get('titulo', 'Sin título')
+        norma_id = norma.get('id')
+
+        def _eliminar(e):
+            try:
+                import sqlite3 as _sqlite3
+                from ..config import config
+                DB_PATH = config.BASE_DIR / "LEX_VIRIDIS_DB" / "legislacion_ambiental.db"
+                conn = _sqlite3.connect(str(DB_PATH))
+                cur  = conn.cursor()
+
+                # 1. Eliminar del índice FTS
+                cur.execute(
+                    "DELETE FROM busqueda_fts WHERE articulo_id IN "
+                    "(SELECT id FROM articulos WHERE norma_id = ?)", (norma_id,)
+                )
+                # 2. Eliminar artículos
+                cur.execute("DELETE FROM articulos WHERE norma_id = ?", (norma_id,))
+                # 3. Eliminar norma
+                cur.execute("DELETE FROM normas WHERE id = ?", (norma_id,))
+                conn.commit()
+                conn.close()
+
+                # 4. Cerrar diálogo y recargar lista
+                dialog.open = False
+                self.grupos = self.library_repo.get_norms_grouped_by_type()
+                self._render_list()
+                if self.page:
+                    self.page.update()
+                    sb = ft.SnackBar(
+                        content=ft.Text(f"✅ '{titulo}' eliminado de la biblioteca"),
+                        bgcolor=Theme.SUCCESS,
+                    )
+                    self.page.overlay.append(sb)
+                    sb.open = True
+                    self.page.update()
+
+            except Exception as ex:
+                dialog.open = False
+                if self.page:
+                    self.page.update()
+                    sb = ft.SnackBar(
+                        content=ft.Text(f"Error al eliminar: {ex}"),
+                        bgcolor=ft.Colors.RED_400,
+                    )
+                    self.page.overlay.append(sb)
+                    sb.open = True
+                    self.page.update()
+
+        dialog = ft.AlertDialog(
+            modal=True,
+            title=ft.Row([
+                ft.Icon("warning", color=Theme.ERROR),
+                ft.Text("Eliminar documento", weight="bold"),
+            ]),
+            content=ft.Text(
+                f"¿Eliminar '{titulo}' de la biblioteca?\n\n"
+                "Esto borrará la norma, todos sus artículos y su índice de búsqueda.\n"
+                "El archivo PDF original NO será eliminado de tu disco.",
+                size=13,
+            ),
+            actions=[
+                ft.TextButton("Cancelar", on_click=lambda _: self._close_lib_dialog(dialog)),
+                ft.ElevatedButton(
+                    "Eliminar",
+                    icon="delete",
+                    on_click=_eliminar,
+                    bgcolor=Theme.ERROR,
+                    color="white",
+                ),
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+        if self.page:
+            self.page.dialog = dialog
+            dialog.open = True
+            self.page.update()
+
+    def _close_lib_dialog(self, dialog):
+        dialog.open = False
+        if self.page:
+            self.page.update()
 
     def _show_import_dialog(self, e):
         """Muestra el diálogo de selección de archivo PDF"""
