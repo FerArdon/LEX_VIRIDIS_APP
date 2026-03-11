@@ -1,8 +1,16 @@
+==================================================
+FATAL ERROR - LA APLICACIÓN NO PUDO INICIAR
+==================================================
 Traceback (most recent call last):
-  File "c:\LEX_VIRIDIS_APP\run_modern_ui.py", line 10, in <module>
+  File "C:\LEX_VIRIDIS_APP\run_modern_ui.py", line 26, in <module>
     from lexviridis.ui_v2 import main
-  File "c:\LEX_VIRIDIS_APP\lexviridis\ui_v2.py", line 15, in <module>
-    from .views.dashboard import DashboardView
-  File "c:\LEX_VIRIDIS_APP\lexviridis\views\dashboard.py", line 2, in <module>
-    from flet import (
-ImportError: cannot import name 'PieChart' from 'flet' (C:\LEX_VIRIDIS_APP\.venv\Lib\site-packages\flet\__init__.py)
+  File "C:\LEX_VIRIDIS_APP\lexviridis\ui_v2.py", line 60, in <module>
+    class LexViridisShell:
+  File "C:\LEX_VIRIDIS_APP\lexviridis\ui_v2.py", line 542, in LexViridisShell
+    def _on_profile_picture_selected(self, e: ft.FilePickerResultEvent):
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\LEX_VIRIDIS_APP\.venv\Lib\site-packages\flet\__init__.py", line 1159, in __getattr__
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+AttributeError: module 'flet' has no attribute 'FilePickerResultEvent'
+==================================================
+Detalle: module 'flet' has no attribute 'FilePickerResultEvent'

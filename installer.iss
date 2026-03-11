@@ -31,11 +31,15 @@ Compression=lzma2/ultra64
 SolidCompression=yes
 LZMAUseSeparateProcess=yes
 
+; Arquitectura
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+
 ; Iconos y gráficos
 SetupIconFile=assets\LEXVIRIDIS_WHITE_BG.ico
 WizardStyle=modern
-WizardImageFile=assets\LEXVIRIDIS_WHITE_BG.bmp
-WizardSmallImageFile=assets\LEXVIRIDIS_WHITE_BG.bmp
+WizardImageFile=assets\installer_wizard.bmp
+WizardSmallImageFile=assets\installer_small.bmp
 
 
 ; Privilegios
@@ -54,21 +58,21 @@ LicenseFile=LICENSE.txt
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 6.1; Check: not IsAdminInstallMode
 
 [Files]
 ; Ejecutable principal
 Source: "dist\LEX_VIRIDIS.exe"; DestDir: "{app}"; Flags: ignoreversion
 
-; Assets (iconos, imágenes)
-Source: "assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Assets (iconos, imágenes) - desde dist
+Source: "dist\assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs
 
-; Base de datos
-Source: "LEX_VIRIDIS_DB\legislacion_ambiental.db"; DestDir: "{app}\LEX_VIRIDIS_DB"; Flags: ignoreversion
+; Base de datos - desde dist
+Source: "dist\LEX_VIRIDIS_DB\legislacion_ambiental.db"; DestDir: "{app}\LEX_VIRIDIS_DB"; Flags: ignoreversion
 
-; Sistema de licencias (scripts de generación - opcional para admin)
-Source: "LEX_VIRIDIS_LICENCIA\*"; DestDir: "{app}\LEX_VIRIDIS_LICENCIA"; Flags: ignoreversion
+; Sistema de licencias
+Source: "LEX_VIRIDIS_LICENCIA\*"; DestDir: "{app}\LEX_VIRIDIS_LICENCIA"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 ; Documentación
 Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion

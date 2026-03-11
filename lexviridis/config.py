@@ -23,12 +23,13 @@ from pathlib import Path
 from typing import Any, Final
 
 # Suppress warnings in production
-if not os.getenv('DEBUG'):
-    warnings.filterwarnings('ignore')
+if not os.getenv("DEBUG"):
+    warnings.filterwarnings("ignore")
 
 
 class LogLevel(Enum):
     """Standard logging levels."""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -39,6 +40,7 @@ class LogLevel(Enum):
 @dataclass(frozen=True)
 class SecurityConfig:
     """Security-related configuration."""
+
     enable_file_permissions: bool = True
     max_log_file_size_mb: int = 10
     max_log_backup_count: int = 5
@@ -48,6 +50,7 @@ class SecurityConfig:
 @dataclass(frozen=True)
 class DatabaseConfig:
     """Database and storage configuration."""
+
     index_version: str = "1.1"
     cache_ttl_seconds: int = 3600
     backup_retention_days: int = 30
@@ -67,7 +70,7 @@ class AppConfig:
     database: DatabaseConfig = field(default_factory=DatabaseConfig)
 
     # Environment detection
-    IS_FROZEN: Final[bool] = getattr(sys, 'frozen', False)
+    IS_FROZEN: Final[bool] = getattr(sys, "frozen", False)
     IS_WINDOWS: Final[bool] = platform.system() == "Windows"
     IS_MACOS: Final[bool] = platform.system() == "Darwin"
     IS_LINUX: Final[bool] = platform.system() == "Linux"
@@ -76,10 +79,7 @@ class AppConfig:
     @property
     def BASE_DIR(self) -> Path:
         """Get base directory with validation."""
-        base = Path(
-            sys._MEIPASS if self.IS_FROZEN
-            else Path(__file__).parent.parent
-        ).resolve()
+        base = Path(getattr(sys, "_MEIPASS", None) or Path(__file__).parent.parent).resolve()
 
         if not base.exists():
             raise RuntimeError(f"Base directory does not exist: {base}")
@@ -111,6 +111,7 @@ class AppConfig:
     def LOG_DIR(self) -> Path:
         """Log directory outside OneDrive to avoid sync-blocking."""
         import tempfile
+
         log_dir = Path(tempfile.gettempdir()) / "LEX_VIRIDIS" / "logs"
         return self._ensure_dir(log_dir)
 
@@ -176,18 +177,18 @@ class AppConfig:
             if self.security.enable_file_permissions and self.IS_WINDOWS:
                 # Set appropriate permissions on Windows
                 try:
-                    os.chmod(path, 0o755)
+                    os.chmod(path, 0o755)  # nosec B103
                 except (OSError, AttributeError):
                     pass  # Ignore permission errors on Windows
             return path
         except Exception as e:
-            raise RuntimeError(f"Cannot create directory {path}: {e}")
+            raise RuntimeError(f"Cannot create directory {path}: {e}") from e
 
     def _validate_resource(self, path: Path) -> Path:
         """Validate resource file exists."""
         if not path.exists():
             # Try alternative extensions
-            for ext in ['.png', '.jpg', '.jpeg', '.ico']:
+            for ext in [".png", ".jpg", ".jpeg", ".ico"]:
                 alt_path = path.with_suffix(ext)
                 if alt_path.exists():
                     return alt_path
@@ -214,7 +215,7 @@ class LoggingManager:
 
     def __init__(self, config: AppConfig):
         self.config = config
-        self.logger = None
+        self.logger: logging.Logger | None = None
 
     def setup_logging(self, level: LogLevel = LogLevel.INFO) -> logging.Logger:
         """Configure comprehensive logging with rotation."""
@@ -232,14 +233,11 @@ class LoggingManager:
 
         # Create formatters
         detailed_formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            "%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
         )
 
-        simple_formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
+        simple_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
         # File handler with rotation
         log_file = self.config.LOG_DIR / f"lexviridis_{datetime.now():%Y%m%d}.log"
@@ -247,19 +245,23 @@ class LoggingManager:
             log_file,
             maxBytes=self.config.security.max_log_file_size_mb * 1024 * 1024,
             backupCount=self.config.security.max_log_backup_count,
-            encoding='utf-8'
+            encoding="utf-8",
         )
         file_handler.setLevel(log_level)
         file_handler.setFormatter(detailed_formatter)
 
-        # Console handler
-        console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setLevel(log_level)
-        console_handler.setFormatter(simple_formatter)
+        # Console handler (only if stdout is available, e.g., not in frozen windowed mode)
+        if sys.stdout is not None:
+            try:
+                console_handler = logging.StreamHandler(sys.stdout)
+                console_handler.setLevel(log_level)
+                console_handler.setFormatter(simple_formatter)
+                logger.addHandler(console_handler)
+            except Exception:
+                pass  # Skip console handler in frozen windowed mode
 
         # Add handlers
         logger.addHandler(file_handler)
-        logger.addHandler(console_handler)
 
         # Log startup
         logger.info("=" * 60)
@@ -288,14 +290,14 @@ logger = logging_manager.setup_logging()
 
 # Export commonly used items
 __all__ = [
-    'config',
-    'logger',
-    'logging_manager',
-    'AppConfig',
-    'SecurityConfig',
-    'DatabaseConfig',
-    'LogLevel',
-    'LoggingManager'
+    "config",
+    "logger",
+    "logging_manager",
+    "AppConfig",
+    "SecurityConfig",
+    "DatabaseConfig",
+    "LogLevel",
+    "LoggingManager",
 ]
 
 
