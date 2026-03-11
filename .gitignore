@@ -81,3 +81,6 @@ node_modules/
 
 # Archivos de paquetes lock (web)
 package-lock.json
+
+flet_dir.txt
+test_output.txt
