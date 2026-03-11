@@ -79,8 +79,25 @@ class LexViridisShell:
         self.license_info = None
         self.license_watchdog = None
 
-        # 4. Check License & Start
+        # 4. Render loading spinner IMMEDIATELY so Flutter paints a first frame
+        #    instead of holding the native gray canvas while the license I/O runs.
+        self._show_loading()
+
+        # 5. License check runs in background — UI thread is free to render
         self._check_license_and_start()
+
+    def _show_loading(self):
+        """Primer frame: spinner centrado. Reemplazado por login/activation cuando esté listo."""
+        self.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+        self.page.vertical_alignment = ft.MainAxisAlignment.CENTER
+        self.page.add(
+            ft.Container(
+                content=ft.ProgressRing(width=48, height=48, color=Theme.PRIMARY),
+                alignment=ft.alignment.Alignment(0, 0),
+                expand=True,
+            )
+        )
+        self.page.update()
 
     def _setup_page(self):
         self.page.title = "LEX VIRIDIS | Compendio Legal Ambiental"
@@ -94,31 +111,35 @@ class LexViridisShell:
         self.page.window_maximized = True
 
     def _check_license_and_start(self):
-        logging.debug("Checking license on startup...")
-        self.license_info = check_license_on_startup(self.page)
-        logging.debug(f"License check result: {self.license_info}")
+        # Corre la verificación en background para no bloquear el hilo UI.
+        # Mientras esto corre, Flutter pinta el primer frame (page.bgcolor)
+        # en lugar de quedarse en el gris del canvas nativo.
+        def _do_check():
+            logging.debug("Checking license on startup (background)...")
+            self.license_info = check_license_on_startup(self.page)
+            logging.debug(f"License check result: {self.license_info}")
 
-        if self.license_info and self.license_info.get("valid"):
-            logging.debug("License valid. Starting watchdog and login UI...")
-            self._start_watchdog()
-            self._show_login_ui()
-            # Initialize backend in background
-            logging.debug("Starting backend init thread...")
+            if self.license_info and self.license_info.get("valid"):
+                logging.debug("License valid. Starting watchdog and login UI...")
+                self._start_watchdog()
+                self._show_login_ui()
 
-            def _init_and_signal():
-                self._init_backend_async()
-                self.backend_ready.set()  # Señalizar que está listo
-                logging.debug("Backend initialization completed and signaled")
+                def _init_and_signal():
+                    self._init_backend_async()
+                    self.backend_ready.set()
+                    logging.debug("Backend initialization completed and signaled")
 
-            threading.Thread(target=_init_and_signal, daemon=True).start()
-        elif self.license_info and self.license_info.get("expired"):
-            logging.debug("License expired.")
-            LicenseExpiredDialog.show(
-                self.page, on_renew=self._show_activation, on_exit=lambda: self.page.window_close()
-            )
-        else:
-            logging.debug("No valid license. Showing activation screen.")
-            self._show_activation()
+                threading.Thread(target=_init_and_signal, daemon=True).start()
+            elif self.license_info and self.license_info.get("expired"):
+                logging.debug("License expired.")
+                LicenseExpiredDialog.show(
+                    self.page, on_renew=self._show_activation, on_exit=lambda: self.page.window_close()
+                )
+            else:
+                logging.debug("No valid license. Showing activation screen.")
+                self._show_activation()
+
+        threading.Thread(target=_do_check, daemon=True).start()
 
     def _start_watchdog(self):
         self.license_watchdog = LicenseWatchdog(self.page, on_invalid_callback=self._handle_license_invalidated)
@@ -170,8 +191,7 @@ class LexViridisShell:
             self.page.window_width, self.page.window_height = 500, 650
             self.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
             self.page.vertical_alignment = ft.MainAxisAlignment.CENTER
-            self.page.update()
-            logging.debug("Page cleaned and resized")
+            # No intermediate update — build card first, then send everything in one frame
 
             # Logo
             logo_path = _get_asset_path("LEXVIRIDIS_WHITE_BG.png")
@@ -188,8 +208,48 @@ class LexViridisShell:
                 width=350,
                 border_radius=Radius.MD,
                 text_size=14,
-                on_submit=lambda _: self._handle_login(user_field.value, pass_field.value),
             )
+            login_btn = ft.ElevatedButton(
+                "Entrar",
+                width=350,
+                height=45,
+                style=ft.ButtonStyle(
+                    bgcolor=Theme.PRIMARY, color="white", shape=ft.RoundedRectangleBorder(radius=Radius.MD)
+                ),
+            )
+
+            def _on_login_click(_e):
+                # 1. Feedback inmediato en el hilo de UI
+                login_btn.disabled = True
+                login_btn.text = "Verificando..."
+                self.page.update()
+
+                def _do():
+                    user_obj = self.deps.auth_manager.login(user_field.value, pass_field.value)
+                    if user_obj:
+                        self.current_user = user_obj
+                        self.page.clean()
+                        self.page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+                        self.page.vertical_alignment = ft.MainAxisAlignment.CENTER
+                        self.page.add(
+                            ft.Container(
+                                content=ft.ProgressRing(width=48, height=48, color=Theme.PRIMARY),
+                                alignment=ft.alignment.Alignment(0, 0),
+                                expand=True,
+                            )
+                        )
+                        self.page.update()
+                        self._show_main_ui()
+                    else:
+                        login_btn.disabled = False
+                        login_btn.text = "Entrar"
+                        self.page.update()
+                        self._show_toast("Credenciales incorrectas", bgcolor=Theme.ERROR)
+
+                threading.Thread(target=_do, daemon=True).start()
+
+            login_btn.on_click = _on_login_click
+            pass_field.on_submit = lambda _: _on_login_click(None)
 
             # Login card with professional design
             login_card = ft.Container(
@@ -211,15 +271,7 @@ class LexViridisShell:
                         pass_field,
                         ft.Container(height=25),
                         # Login button
-                        ft.ElevatedButton(
-                            "Entrar",
-                            width=350,
-                            height=45,
-                            style=ft.ButtonStyle(
-                                bgcolor=Theme.PRIMARY, color="white", shape=ft.RoundedRectangleBorder(radius=Radius.MD)
-                            ),
-                            on_click=lambda _: self._handle_login(user_field.value, pass_field.value),
-                        ),
+                        login_btn,
                         ft.Container(height=20),
                         # Footer
                         ft.Text("FEMA Honduras © 2026", size=12, color=Theme.TEXT_SECONDARY, text_align="center"),
@@ -240,17 +292,6 @@ class LexViridisShell:
             logging.debug("_show_login_ui completed")
         except Exception as e:
             logging.error(f"Error in _show_login_ui: {e}", exc_info=True)
-
-    def _handle_login(self, user, pwd):
-        self._show_toast("El sistema se está iniciando, intenta en unos segundos...")
-
-        user_obj = self.deps.auth_manager.login(user, pwd)
-
-        if user_obj:
-            self.current_user = user_obj
-            self._show_main_ui()
-        else:
-            self._show_toast("Credenciales incorrectas", bgcolor=Theme.ERROR)
 
     def _show_main_ui(self):
         # Esperar a que el backend esté listo (timeout 10 segundos)
