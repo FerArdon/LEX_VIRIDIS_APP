@@ -235,8 +235,7 @@ class LexViridisShell:
             )
 
             logging.debug("Adding centered login_card to page")
-            # Center the login card both horizontally and vertically
-            self.page.add(ft.Container(content=login_card, alignment=ft.alignment.center, expand=True))
+            self.page.add(login_card)
             self.page.update()
             logging.debug("_show_login_ui completed")
         except Exception as e:
@@ -476,7 +475,7 @@ class LexViridisShell:
             title=ft.Text("Foto de Perfil"),
             content=ft.Column(
                 [
-                    ft.Container(content=current_avatar, alignment=ft.alignment.center),
+                    ft.Container(content=current_avatar, alignment=ft.alignment.Alignment(0, 0)),
                     ft.Container(height=Spacing.MD),
                     ft.Text(
                         "Selecciona una imagen (PNG, JPG, JPEG, GIF)",

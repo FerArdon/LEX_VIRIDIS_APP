@@ -63,7 +63,7 @@ class HelpUI:
                 on_click=lambda _: self._export_manual_pdf(),
             ),
             padding=ft.padding.only(bottom=20, right=20),
-            alignment=ft.alignment.bottom_right,
+            alignment=ft.alignment.Alignment(1, 1),
         )
 
         return ft.Stack([TutorialView(), fab_container], expand=True)
@@ -97,7 +97,7 @@ class HelpUI:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 scroll=ft.ScrollMode.AUTO,
             ),
-            alignment=ft.alignment.center,
+            alignment=ft.alignment.Alignment(0, 0),
             padding=Spacing.XL,
             bgcolor=Theme.BACKGROUND,
         )
