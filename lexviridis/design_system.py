@@ -3,13 +3,13 @@ LEX VIRIDIS - Sistema de Diseño Profesional
 Elementos UI consistentes, colores y tipografía.
 """
 
-
 import flet as ft
 
 
 # === APILADO DE COLORES SEGURO (COMPATIBILIDAD FLET <0.21 y >=0.21) ===
 class SafeColors:
     """Clase de compatibilidad para usar colores en cualquier versión de Flet."""
+
     # Colores Básicos
     BLACK = "black"
     WHITE = "white"
@@ -48,6 +48,7 @@ class SafeColors:
             # Fallback simple si falla la función
             return color
 
+
 Colors = SafeColors
 
 
@@ -61,8 +62,8 @@ class Theme:
     PRIMARY_DARK = "#0D3818"
 
     # Secundarios
-    SECONDARY = "#00695C"      # Teal profundo
-    ACCENT = "#D4AF37"         # Dorado institucional
+    SECONDARY = "#00695C"  # Teal profundo
+    ACCENT = "#D4AF37"  # Dorado institucional
 
     # Estados
     SUCCESS = "#2E7D32"
@@ -136,6 +137,7 @@ class Radius:
 
 # === COMPONENTES REUTILIZABLES ===
 
+
 def create_theme() -> ft.Theme:
     """Crea el tema Flet completo. Compatible con Flet 0.25.2+ y modo .exe."""
     try:
@@ -145,7 +147,6 @@ def create_theme() -> ft.Theme:
                 secondary=Theme.SECONDARY,
                 surface=Theme.SURFACE,
                 error=Theme.ERROR,
-                # background=Theme.BACKGROUND # Deprecated in newer Flet versions
             ),
             visual_density="comfortable",
         )
@@ -167,70 +168,55 @@ class UIComponents:
 
     @staticmethod
     def primary_button(text: str, on_click=None, icon=None, disabled=False, **kwargs) -> ft.ElevatedButton:
-        # _StateClass = getattr(ft, 'ControlState', getattr(ft, 'MaterialState', None))
+        _StateClass = getattr(ft, "ControlState", getattr(ft, "MaterialState", None))
         bgcolor_val = Theme.PRIMARY
-        # if _StateClass:
-        #     bgcolor_val = {
-        #         _StateClass.DEFAULT: Theme.PRIMARY,
-        #         _StateClass.HOVERED: Theme.PRIMARY_LIGHT,
-        #         _StateClass.DISABLED: Theme.TEXT_DISABLED,
-        #     }
-        content_controls = []
-        if icon:
-            content_controls.append(ft.Icon(icon, color=Theme.TEXT_ON_PRIMARY))
-        content_controls.append(ft.Text(text, color=Theme.TEXT_ON_PRIMARY))
-
+        if _StateClass:
+            bgcolor_val = {
+                _StateClass.DEFAULT: Theme.PRIMARY,
+                _StateClass.HOVERED: Theme.PRIMARY_LIGHT,
+                _StateClass.DISABLED: Theme.TEXT_DISABLED,
+            }
         return ft.ElevatedButton(
-            content=ft.Row(content_controls, alignment=ft.MainAxisAlignment.CENTER, spacing=Spacing.SM),
-            # icon=icon, # Removed to avoid conflict with content
+            text=text,
+            icon=icon,
             on_click=on_click,
             disabled=disabled,
             style=ft.ButtonStyle(
                 bgcolor=bgcolor_val,
-                # color=Theme.TEXT_ON_PRIMARY, # Color handled in Text/Icon
+                color=Theme.TEXT_ON_PRIMARY,
                 padding=ft.padding.symmetric(horizontal=Spacing.LG, vertical=Spacing.MD),
                 shape=ft.RoundedRectangleBorder(radius=Radius.MD),
                 elevation=2,
             ),
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod
     def secondary_button(text: str, on_click=None, icon=None, **kwargs) -> ft.OutlinedButton:
-        content_controls = []
-        if icon:
-            content_controls.append(ft.Icon(icon, color=Theme.PRIMARY))
-        content_controls.append(ft.Text(text, color=Theme.PRIMARY))
-
         return ft.OutlinedButton(
-            content=ft.Row(content_controls, alignment=ft.MainAxisAlignment.CENTER, spacing=Spacing.SM),
-            # icon=icon,
+            text=text,
+            icon=icon,
             on_click=on_click,
             style=ft.ButtonStyle(
-                # color=Theme.PRIMARY,
+                color=Theme.PRIMARY,
                 padding=ft.padding.symmetric(horizontal=Spacing.LG, vertical=Spacing.MD),
                 shape=ft.RoundedRectangleBorder(radius=Radius.MD),
                 side=ft.BorderSide(width=1.5, color=Theme.PRIMARY),
             ),
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod
     def text_button(text: str, on_click=None, icon=None, **kwargs) -> ft.TextButton:
-        content_controls = []
-        if icon:
-            content_controls.append(ft.Icon(icon, color=Theme.PRIMARY))
-        content_controls.append(ft.Text(text, color=Theme.PRIMARY))
-        
         return ft.TextButton(
-            content=ft.Row(content_controls, alignment=ft.MainAxisAlignment.CENTER, spacing=Spacing.SM, tight=True),
-            # icon=icon,
+            text=text,
+            icon=icon,
             on_click=on_click,
             style=ft.ButtonStyle(
-                # color=Theme.PRIMARY,
+                color=Theme.PRIMARY,
                 padding=ft.padding.symmetric(horizontal=Spacing.MD, vertical=Spacing.SM),
             ),
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod
@@ -251,7 +237,7 @@ class UIComponents:
             ),
             on_click=on_click,
             animate=ft.Animation(200, "easeOut"),
-            **kwargs
+            **kwargs,
         )
 
     @staticmethod
@@ -274,11 +260,11 @@ class UIComponents:
     def chip(label: str, selected=False, on_click=None, icon=None) -> ft.Chip:
         return ft.Chip(
             label=ft.Text(label, size=Typography.CAPTION),
-            leading=ft.Icon(icon, size=18, color=Theme.TEXT_ON_PRIMARY if selected else Theme.TEXT_PRIMARY) if icon else None,
+            leading=ft.Icon(icon, size=18, color=Theme.TEXT_ON_PRIMARY if selected else Theme.TEXT_PRIMARY)
+            if icon
+            else None,
             bgcolor=Theme.PRIMARY if selected else Theme.SURFACE_VARIANT,
-            label_style=ft.TextStyle(
-                color=Theme.TEXT_ON_PRIMARY if selected else Theme.TEXT_PRIMARY
-            ),
+            label_style=ft.TextStyle(color=Theme.TEXT_ON_PRIMARY if selected else Theme.TEXT_PRIMARY),
             on_click=on_click,
         )
 
@@ -342,10 +328,12 @@ class UIComponents:
         ]
 
         if action_text and on_action:
-            controls.extend([
-                ft.Container(height=Spacing.LG),
-                UIComponents.secondary_button(action_text, on_click=on_action),
-            ])
+            controls.extend(
+                [
+                    ft.Container(height=Spacing.LG),
+                    UIComponents.secondary_button(action_text, on_click=on_action),
+                ]
+            )
 
         return ft.Container(
             content=ft.Column(
@@ -370,11 +358,14 @@ class UIComponents:
     @staticmethod
     def loading_state(message: str = "Cargando...") -> ft.Container:
         return ft.Container(
-            content=ft.Column([
-                UIComponents.progress_indicator(),
-                ft.Container(height=Spacing.MD),
-                ft.Text(message, size=Typography.BODY, color=Theme.TEXT_SECONDARY),
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+            content=ft.Column(
+                [
+                    UIComponents.progress_indicator(),
+                    ft.Container(height=Spacing.MD),
+                    ft.Text(message, size=Typography.BODY, color=Theme.TEXT_SECONDARY),
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
             alignment=ft.Alignment(0, 0),
             expand=True,
         )
@@ -382,34 +373,38 @@ class UIComponents:
     @staticmethod
     def hero_header(image_src: str, title: str, subtitle: str) -> ft.Container:
         return ft.Container(
-            content=ft.Stack([
-                ft.Image(
-                    src=image_src,
-                    width=float("inf"),
-                    height=110,
-                    fit="cover",
-                    border_radius=Radius.LG,
-                ),
-                ft.Container(
-                    content=ft.Column([
-                        ft.Text(title, size=Typography.HEADLINE, weight=Typography.BOLD, color=Colors.WHITE),
-                        ft.Text(subtitle, size=Typography.BODY, color=Colors.with_opacity(0.9, Colors.WHITE)),
-                    ], spacing=0),
-                    padding=Spacing.LG,
-                    alignment=ft.Alignment(-1, 1),
-                    gradient=ft.LinearGradient(
-                        begin=ft.Alignment(0, -1),
-                        end=ft.Alignment(0, 1),
-                        colors=[Colors.TRANSPARENT, Colors.with_opacity(0.8, Colors.BLACK87)],
+            content=ft.Stack(
+                [
+                    ft.Image(
+                        src=image_src,
+                        width=float("inf"),
+                        height=110,
+                        fit="cover",
+                        border_radius=Radius.LG,
                     ),
-                    border_radius=Radius.LG,
-                )
-            ]),
+                    ft.Container(
+                        content=ft.Column(
+                            [
+                                ft.Text(title, size=Typography.HEADLINE, weight=Typography.BOLD, color=Colors.WHITE),
+                                ft.Text(subtitle, size=Typography.BODY, color=Colors.with_opacity(0.9, Colors.WHITE)),
+                            ],
+                            spacing=0,
+                        ),
+                        padding=Spacing.LG,
+                        alignment=ft.Alignment(-1, 1),
+                        gradient=ft.LinearGradient(
+                            begin=ft.Alignment(0, -1),
+                            end=ft.Alignment(0, 1),
+                            colors=[Colors.TRANSPARENT, Colors.with_opacity(0.8, Colors.BLACK87)],
+                        ),
+                        border_radius=Radius.LG,
+                    ),
+                ]
+            ),
             margin=ft.margin.only(bottom=Spacing.LG),
             border_radius=Radius.LG,
             height=110,
         )
-
 
 
 class ResultCard(ft.Container):
@@ -422,13 +417,13 @@ class ResultCard(ft.Container):
         # 1. 'titulo' explícito (ej: desde Novedades)
         # 2. Nombre de archivo limpio si existe
         # 3. 'Desconocido' como fallback
-        raw_file = result.get('file', 'Desconocido')
+        raw_file = result.get("file", "Desconocido")
         file_name = Path(raw_file).name if raw_file else "Desconocido"
-        display_title = result.get('titulo') or file_name
+        display_title = result.get("titulo") or file_name
 
-        page = result.get('page', 1)
-        relevance = result.get('relevance', 0)
-        context = result.get('context', '...')
+        page = result.get("page", 1)
+        relevance = result.get("relevance", 0)
+        context = result.get("context", "...")
 
         # Determinar icono según tipo
         if "Decreto" in str(display_title) or "Decreto" in file_name:
@@ -450,8 +445,8 @@ class ResultCard(ft.Container):
         num_stars = min(5, max(0, int(relevance / 2)))
         relevance_stars = "⭐" * num_stars + "☆" * (5 - num_stars)
 
-        matches = result.get('matches', 0)
-        is_norma = result.get('is_norma', False)
+        matches = result.get("matches", 0)
+        is_norma = result.get("is_norma", False)
 
         # Construir fila de metadatos condicionalmente
         meta_row_controls = []
@@ -467,43 +462,54 @@ class ResultCard(ft.Container):
         else:
             # Para normas completas mostrar fecha o mensaje simple
             meta_row_controls = [
-                 ft.Icon(ft.Icons.CALENDAR_MONTH, size=12, color=Theme.TEXT_SECONDARY),
-                 ft.Text("Documento completo", size=Typography.CAPTION, color=Theme.TEXT_SECONDARY)
+                ft.Icon(ft.Icons.CALENDAR_MONTH, size=12, color=Theme.TEXT_SECONDARY),
+                ft.Text("Documento completo", size=Typography.CAPTION, color=Theme.TEXT_SECONDARY),
             ]
 
-        content = ft.Row([
-            UIComponents.icon_badge(icon, icon_color, size=28),
-            ft.Container(width=Spacing.MD),
-            ft.Column([
-                ft.Row([
-                    ft.Text(
-                        display_title,
-                        size=Typography.SUBTITLE,
-                        weight=Typography.SEMIBOLD,
-                        color=Theme.TEXT_PRIMARY,
-                        max_lines=1,
-                        overflow=ft.TextOverflow.ELLIPSIS,
-                        expand=True,
-                    ),
-                    ft.Text(relevance_stars, size=Typography.CAPTION, color=Theme.ACCENT),
-                ]),
-                ft.Row(meta_row_controls, spacing=Spacing.SM),
-                ft.Container(height=Spacing.XS),
-                # Usar Markdown para permitir resaltado en negrita
-                ft.Markdown(
-                    context,
-                    selectable=False,
-                    extension_set=ft.MarkdownExtensionSet.GITHUB_FLAVORED,
+        content = ft.Row(
+            [
+                UIComponents.icon_badge(icon, icon_color, size=28),
+                ft.Container(width=Spacing.MD),
+                ft.Column(
+                    [
+                        ft.Row(
+                            [
+                                ft.Text(
+                                    display_title,
+                                    size=Typography.SUBTITLE,
+                                    weight=Typography.SEMIBOLD,
+                                    color=Theme.TEXT_PRIMARY,
+                                    max_lines=1,
+                                    overflow=ft.TextOverflow.ELLIPSIS,
+                                    expand=True,
+                                ),
+                                ft.Text(relevance_stars, size=Typography.CAPTION, color=Theme.ACCENT),
+                            ]
+                        ),
+                        ft.Row(meta_row_controls, spacing=Spacing.SM),
+                        ft.Container(height=Spacing.XS),
+                        # Usar Markdown para permitir resaltado en negrita
+                        ft.Markdown(
+                            context,
+                            selectable=False,
+                            extension_set=ft.MarkdownExtensionSet.GITHUB_FLAVORED,
+                        ),
+                    ],
+                    expand=True,
+                    spacing=Spacing.XXS,
                 ),
-            ], expand=True, spacing=Spacing.XXS),
-            ft.IconButton(
-                ft.Icons.PICTURE_AS_PDF,
-                icon_color=Theme.ERROR,
-                tooltip="Abrir PDF Original",
-                on_click=on_pdf_click if on_pdf_click else on_click
-            ) if result.get('file') != "Desconocido" else ft.Container(),
-            ft.Icon(ft.Icons.CHEVRON_RIGHT, color=Theme.TEXT_DISABLED),
-        ], alignment=ft.MainAxisAlignment.START)
+                ft.IconButton(
+                    ft.Icons.PICTURE_AS_PDF,
+                    icon_color=Theme.ERROR,
+                    tooltip="Abrir PDF Original",
+                    on_click=on_pdf_click if on_pdf_click else on_click,
+                )
+                if result.get("file") != "Desconocido"
+                else ft.Container(),
+                ft.Icon(ft.Icons.CHEVRON_RIGHT, color=Theme.TEXT_DISABLED),
+            ],
+            alignment=ft.MainAxisAlignment.START,
+        )
 
         super().__init__(
             content=content,

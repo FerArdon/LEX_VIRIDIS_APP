@@ -1,6 +1,8 @@
 # Dependencias principales para LEX VIRIDIS
-# Nucleo
+# Núcleo
+# tkinter es parte de la librería estándar de Python, no se instala con pip
 flet>=0.21.0
+ttkbootstrap>=1.10.1
 
 # PDF y Procesamiento
 PyMuPDF>=1.24.0
@@ -12,6 +14,4 @@ google-generativeai>=0.3.0
 # Utilidades
 psutil>=5.9.8
 numpy>=1.24.0
-requests
-fastapi>=0.109.0
-uvicorn>=0.27.0
+requests  # Para verificación de conectividad

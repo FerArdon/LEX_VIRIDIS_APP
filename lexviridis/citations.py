@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
@@ -10,6 +9,7 @@ class CitationStyle(Enum):
     BLUEBOOK = "bluebook"
     HONDURAN = "honduran"
 
+
 @dataclass
 class LegalDocument:
     tipo: str
@@ -18,6 +18,7 @@ class LegalDocument:
     fecha_publicacion: datetime
     institucion: str = "Congreso Nacional de Honduras"
     articulo: str | None = None
+
 
 class CitationGenerator:
     """Generador de citas legales automáticas."""
@@ -36,21 +37,24 @@ class CitationGenerator:
     def _format_apa(doc: LegalDocument) -> str:
         year = doc.fecha_publicacion.year
         citation = f"{doc.institucion}. ({year}). {doc.titulo} ({doc.tipo} No. {doc.numero}). La Gaceta."
-        if doc.articulo: citation += f" Art. {doc.articulo}."
+        if doc.articulo:
+            citation += f" Art. {doc.articulo}."
         return citation
 
     @staticmethod
     def _format_iso690(doc: LegalDocument) -> str:
         fecha = doc.fecha_publicacion.strftime("%d de %B de %Y")
         citation = f"HONDURAS. {doc.tipo} No. {doc.numero}, {doc.titulo}. La Gaceta, {fecha}."
-        if doc.articulo: citation += f" art. {doc.articulo}."
+        if doc.articulo:
+            citation += f" art. {doc.articulo}."
         return citation
 
     @staticmethod
     def _format_bluebook(doc: LegalDocument) -> str:
         year = doc.fecha_publicacion.year
         citation = f"{doc.titulo}, {doc.tipo} {doc.numero}"
-        if doc.articulo: citation += f", art. {doc.articulo}"
+        if doc.articulo:
+            citation += f", art. {doc.articulo}"
         citation += f" (Honduras {year})"
         return citation
 
@@ -59,6 +63,7 @@ class CitationGenerator:
         fecha = doc.fecha_publicacion.strftime("%d de %B de %Y")
         prefix = f"Art. {doc.articulo} del " if doc.articulo else ""
         return f"{prefix}{doc.tipo} No. {doc.numero}, {doc.titulo}, publicado en La Gaceta el {fecha}."
+
 
 class BibliographyManager:
     """Gestiona una lista de documentos citados."""

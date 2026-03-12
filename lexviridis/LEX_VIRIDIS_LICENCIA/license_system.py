@@ -28,42 +28,14 @@ class LicenseManager:
     """
 
     # En producción, esta clave debe estar ofuscada o compilada seguramente
-    @staticmethod
-    def _verify_file_integrity():
-        """Verifica que license.dat no fue manipulado externamente."""
-        if not LicenseManager.LICENSE_FILE.exists():
-            return True  # Primer uso
-
-        try:
-            content = LicenseManager.LICENSE_FILE.read_bytes()
-            # Debe estar en base64 (caracteres validos)
-            if not content: return False
-            # Check simple de estructura (no garantiza validez cripto, solo formato)
-            # Mejor dejar que validate_license maneje la criptografia
-            return True
-        except Exception:
-            return False
-
-    @staticmethod
-    def _get_secret_key():
-        """Obtiene clave secreta ofuscada."""
-        # Simple XOR obfuscation to prevent string search
-        # "LEX_VIRIDIS_SECRET_KEY_2026_FER_ARDON"
-        # Key generada dinamicamente
-        parts = [
-            b"LEX_", b"VIRIDIS_", b"SECRET_", b"KEY_", b"2026_", b"FER_", b"ARDON"
-        ]
-        return b"".join(parts)
-
-    _SECRET_KEY = _get_secret_key()
-
+    _SECRET_KEY = b"LEX_VIRIDIS_SECRET_KEY_2026_FER_ARDON"
 
     LICENSE_TYPES = {
-        "PRUEBA": 15,       # 15 días
-        "MENSUAL": 30,      # 30 días
-        "SEMESTRAL": 180,   # 180 días
-        "ANUAL": 365,       # 365 días
-        "PERMANENTE": 36500 # 100 años
+        "PRUEBA": 15,  # 15 días
+        "MENSUAL": 30,  # 30 días
+        "SEMESTRAL": 180,  # 180 días
+        "ANUAL": 365,  # 365 días
+        "PERMANENTE": 36500,  # 100 años
     }
 
     # Archivo donde se guarda la licencia activada
@@ -76,8 +48,7 @@ class LicenseManager:
         return str(uuid.getnode())
 
     @classmethod
-    def generate_license(cls, license_type: str, client_name: str,
-                         max_seats: int = 1, hardware_id: str = None) -> str:
+    def generate_license(cls, license_type: str, client_name: str, max_seats: int = 1, hardware_id: str = None) -> str:
         """
         Genera una clave de licencia firmada.
 
@@ -102,11 +73,11 @@ class LicenseManager:
             "max_seats": max_seats,
             "hw_id": hardware_id,  # Solo para single-seat legacy
             "iat": creation_date.timestamp(),
-            "exp": expiration_date.timestamp()
+            "exp": expiration_date.timestamp(),
         }
 
         # Serializar y Codificar
-        payload_str = json.dumps(payload, separators=(',', ':'))
+        payload_str = json.dumps(payload, separators=(",", ":"))
         payload_b64 = base64.urlsafe_b64encode(payload_str.encode()).decode()
 
         # Firmar
@@ -122,7 +93,7 @@ class LicenseManager:
         Valida una licencia. Retorna los datos si es válida, o error si no.
         """
         try:
-            payload_b64, signature_b64 = license_key.split('.')
+            payload_b64, signature_b64 = license_key.split(".")
 
             # Decodificar
             payload_str = base64.urlsafe_b64decode(payload_b64).decode()
@@ -143,7 +114,7 @@ class LicenseManager:
                 return {
                     "valid": False,
                     "error": f"Licencia expirada el {expiration_date.strftime('%Y-%m-%d')}.",
-                    "expired": True
+                    "expired": True,
                 }
 
             # Verificar activaciones multi-seat
@@ -158,7 +129,7 @@ class LicenseManager:
                         return {
                             "valid": False,
                             "error": f"Límite de activaciones alcanzado ({max_seats} PCs máximo).",
-                            "seats_exhausted": True
+                            "seats_exhausted": True,
                         }
                     # Registrar nueva activación
                     activations.append(current_hw_id)
@@ -173,7 +144,7 @@ class LicenseManager:
                 "expires": expiration_date.strftime("%Y-%m-%d"),
                 "days_left": days_left,
                 "max_seats": max_seats,
-                "seats_used": len(cls._load_activations(license_key)) if check_hardware else 0
+                "seats_used": len(cls._load_activations(license_key)) if check_hardware else 0,
             }
 
         except ValueError as ve:
@@ -190,7 +161,7 @@ class LicenseManager:
                 # Usar hash de licencia como key
                 key_hash = hashlib.md5(license_key.encode()).hexdigest()[:16]
                 return data.get(key_hash, [])
-        except Exception:
+        except:
             pass
         return []
 
@@ -228,7 +199,7 @@ class LicenseManager:
             if cls.LICENSE_FILE.exists():
                 encoded = cls.LICENSE_FILE.read_text()
                 return base64.b64decode(encoded).decode()
-        except Exception:
+        except:
             pass
         return None
 
@@ -238,7 +209,7 @@ class LicenseManager:
         try:
             if cls.LICENSE_FILE.exists():
                 cls.LICENSE_FILE.unlink()
-        except Exception:
+        except:
             pass
 
 

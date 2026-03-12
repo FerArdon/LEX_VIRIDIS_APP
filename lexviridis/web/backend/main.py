@@ -1,4 +1,3 @@
-
 import sys
 from pathlib import Path
 
@@ -20,7 +19,7 @@ app = FastAPI(title="LEX VIRIDIS API", version="2.0.0")
 # Configurar CORS para el frontend (Vite por defecto usa 5173)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # En producción limitar a dominios específicos
+    allow_origins=["*"],  # En producción limitar a dominios específicos
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,16 +28,14 @@ app.add_middleware(
 # Inicializar motor
 engine = SearchEngine()
 
+
 @app.get("/")
 async def root():
     return {"message": "LEX VIRIDIS API v2.0 - Online", "status": "ready" if engine.is_ready else "error"}
 
+
 @app.get("/api/search")
-async def search(
-    q: str = Query(..., min_length=2),
-    page: int = 1,
-    page_size: int = 20
-):
+async def search(q: str = Query(..., min_length=2), page: int = 1, page_size: int = 20):
     """Búsqueda de artículos legales."""
     if not engine.is_ready:
         raise HTTPException(status_code=500, detail="Motor de búsqueda no disponible")
@@ -51,17 +48,13 @@ async def search(
             "page": page,
             "total_found": result.total_found,
             "duration_ms": result.duration_ms,
-            "results": result.results
+            "results": result.results,
         }
     elif result.status == SearchStatus.NO_RESULTS:
-        return {
-            "query": q,
-            "total_found": 0,
-            "results": [],
-            "message": "No se encontraron resultados"
-        }
+        return {"query": q, "total_found": 0, "results": [], "message": "No se encontraron resultados"}
     else:
         raise HTTPException(status_code=400, detail=result.message)
+
 
 @app.get("/api/documentos/{article_id}")
 async def get_article(article_id: int):
@@ -75,11 +68,14 @@ async def get_article(article_id: int):
 
     return article
 
+
 @app.get("/api/stats")
 async def get_stats():
     """Obtiene estadísticas generales del sistema."""
     return engine.get_dashboard_stats()
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

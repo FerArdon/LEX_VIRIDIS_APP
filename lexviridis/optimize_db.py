@@ -1,26 +1,31 @@
-
 """
 Script de optimización de base de datos para LEX VIRIDIS.
 Crea índices y optimiza la estructura para búsquedas rápidas.
 """
+
 import sqlite3
 import time
 from pathlib import Path
 
 DB = Path(r"c:\Users\frard\OneDrive\LEX_VIRIDIS_APP\LEX_VIRIDIS_DB\legislacion_ambiental.db")
 
+
 def benchmark_search(cursor, query):
     """Mide el tiempo de una búsqueda."""
     start = time.perf_counter()
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT articulo_id, titulo_norma
         FROM busqueda_fts
         WHERE busqueda_fts MATCH ?
         LIMIT 20
-    """, (f'"{query}"',))
+    """,
+        (f'"{query}"',),
+    )
     results = cursor.fetchall()
     elapsed = (time.perf_counter() - start) * 1000
     return len(results), elapsed
+
 
 def optimize_database():
     print("⚡ Optimización de Base de Datos LEX VIRIDIS")
@@ -99,6 +104,7 @@ def optimize_database():
 
     conn.close()
     print("\n✅ Optimización completada!")
+
 
 if __name__ == "__main__":
     optimize_database()

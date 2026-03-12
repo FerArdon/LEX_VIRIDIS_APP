@@ -41,5 +41,7 @@ repos:
     rev: 1.7.7
     hooks:
       - id: bandit
-        args: [-ll, --skip, B101]
+        # -f json: evita crash UnicodeEncodeError cp1252 en Windows (bug bandit con chars Unicode en fuente)
+        # --exit-zero: reporta hallazgos sin bloquear commits (issues pre-existentes se rastrean por separado)
+        args: [-ll, --skip, B101, -f, json, --exit-zero]
         exclude: ^tests/

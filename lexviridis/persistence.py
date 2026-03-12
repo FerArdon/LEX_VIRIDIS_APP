@@ -22,7 +22,7 @@ class DataManager:
     def _load_data(self):
         if self.filepath.exists():
             try:
-                with open(self.filepath, encoding='utf-8') as f:
+                with open(self.filepath, encoding="utf-8") as f:
                     return json.load(f)
             except Exception as e:
                 logging.warning(f"Archivo corrupto {self.filepath}: {e}")
@@ -30,13 +30,14 @@ class DataManager:
 
     def _save_data(self):
         try:
-            with open(self.filepath, 'w', encoding='utf-8') as f:
+            with open(self.filepath, "w", encoding="utf-8") as f:
                 json.dump(self._data, f, ensure_ascii=False, indent=2)
         except Exception as e:
             logging.error(f"No se pudo guardar {self.filepath}: {e}")
 
     def _default_data(self):
         return {}
+
 
 # -----------------------------
 # Caché de búsqueda
@@ -51,7 +52,7 @@ class SearchCache(DataManager):
 
     def _generate_key(self, terms: list[str]) -> str:
         key = "_".join(sorted(t.lower() for t in terms))
-        return hashlib.md5(key.encode('utf-8')).hexdigest()
+        return hashlib.md5(key.encode("utf-8")).hexdigest()
 
     def get(self, terms: list[str]) -> list[dict] | None:
         return self._data.get(self._generate_key(terms))
@@ -60,8 +61,9 @@ class SearchCache(DataManager):
         key = self._generate_key(terms)
         self._data[key] = results
         if len(self._data) > self.max_cache_size:
-            self._data = dict(list(self._data.items())[-self.max_cache_size:])
+            self._data = dict(list(self._data.items())[-self.max_cache_size :])
         self._save_data()
+
 
 # -----------------------------
 # Historial de búsqueda
@@ -75,12 +77,13 @@ class SearchHistory(DataManager):
         return []
 
     def add(self, terms: list[str]):
-        if not terms: return
+        if not terms:
+            return
         timestamp = datetime.now().isoformat()
         normalized = sorted(normalize_text(t) for t in terms)
-        if not self._data or normalized != sorted(normalize_text(t) for t in self._data[-1]['terms']):
-            self._data.append({'terms': terms, 'timestamp': timestamp})
-            self._data = self._data[-self.max_size:]
+        if not self._data or normalized != sorted(normalize_text(t) for t in self._data[-1]["terms"]):
+            self._data.append({"terms": terms, "timestamp": timestamp})
+            self._data = self._data[-self.max_size :]
             self._save_data()
 
     def get(self) -> list[dict]:
@@ -89,6 +92,7 @@ class SearchHistory(DataManager):
     def clear(self):
         self._data = self._default_data()
         self._save_data()
+
 
 # -----------------------------
 # Favoritos
@@ -101,7 +105,7 @@ class FavoritesManager(DataManager):
         return {}
 
     def add(self, path: str, description: str = ""):
-        self._data[path] = {'description': description, 'added': datetime.now().isoformat()}
+        self._data[path] = {"description": description, "added": datetime.now().isoformat()}
         self._save_data()
 
     def remove(self, path: str):
@@ -115,6 +119,7 @@ class FavoritesManager(DataManager):
     def get_all(self) -> dict[str, dict]:
         return self._data
 
+
 # -----------------------------
 # Guardado automático de búsquedas
 # -----------------------------
@@ -125,21 +130,17 @@ class AutoBackup:
         self.max_backups = 30
 
     def save(self, terms: list[str], results: list[dict]):
-        if not results: return
+        if not results:
+            return
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         slug = "_".join(terms[:3]).replace(" ", "_")[:50]
         filename = f"search_{ts}_{slug}.json" if slug else f"search_{ts}.json"
         path = self.dir / filename
 
-        data = {
-            "timestamp": ts,
-            "search_terms": terms,
-            "results": results,
-            "app_version": config.APP_VERSION
-        }
+        data = {"timestamp": ts, "search_terms": terms, "results": results, "app_version": config.APP_VERSION}
 
         try:
-            with open(path, 'w', encoding='utf-8') as f:
+            with open(path, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
             logging.info(f"Backup automático: {path.name}")
         except Exception as e:

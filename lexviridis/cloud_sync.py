@@ -1,4 +1,3 @@
-
 import threading
 import time
 from datetime import datetime
@@ -24,7 +23,8 @@ class CloudSync:
 
     def sync_database(self, local_db_path: Path):
         """Sincroniza la base de datos local con la 'nube'."""
-        if not self.creds: return "error_not_authenticated"
+        if not self.creds:
+            return "error_not_authenticated"
 
         self.is_syncing = True
         try:
@@ -38,6 +38,7 @@ class CloudSync:
     def start_auto_sync(self, interval_minutes=30):
         """Inicia el thread de sincronización automática."""
         self.sync_enabled = True
+
         def _job():
             while self.sync_enabled:
                 if self.creds:
@@ -49,6 +50,8 @@ class CloudSync:
         threading.Thread(target=_job, daemon=True).start()
 
     def get_status(self):
-        if not self.creds: return "disconnected"
-        if self.is_syncing: return "syncing"
+        if not self.creds:
+            return "disconnected"
+        if self.is_syncing:
+            return "syncing"
         return "connected"

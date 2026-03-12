@@ -79,7 +79,7 @@ class AppConfig:
     @property
     def BASE_DIR(self) -> Path:
         """Get base directory with validation."""
-        base = Path(getattr(sys, "_MEIPASS", None) or Path(__file__).parent.parent).resolve()
+        base = Path(sys._MEIPASS if self.IS_FROZEN else Path(__file__).parent.parent).resolve()
 
         if not base.exists():
             raise RuntimeError(f"Base directory does not exist: {base}")
@@ -162,7 +162,7 @@ class AppConfig:
             try:
                 # Fallback to PNG
                 return self._validate_resource(self.RESOURCE_DIR / "logo_luxviridis.png")
-            except (FileNotFoundError, OSError, AttributeError):
+            except:
                 return None
 
     @property
@@ -177,12 +177,12 @@ class AppConfig:
             if self.security.enable_file_permissions and self.IS_WINDOWS:
                 # Set appropriate permissions on Windows
                 try:
-                    os.chmod(path, 0o755)  # nosec B103
+                    os.chmod(path, 0o755)
                 except (OSError, AttributeError):
                     pass  # Ignore permission errors on Windows
             return path
         except Exception as e:
-            raise RuntimeError(f"Cannot create directory {path}: {e}") from e
+            raise RuntimeError(f"Cannot create directory {path}: {e}")
 
     def _validate_resource(self, path: Path) -> Path:
         """Validate resource file exists."""
@@ -215,7 +215,7 @@ class LoggingManager:
 
     def __init__(self, config: AppConfig):
         self.config = config
-        self.logger: logging.Logger | None = None
+        self.logger = None
 
     def setup_logging(self, level: LogLevel = LogLevel.INFO) -> logging.Logger:
         """Configure comprehensive logging with rotation."""
@@ -250,18 +250,14 @@ class LoggingManager:
         file_handler.setLevel(log_level)
         file_handler.setFormatter(detailed_formatter)
 
-        # Console handler (only if stdout is available, e.g., not in frozen windowed mode)
-        if sys.stdout is not None:
-            try:
-                console_handler = logging.StreamHandler(sys.stdout)
-                console_handler.setLevel(log_level)
-                console_handler.setFormatter(simple_formatter)
-                logger.addHandler(console_handler)
-            except Exception:
-                pass  # Skip console handler in frozen windowed mode
+        # Console handler
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setLevel(log_level)
+        console_handler.setFormatter(simple_formatter)
 
         # Add handlers
         logger.addHandler(file_handler)
+        logger.addHandler(console_handler)
 
         # Log startup
         logger.info("=" * 60)

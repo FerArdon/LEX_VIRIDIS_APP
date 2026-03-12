@@ -1,4 +1,5 @@
 """Test rápido de imports y rutas para validar correcciones de empaquetado."""
+
 import os
 import sys
 
@@ -10,6 +11,7 @@ ok = []
 # Test 1: config
 try:
     from lexviridis.config import config
+
     ok.append(f"1. config OK - BASE_DIR: {config.BASE_DIR}")
 except Exception as e:
     errors.append(f"1. config FAIL: {e}")
@@ -17,6 +19,7 @@ except Exception as e:
 # Test 2: design_system create_theme
 try:
     from lexviridis.design_system import create_theme
+
     theme = create_theme()
     ok.append(f"2. create_theme OK - type: {type(theme).__name__}")
 except Exception as e:
@@ -25,6 +28,7 @@ except Exception as e:
 # Test 3: search_engine
 try:
     from lexviridis.search_engine import DB_PATH
+
     ok.append(f"3. search_engine OK - DB_PATH: {DB_PATH}")
 except Exception as e:
     errors.append(f"3. search_engine FAIL: {e}")
@@ -32,6 +36,7 @@ except Exception as e:
 # Test 4: license_ui
 try:
     from lexviridis.license_ui import LicenseManager
+
     ok.append(f"4. license_ui OK - LicenseManager: {type(LicenseManager).__name__}")
 except Exception as e:
     errors.append(f"4. license_ui FAIL: {e}")
@@ -39,6 +44,7 @@ except Exception as e:
 # Test 5: translations
 try:
     from lexviridis.translations import i18n
+
     ok.append(f"5. translations OK - lang: {i18n.current_language}")
 except Exception as e:
     errors.append(f"5. translations FAIL: {e}")
@@ -47,6 +53,7 @@ except Exception as e:
 try:
     from lexviridis import __version__
     from lexviridis.config import config as cfg
+
     v_init = __version__
     v_config = cfg.APP_VERSION
     if v_init == v_config == "3.0.0":
@@ -59,6 +66,7 @@ except Exception as e:
 # Test 7: asset paths
 try:
     from lexviridis.config import config as cfg
+
     icon_path = cfg.BASE_DIR / "assets" / "LEXVIRIDIS_WHITE_BG.ico"
     logo_path = cfg.BASE_DIR / "assets" / "LEXVIRIDIS_WHITE_BG.png"
     icon_exists = icon_path.exists()
@@ -73,6 +81,7 @@ except Exception as e:
 # Test 8: DB exists
 try:
     from lexviridis.search_engine import DB_PATH
+
     db_exists = DB_PATH.exists()
     if db_exists:
         ok.append(f"8. database OK - {DB_PATH}")
@@ -84,6 +93,7 @@ except Exception as e:
 # Test 9: ui_v2 import (sin iniciar Flet)
 try:
     import importlib
+
     spec = importlib.util.find_spec("lexviridis.ui_v2")
     if spec:
         ok.append("9. ui_v2 module found OK")
@@ -92,18 +102,18 @@ try:
 except Exception as e:
     errors.append(f"9. ui_v2 FAIL: {e}")
 
-print("\n" + "="*60)
+print("\n" + "=" * 60)
 print("  LEX VIRIDIS - Test de Validación Post-Fix")
-print("="*60)
+print("=" * 60)
 print(f"\nOK: {len(ok)} | ERRORS: {len(errors)}")
 print()
 for line in ok:
     print(f"  [OK] {line}")
 for line in errors:
     print(f"  [!!] {line}")
-print("\n" + "="*60)
+print("\n" + "=" * 60)
 if errors:
     print("  HAY ERRORES - REVISAR ANTES DE COMPILAR")
 else:
     print("  TODAS LAS PRUEBAS PASARON - LISTO PARA COMPILAR")
-print("="*60)
+print("=" * 60)

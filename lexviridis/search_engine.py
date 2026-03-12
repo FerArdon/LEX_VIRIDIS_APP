@@ -1,13 +1,4 @@
 """
-LEX VIRIDIS - Sistema de Investigación Legal Ambiental
-Copyright © 2026 Fiscalía Especial del Medio Ambiente (FEMA) - Honduras.
-Todos los derechos reservados.
-
-PROPRIETARY SOFTWARE - Unauthorized use prohibited
-SOFTWARE PROPIETARIO - Uso no autorizado prohibido
-
-Module: search_engine.py
-
 Motor de búsqueda optimizado para LEX VIRIDIS.
 
 Incluye:
@@ -27,14 +18,13 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
-from .license_check import requires_valid_license
-
 # Configurar logger
 search_logger = logging.getLogger("lexviridis.search")
 
 # Importar configuración centralizada (compatible con .exe y desarrollo)
 try:
     from .config import config as _app_config
+
     DB_PATH = _app_config.BASE_DIR / "LEX_VIRIDIS_DB" / "legislacion_ambiental.db"
 except Exception:
     DB_PATH = Path(__file__).parent.parent / "LEX_VIRIDIS_DB" / "legislacion_ambiental.db"
@@ -48,20 +38,20 @@ CACHE_SIZE = 100
 SEARCH_TIMEOUT_SECONDS = 5
 MAX_RESULTS = 100
 
-ALLOWED_CHARS_PATTERN = re.compile(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s\-\.]+$')
-SQL_KEYWORDS = {'DROP', 'DELETE', 'INSERT', 'UPDATE', 'TRUNCATE', '--', ';', 'UNION', 'SELECT'}
+ALLOWED_CHARS_PATTERN = re.compile(r"^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s\-\.]+$")
+SQL_KEYWORDS = {"DROP", "DELETE", "INSERT", "UPDATE", "TRUNCATE", "--", ";", "UNION", "SELECT"}
 
 # Sinónimos legales
 SINONIMOS = {
-    'delito': ['delito', 'delitos', 'crimen', 'infraccion', 'infracción', 'falta'],
-    'ambiental': ['ambiental', 'ambientales', 'ambiente', 'ecologico', 'ecológico', 'naturaleza'],
-    'bosque': ['bosque', 'bosques', 'forestal', 'forestales', 'arbol', 'árboles', 'monte'],
-    'agua': ['agua', 'aguas', 'hidrico', 'hídrico'],
-    'contaminacion': ['contaminacion', 'contaminación', 'polucion', 'polución', 'vertido'],
-    'tala': ['tala', 'corte', 'deforestacion', 'deforestación', 'aprovechamiento'],
-    'licencia': ['licencia', 'licencias', 'permiso', 'permisos', 'autorizacion', 'autorización'],
-    'multa': ['multa', 'multas', 'sancion', 'sanción', 'pena', 'penalidad'],
-    'protegida': ['protegida', 'protegidas', 'protección', 'conservacion', 'conservación'],
+    "delito": ["delito", "delitos", "crimen", "infraccion", "infracción", "falta"],
+    "ambiental": ["ambiental", "ambientales", "ambiente", "ecologico", "ecológico", "naturaleza"],
+    "bosque": ["bosque", "bosques", "forestal", "forestales", "arbol", "árboles", "monte"],
+    "agua": ["agua", "aguas", "hidrico", "hídrico"],
+    "contaminacion": ["contaminacion", "contaminación", "polucion", "polución", "vertido"],
+    "tala": ["tala", "corte", "deforestacion", "deforestación", "aprovechamiento"],
+    "licencia": ["licencia", "licencias", "permiso", "permisos", "autorizacion", "autorización"],
+    "multa": ["multa", "multas", "sancion", "sanción", "pena", "penalidad"],
+    "protegida": ["protegida", "protegidas", "protección", "conservacion", "conservación"],
 }
 
 
@@ -102,7 +92,7 @@ class QueryValidator:
             return False, f"Máximo {MAX_QUERY_LENGTH} caracteres"
 
         if not ALLOWED_CHARS_PATTERN.match(query):
-            invalid_chars = set(c for c in query if not re.match(r'[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s\-\.]', c))
+            invalid_chars = set(c for c in query if not re.match(r"[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s\-\.]", c))
             return False, f"Caracteres no permitidos: {' '.join(invalid_chars)}"
 
         query_upper = query.upper()
@@ -115,8 +105,8 @@ class QueryValidator:
 
     @staticmethod
     def sanitize(query: str) -> str:
-        sanitized = re.sub(r'[^\w\sáéíóúÁÉÍÓÚñÑüÜ\-\.]', '', query)
-        return ' '.join(sanitized.split()).strip()
+        sanitized = re.sub(r"[^\w\sáéíóúÁÉÍÓÚñÑüÜ\-\.]", "", query)
+        return " ".join(sanitized.split()).strip()
 
 
 class DatabaseManager:
@@ -364,7 +354,7 @@ class SearchEngine:
         return self._init_error
 
     def _normalize_accents(self, text: str) -> str:
-        replacements = {'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ñ': 'n', 'ü': 'u'}
+        replacements = {"á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u", "ñ": "n", "ü": "u"}
         result = text.lower()
         for orig, repl in replacements.items():
             result = result.replace(orig, repl)
@@ -378,7 +368,7 @@ class SearchEngine:
             word_norm = self._normalize_accents(word)
             found = False
 
-            for _base, synonyms in SINONIMOS.items():
+            for base, synonyms in SINONIMOS.items():
                 norm_synonyms = [self._normalize_accents(s) for s in synonyms]
                 if word_norm in norm_synonyms:
                     expanded.extend(synonyms)
@@ -390,19 +380,20 @@ class SearchEngine:
 
         return list(dict.fromkeys(expanded))
 
-    @requires_valid_license
     def search(self, query: str, operator: str = "OR", limit: int = DEFAULT_PAGE_SIZE, offset: int = 0) -> list[dict]:
         """Búsqueda simple (interfaz compatible)."""
         result = self.search_safe(query, operator, page=1, page_size=limit)
         return result.results
 
-    @requires_valid_license
-    def search_safe(self, query: str, operator: str = "OR", page: int = 1, page_size: int = DEFAULT_PAGE_SIZE) -> SearchResult:
+    def search_safe(
+        self, query: str, operator: str = "OR", page: int = 1, page_size: int = DEFAULT_PAGE_SIZE
+    ) -> SearchResult:
         """Búsqueda segura con caché, validación y paginación."""
         start_time = time.perf_counter()
 
         # Registrar búsqueda en historial
         import threading
+
         threading.Thread(target=self._log_search, args=(query,), daemon=True).start()
 
         if not self._is_ready:
@@ -410,7 +401,9 @@ class SearchEngine:
                 status=SearchStatus.DB_ERROR,
                 results=[],
                 message=self._init_error or "Motor no disponible",
-                query=query, duration_ms=0, total_found=0
+                query=query,
+                duration_ms=0,
+                total_found=0,
             )
 
         # Validar
@@ -418,8 +411,11 @@ class SearchEngine:
         if not is_valid:
             return SearchResult(
                 status=SearchStatus.INVALID_QUERY,
-                results=[], message=error_msg,
-                query=query, duration_ms=0, total_found=0
+                results=[],
+                message=error_msg,
+                query=query,
+                duration_ms=0,
+                total_found=0,
             )
 
         clean_query = QueryValidator.sanitize(query)
@@ -433,8 +429,12 @@ class SearchEngine:
                 status=SearchStatus.SUCCESS if cached else SearchStatus.NO_RESULTS,
                 results=cached,
                 message=f"{len(cached)} resultados (caché)",
-                query=query, duration_ms=duration, total_found=len(cached),
-                page=page, page_size=page_size, cached=True
+                query=query,
+                duration_ms=duration,
+                total_found=len(cached),
+                page=page,
+                page_size=page_size,
+                cached=True,
             )
 
         # Ejecutar búsqueda
@@ -454,8 +454,11 @@ class SearchEngine:
                 search_logger.info(f"🔍 Sin resultados: '{query}' ({duration:.2f}ms)")
                 return SearchResult(
                     status=SearchStatus.NO_RESULTS,
-                    results=[], message="Sin resultados. Prueba otros términos.",
-                    query=query, duration_ms=duration, total_found=0
+                    results=[],
+                    message="Sin resultados. Prueba otros términos.",
+                    query=query,
+                    duration_ms=duration,
+                    total_found=0,
                 )
 
             search_logger.info(f"✅ '{query}' → {len(results)} resultados ({duration:.2f}ms)")
@@ -463,25 +466,32 @@ class SearchEngine:
                 status=SearchStatus.SUCCESS,
                 results=results,
                 message=f"{len(results)} resultados",
-                query=query, duration_ms=duration, total_found=len(results),
-                page=page, page_size=page_size
+                query=query,
+                duration_ms=duration,
+                total_found=len(results),
+                page=page,
+                page_size=page_size,
             )
 
         except sqlite3.Error as e:
             search_logger.error(f"❌ DB error: {e}")
             return SearchResult(
                 status=SearchStatus.DB_ERROR,
-                results=[], message="Error de base de datos",
-                query=query, duration_ms=(time.perf_counter() - start_time) * 1000,
-                total_found=0
+                results=[],
+                message="Error de base de datos",
+                query=query,
+                duration_ms=(time.perf_counter() - start_time) * 1000,
+                total_found=0,
             )
         except Exception as e:
             search_logger.error(f"❌ Error: {e}", exc_info=True)
             return SearchResult(
                 status=SearchStatus.UNKNOWN_ERROR,
-                results=[], message="Error inesperado",
-                query=query, duration_ms=(time.perf_counter() - start_time) * 1000,
-                total_found=0
+                results=[],
+                message="Error inesperado",
+                query=query,
+                duration_ms=(time.perf_counter() - start_time) * 1000,
+                total_found=0,
             )
 
     def _execute_search(self, query: str, operator: str, page: int, page_size: int) -> list[dict]:
@@ -523,32 +533,29 @@ class SearchEngine:
 
             for row in cursor.fetchall():
                 # Convertir snippet de FTS (<b>...</b>) a Markdown (**...**) para Flet
-                snippet_md = str(row['fragmento']).replace("<b>", "**").replace("</b>", "**")
+                snippet_md = str(row["fragmento"]).replace("<b>", "**").replace("</b>", "**")
 
                 # Calcular número de ocurrencias
                 matches_count = 0
-                contenido_lower = str(row['contenido_completo']).lower()
+                contenido_lower = str(row["contenido_completo"]).lower()
                 for term in terms:
                     if len(term) > 2:
                         matches_count += contenido_lower.count(term.lower())
 
-                results.append({
-                    'id': row['articulo_id'],
-                    'numero_articulo': row['numero_articulo'],
-                    'norma_titulo': row['titulo_norma'],
-                    'contenido': row['contenido_completo'],       # ✅ Para ArticleDetailView
-                    'archivo_pdf': row['archivo_pdf'],
-                    'file': row['archivo_pdf'] or "Desconocido",
-                    'page': row['pagina'] or 1,
-                    'pagina': row['pagina'] or 1,                  # ✅ Alias
-                    'relevance': round(abs(row['rank']) * 10, 1),
-                    'context': f"Art. {row['numero_articulo']}: {snippet_md}",
-                    'term': query,
-                    'matches': matches_count,
-                    'is_high_relevance': abs(row['rank']) < 5.0
-                })
+                results.append(
+                    {
+                        "id": row["articulo_id"],
+                        "file": row["archivo_pdf"] or "Desconocido",
+                        "page": row["pagina"] or 1,
+                        "relevance": round(abs(row["rank"]) * 10, 1),
+                        "context": f"Art. {row['numero_articulo']}: {snippet_md}",
+                        "term": query,
+                        "matches": matches_count,
+                        "is_high_relevance": abs(row["rank"]) < 5.0,  # Rank bajo en FTS5 significa más relevante
+                    }
+                )
 
-            results.sort(key=lambda x: x['relevance'], reverse=True)
+            results.sort(key=lambda x: x["relevance"], reverse=True)
 
             # Fallback: Si FTS no encuentra nada, buscar directamente en normas.titulo
             if not results:
@@ -570,19 +577,21 @@ class SearchEngine:
 
                 for row in cursor.fetchall():
                     # Crear un resultado sintético desde la norma
-                    results.append({
-                        'id': row['norma_id'],
-                        'file': row['archivo_pdf'] or "Desconocido",
-                        'page': 1,
-                        'relevance': 8.0,
-                        'context': f"{row['tipo']}: {row['titulo'][:100]}",
-                        'term': query,
-                        'matches': 1,
-                        'is_high_relevance': True,
-                        'norma_titulo': row['titulo'],
-                        'tipo_norma': row['tipo'],
-                        'contenido': row['resumen'] or row['titulo'],
-                    })
+                    results.append(
+                        {
+                            "id": row["norma_id"],
+                            "file": row["archivo_pdf"] or "Desconocido",
+                            "page": 1,
+                            "relevance": 8.0,
+                            "context": f"{row['tipo']}: {row['titulo'][:100]}",
+                            "term": query,
+                            "matches": 1,
+                            "is_high_relevance": True,
+                            "norma_titulo": row["titulo"],
+                            "tipo_norma": row["tipo"],
+                            "contenido": row["resumen"] or row["titulo"],
+                        }
+                    )
 
         finally:
             conn.close()
@@ -595,12 +604,15 @@ class SearchEngine:
         cursor = conn.cursor()
 
         try:
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT a.id, a.numero_articulo, a.contenido, a.pagina, n.titulo as norma_titulo, n.archivo_pdf
                 FROM articulos a
                 JOIN normas n ON a.norma_id = n.id
                 WHERE a.id = ?
-            """, (article_id,))
+            """,
+                (article_id,),
+            )
 
             row = cursor.fetchone()
             if row:
@@ -649,18 +661,22 @@ class SearchEngine:
 
     def get_search_suggestions(self, partial: str, limit: int = 5) -> list[str]:
         """Obtiene sugerencias basadas en el historial."""
-        if not partial or len(partial) < 2: return []
+        if not partial or len(partial) < 2:
+            return []
         conn = self.db_manager.get_connection()
         cursor = conn.cursor()
         try:
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT DISTINCT query
                 FROM historial_busquedas
                 WHERE query LIKE ?
                 ORDER BY timestamp DESC
                 LIMIT ?
-            """, (f"{partial}%", limit))
-            return [row['query'] for row in cursor.fetchall()]
+            """,
+                (f"{partial}%", limit),
+            )
+            return [row["query"] for row in cursor.fetchall()]
         finally:
             conn.close()
 
@@ -671,29 +687,34 @@ class SearchEngine:
         results = []
         try:
             # Intentar ordenar por fecha de publicación si existe
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT id, titulo, fecha_publicacion, tipo, archivo_pdf,
                        (SELECT COUNT(*) FROM articulos WHERE norma_id = normas.id) as num_articulos
                 FROM normas
                 ORDER BY fecha_publicacion DESC
                 LIMIT ?
-            """, (limit,))
+            """,
+                (limit,),
+            )
 
             for row in cursor.fetchall():
                 # Adaptar formato a resultado de búsqueda
-                results.append({
-                    'id': row['id'], # Usamos ID de norma, ojo con conflicto con ID de artículo
-                    'file': row['archivo_pdf'] or "Desconocido",
-                    'page': 1,
-                    'relevance': 100.0,
-                    'context': f"{row['tipo']} - {row['fecha_publicacion']}",
-                    'term': "Novedades",
-                    'matches': 0,
-                    'is_high_relevance': True,
-                    'is_norma': True, # Bandera para diferenciar en UI
-                    'titulo': row['titulo'],
-                    'tipo': row['tipo']
-                })
+                results.append(
+                    {
+                        "id": row["id"],  # Usamos ID de norma, ojo con conflicto con ID de artículo
+                        "file": row["archivo_pdf"] or "Desconocido",
+                        "page": 1,
+                        "relevance": 100.0,
+                        "context": f"{row['tipo']} - {row['fecha_publicacion']}",
+                        "term": "Novedades",
+                        "matches": 0,
+                        "is_high_relevance": True,
+                        "is_norma": True,  # Bandera para diferenciar en UI
+                        "titulo": row["titulo"],
+                        "tipo": row["tipo"],
+                    }
+                )
         except Exception as e:
             search_logger.error(f"Error fetching latest norms: {e}")
         finally:
@@ -731,16 +752,16 @@ class SearchEngine:
         try:
             # Stats generales
             cursor.execute("SELECT COUNT(*) FROM normas")
-            stats['total_normas'] = cursor.fetchone()[0]
+            stats["total_normas"] = cursor.fetchone()[0]
 
             cursor.execute("SELECT COUNT(*) FROM articulos")
-            stats['total_articulos'] = cursor.fetchone()[0]
+            stats["total_articulos"] = cursor.fetchone()[0]
 
             cursor.execute("SELECT COUNT(*) FROM favoritos")
-            stats['total_favoritos'] = cursor.fetchone()[0]
+            stats["total_favoritos"] = cursor.fetchone()[0]
 
             cursor.execute("SELECT COUNT(*) FROM historial_busquedas")
-            stats['total_busquedas'] = cursor.fetchone()[0]
+            stats["total_busquedas"] = cursor.fetchone()[0]
 
             # Distribución por tipo de norma
             cursor.execute("""
@@ -749,7 +770,7 @@ class SearchEngine:
                 GROUP BY tipo
                 ORDER BY count DESC
             """)
-            stats['distribucion_tipo'] = {row['tipo'] or 'Otros': row['count'] for row in cursor.fetchall()}
+            stats["distribucion_tipo"] = {row["tipo"] or "Otros": row["count"] for row in cursor.fetchall()}
 
             # Top búsquedas
             cursor.execute("""
@@ -759,7 +780,7 @@ class SearchEngine:
                 ORDER BY frequency DESC
                 LIMIT 10
             """)
-            stats['top_searches'] = [(row['query'], row['frequency']) for row in cursor.fetchall()]
+            stats["top_searches"] = [(row["query"], row["frequency"]) for row in cursor.fetchall()]
 
             # Actividad última semana
             cursor.execute("""
@@ -769,7 +790,7 @@ class SearchEngine:
                 GROUP BY fecha
                 ORDER BY fecha
             """)
-            stats['timeline_busquedas'] = [(row['fecha'], row['count']) for row in cursor.fetchall()]
+            stats["timeline_busquedas"] = [(row["fecha"], row["count"]) for row in cursor.fetchall()]
 
             # Documentos más consultados
             cursor.execute("""
@@ -781,7 +802,7 @@ class SearchEngine:
                 ORDER BY views DESC
                 LIMIT 5
             """)
-            stats['most_viewed'] = [(row['titulo'], row['views']) for row in cursor.fetchall()]
+            stats["most_viewed"] = [(row["titulo"], row["views"]) for row in cursor.fetchall()]
 
             return stats
         finally:
@@ -819,11 +840,14 @@ class SearchEngine:
     def update_favorite_note(self, article_id: int, nota: str):
         conn = self.db_manager.get_connection()
         try:
-            conn.execute("""
+            conn.execute(
+                """
                 UPDATE favoritos
                 SET nota = ?, fecha_modificado = CURRENT_TIMESTAMP
                 WHERE articulo_id = ?
-            """, (nota, article_id))
+            """,
+                (nota, article_id),
+            )
             conn.commit()
         finally:
             conn.close()
@@ -859,10 +883,11 @@ class SearchEngine:
         try:
             cursor.execute("SELECT id FROM favoritos WHERE articulo_id = ?", (article_id,))
             row = cursor.fetchone()
-            if not row: return []
+            if not row:
+                return []
 
-            cursor.execute("SELECT tag FROM favoritos_tags WHERE favorito_id = ?", (row['id'],))
-            return [r['tag'] for r in cursor.fetchall()]
+            cursor.execute("SELECT tag FROM favoritos_tags WHERE favorito_id = ?", (row["id"],))
+            return [r["tag"] for r in cursor.fetchall()]
         finally:
             conn.close()
 
@@ -873,13 +898,13 @@ class SearchEngine:
         try:
             cursor.execute("SELECT id FROM favoritos WHERE articulo_id = ?", (article_id,))
             row = cursor.fetchone()
-            if not row: return
+            if not row:
+                return
 
-            cursor.execute("INSERT INTO favoritos_tags (favorito_id, tag) VALUES (?, ?)", (row['id'], tag))
+            cursor.execute("INSERT INTO favoritos_tags (favorito_id, tag) VALUES (?, ?)", (row["id"], tag))
             conn.commit()
         finally:
             conn.close()
-
 
 
 def create_search_engine(text_index=None) -> SearchEngine:

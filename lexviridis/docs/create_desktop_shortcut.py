@@ -30,7 +30,7 @@ def create_desktop_shortcut():
         desktop = winshell.desktop()
         shortcut_path = os.path.join(desktop, "LEX VIRIDIS - Buscador Jurídico Ambiental.lnk")
 
-        shell = Dispatch('WScript.Shell')
+        shell = Dispatch("WScript.Shell")
         shortcut = shell.CreateShortCut(shortcut_path)
         shortcut.Targetpath = str(exe_path)
         shortcut.WorkingDirectory = str(exe_path.parent)
@@ -49,6 +49,7 @@ def create_desktop_shortcut():
         print(f"❌ Error creando acceso directo: {e}")
         return False
 
+
 def main():
     """Función principal"""
     print("🖥️  CREADOR DE ACCESO DIRECTO - LEX VIRIDIS")
@@ -64,6 +65,7 @@ def main():
         print("\n❌ PROCESO FALLÓ")
 
     return success
+
 
 if __name__ == "__main__":
     success = main()

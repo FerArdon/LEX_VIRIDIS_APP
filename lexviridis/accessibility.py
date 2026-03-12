@@ -1,4 +1,3 @@
-
 import flet as ft
 
 
@@ -20,11 +19,11 @@ class AccessibilityManager:
                     primary=ft.Colors.YELLOW,
                     surface=ft.Colors.BLACK,
                     on_surface=ft.Colors.YELLOW,
-                    # background=ft.Colors.BLACK, # Deprecated
+                    background=ft.Colors.BLACK,
                 )
             )
         else:
-            self.page.theme = None # Volver al default
+            self.page.theme = None  # Volver al default
         self.page.update()
 
     def toggle_large_text(self, value: bool):
@@ -38,14 +37,20 @@ class AccessibilityManager:
         # Usamos un snackbar como fallback accesible o exploramos Semantics
         self.page.show_snack_bar(ft.SnackBar(ft.Text(f"Aviso: {message}"), open=True))
 
+
 def add_accessibility_shortcuts(page: ft.Page, app_instance):
     """Agrega shortcuts globales de teclado."""
+
     def on_keyboard(e: ft.KeyboardEvent):
         if e.ctrl and e.key == "F":
-            app_instance.nav_rail.selected_index = 1 # Buscar
-            app_instance._on_nav_change(ft.ControlEvent(target=app_instance.nav_rail, name="change", data="1", control=app_instance.nav_rail))
+            app_instance.nav_rail.selected_index = 1  # Buscar
+            app_instance._on_nav_change(
+                ft.ControlEvent(target=app_instance.nav_rail, name="change", data="1", control=app_instance.nav_rail)
+            )
         elif e.ctrl and e.key == "H":
-            app_instance.nav_rail.selected_index = 0 # Dashboard
-            app_instance._on_nav_change(ft.ControlEvent(target=app_instance.nav_rail, name="change", data="0", control=app_instance.nav_rail))
+            app_instance.nav_rail.selected_index = 0  # Dashboard
+            app_instance._on_nav_change(
+                ft.ControlEvent(target=app_instance.nav_rail, name="change", data="0", control=app_instance.nav_rail)
+            )
 
     page.on_keyboard_event = on_keyboard

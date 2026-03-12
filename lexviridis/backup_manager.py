@@ -1,4 +1,3 @@
-
 """
 LEX VIRIDIS - Gestor de Backups
 Maneja la copia de seguridad y restauración de la base de datos.
@@ -36,7 +35,7 @@ class BackupManager:
 
             # 2. Comprimir en ZIP
             zip_path = self.backup_dir / f"{backup_name}.zip"
-            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
                 zipf.write(temp_db, arcname=self.db_path.name)
 
             # 3. Eliminar temporal
@@ -54,15 +53,17 @@ class BackupManager:
         backups = []
         for file in self.backup_dir.glob("*.zip"):
             stats = file.stat()
-            backups.append({
-                'name': file.name,
-                'path': str(file),
-                'size_mb': round(stats.st_size / (1024 * 1024), 2),
-                'date': datetime.fromtimestamp(stats.st_mtime),
-            })
+            backups.append(
+                {
+                    "name": file.name,
+                    "path": str(file),
+                    "size_mb": round(stats.st_size / (1024 * 1024), 2),
+                    "date": datetime.fromtimestamp(stats.st_mtime),
+                }
+            )
 
         # Ordenar por fecha descendente
-        return sorted(backups, key=lambda x: x['date'], reverse=True)
+        return sorted(backups, key=lambda x: x["date"], reverse=True)
 
     def cleanup_old_backups(self, keep_days: int = 7):
         """Elimina backups más antiguos que X días."""
@@ -70,9 +71,9 @@ class BackupManager:
         deleted_count = 0
 
         for backup in self.list_backups():
-            if backup['date'] < cutoff:
+            if backup["date"] < cutoff:
                 try:
-                    Path(backup['path']).unlink()
+                    Path(backup["path"]).unlink()
                     deleted_count += 1
                 except Exception as e:
                     logging.warning(f"No se pudo eliminar backup viejo: {e}")
@@ -98,7 +99,7 @@ class BackupManager:
             temp_dir = self.backup_dir / "temp_restore"
             temp_dir.mkdir(exist_ok=True)
 
-            with zipfile.ZipFile(zip_path, 'r') as zipf:
+            with zipfile.ZipFile(zip_path, "r") as zipf:
                 zipf.extractall(temp_dir)
 
             # 3. Localizar el archivo de DB extraído
@@ -138,9 +139,9 @@ class BackupManager:
                 if now.hour == 2 and now.minute == 0:
                     self.create_backup(label="auto")
                     self.cleanup_old_backups(keep_days=7)
-                    time.sleep(65) # Evitar múltiples ejecuciones en el mismo minuto
+                    time.sleep(65)  # Evitar múltiples ejecuciones en el mismo minuto
 
-                time.sleep(30) # Verificar cada 30 segundos
+                time.sleep(30)  # Verificar cada 30 segundos
 
         thread = threading.Thread(target=job, daemon=True)
         thread.start()

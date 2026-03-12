@@ -1,4 +1,3 @@
-
 import json
 import random
 from dataclasses import dataclass
@@ -17,6 +16,7 @@ class Flashcard:
     ultima_revision: datetime | None = None
     proxima_revision: datetime | None = None
 
+
 class StudyManager:
     """Gestor del sistema de estudio (Flashcards y Repetición Espaciada)."""
 
@@ -27,10 +27,13 @@ class StudyManager:
         conn = self.db_manager.get_connection()
         try:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO flashcards (user_id, pregunta, respuesta, categoria, dificultad)
                 VALUES (?, ?, ?, ?, ?)
-            """, (user_id, fc.pregunta, fc.respuesta, fc.categoria, fc.dificultad))
+            """,
+                (user_id, fc.pregunta, fc.respuesta, fc.categoria, fc.dificultad),
+            )
             conn.commit()
         finally:
             conn.close()
@@ -40,21 +43,32 @@ class StudyManager:
         try:
             cursor = conn.cursor()
             # Seleccionar pendientes o nuevas
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT id, pregunta, respuesta, categoria, dificultad, veces_vista, veces_correcta, ultima_revision, proxima_revision
                 FROM flashcards
                 WHERE user_id = ?
                 AND (proxima_revision IS NULL OR proxima_revision <= CURRENT_TIMESTAMP)
                 ORDER BY RANDOM()
                 LIMIT ?
-            """, (user_id, limit))
+            """,
+                (user_id, limit),
+            )
             rows = cursor.fetchall()
-            return [Flashcard(
-                id=r[0], pregunta=r[1], respuesta=r[2], categoria=r[3],
-                dificultad=r[4], veces_vista=r[5], veces_correcta=r[6],
-                ultima_revision=datetime.fromisoformat(r[7]) if r[7] else None,
-                proxima_revision=datetime.fromisoformat(r[8]) if r[8] else None
-            ) for r in rows]
+            return [
+                Flashcard(
+                    id=r[0],
+                    pregunta=r[1],
+                    respuesta=r[2],
+                    categoria=r[3],
+                    dificultad=r[4],
+                    veces_vista=r[5],
+                    veces_correcta=r[6],
+                    ultima_revision=datetime.fromisoformat(r[7]) if r[7] else None,
+                    proxima_revision=datetime.fromisoformat(r[8]) if r[8] else None,
+                )
+                for r in rows
+            ]
         finally:
             conn.close()
 
@@ -75,7 +89,8 @@ class StudyManager:
             cursor = conn.cursor()
             cursor.execute("SELECT veces_correcta, veces_vista FROM flashcards WHERE id = ?", (fc_id,))
             row = cursor.fetchone()
-            if not row: return
+            if not row:
+                return
 
             veces_correcta, veces_vista = row
             veces_vista += 1
@@ -84,14 +99,17 @@ class StudyManager:
                 # Algoritmo de intervalo simple
                 days = (veces_correcta * 2) if veces_correcta > 1 else 1
             else:
-                days = 1 # Repetir mañana
+                days = 1  # Repetir mañana
 
             proxima = datetime.now() + timedelta(days=days)
-            cursor.execute("""
+            cursor.execute(
+                """
                 UPDATE flashcards
                 SET veces_vista = ?, veces_correcta = ?, ultima_revision = CURRENT_TIMESTAMP, proxima_revision = ?
                 WHERE id = ?
-            """, (veces_vista, veces_correcta, proxima.isoformat(), fc_id))
+            """,
+                (veces_vista, veces_correcta, proxima.isoformat(), fc_id),
+            )
             conn.commit()
         finally:
             conn.close()
@@ -120,19 +138,18 @@ class StudyManager:
                 response = ai_client.consultar(prompt)
 
                 # Limpiar markdown de código si existe
-                response = response.replace('```json', '').replace('```', '').strip()
+                response = response.replace("```json", "").replace("```", "").strip()
 
                 data = json.loads(response)
                 for item in data:
-                    cards.append(Flashcard(
-                        None,
-                        item.get('pregunta', 'Pregunta'),
-                        item.get('respuesta', 'Respuesta'),
-                        category,
-                        2
-                    ))
+                    cards.append(
+                        Flashcard(
+                            None, item.get("pregunta", "Pregunta"), item.get("respuesta", "Respuesta"), category, 2
+                        )
+                    )
 
-                if cards: return cards
+                if cards:
+                    return cards
 
             except Exception as e:
                 print(f"Error generando cards con IA: {e}")
@@ -140,8 +157,9 @@ class StudyManager:
 
         # 2. Fallback: Generador heurístico (Regex)
         import re
+
         # Buscar definiciones: "X es Y" o "Se entiende por X..."
-        defs = re.findall(r'([A-Z][^.]{2,40}?)\s+es\s+([^.]{5,200})', text)
+        defs = re.findall(r"([A-Z][^.]{2,40}?)\s+es\s+([^.]{5,200})", text)
         for term, desc in defs:
             cards.append(Flashcard(None, f"¿Qué es {term.strip()}?", desc.strip(), category, 2))
 
@@ -151,6 +169,7 @@ class StudyManager:
 
         return cards
 
+
 class QuizEngine:
     """Motor de cuestionarios dinámicos."""
 
@@ -158,17 +177,17 @@ class QuizEngine:
     def generate_quiz(articulo: dict) -> list[dict]:
         """Genera un mini-quiz de un artículo."""
         options = [
-            articulo['contenido'][:100] + "...",
+            articulo["contenido"][:100] + "...",
             "Regula las sanciones penales de tráfico",
             "Establece el presupuesto nacional",
-            "Define la estructura del sistema judicial"
+            "Define la estructura del sistema judicial",
         ]
         correct = options[0]
         random.shuffle(options)
 
         return {
-            'pregunta': f"¿Cuál es el propósito del Artículo {articulo.get('numero_articulo', '')}?",
-            'opciones': options,
-            'correcta_idx': options.index(correct),
-            'explicacion': articulo['contenido']
+            "pregunta": f"¿Cuál es el propósito del Artículo {articulo.get('numero_articulo', '')}?",
+            "opciones": options,
+            "correcta_idx": options.index(correct),
+            "explicacion": articulo["contenido"],
         }

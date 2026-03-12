@@ -1,4 +1,3 @@
-
 import sqlite3
 from pathlib import Path
 
@@ -81,6 +80,7 @@ BEGIN
 END;
 """
 
+
 def init_db():
     print(f"📦 Creando base de datos en: {DB_PATH}")
     try:
@@ -101,6 +101,7 @@ def init_db():
         print(f"❌ Error creando base de datos: {e}")
         return False
 
+
 # DATOS SEMILLA (Seed Data)
 # Lista curada de las leyes más importantes
 SEED_DATA = [
@@ -108,29 +109,45 @@ SEED_DATA = [
     ("Congreso Nacional", "CN", "Congreso"),
     ("Secretaría de Recursos Naturales y Ambiente", "SERNA", "Ejecutivo"),
     ("Instituto de Conservación Forestal", "ICF", "Ejecutivo"),
-
     # NORMAS (Muestras representativas)
     {
-        "tipo": "Ley", "numero": "104-93", "titulo": "Ley General del Ambiente",
-        "fecha": "1993-06-30", "inst": "Congreso Nacional", "cat": "General",
-        "resumen": "Marco general para la protección, conservación y restauración del ambiente y los recursos naturales."
+        "tipo": "Ley",
+        "numero": "104-93",
+        "titulo": "Ley General del Ambiente",
+        "fecha": "1993-06-30",
+        "inst": "Congreso Nacional",
+        "cat": "General",
+        "resumen": "Marco general para la protección, conservación y restauración del ambiente y los recursos naturales.",
     },
     {
-        "tipo": "Ley", "numero": "98-2007", "titulo": "Ley Forestal, Áreas Protegidas y Vida Silvestre",
-        "fecha": "2007-09-20", "inst": "Congreso Nacional", "cat": "Forestal",
-        "resumen": "Regula el régimen legal de los bosques, áreas protegidas y vida silvestre."
-    },
-     {
-        "tipo": "Ley", "numero": "181-2009", "titulo": "Ley General de Aguas",
-        "fecha": "2009-12-14", "inst": "Congreso Nacional", "cat": "Agua",
-        "resumen": "Establece los principios y regulaciones para la gestión del recurso hídrico."
+        "tipo": "Ley",
+        "numero": "98-2007",
+        "titulo": "Ley Forestal, Áreas Protegidas y Vida Silvestre",
+        "fecha": "2007-09-20",
+        "inst": "Congreso Nacional",
+        "cat": "Forestal",
+        "resumen": "Regula el régimen legal de los bosques, áreas protegidas y vida silvestre.",
     },
     {
-        "tipo": "Decreto", "numero": "130-2017", "titulo": "Código Penal de Honduras (Título XVI)",
-        "fecha": "2019-05-10", "inst": "Congreso Nacional", "cat": "Penal",
-        "resumen": "Título XVI dedicado exclusivamente a los Delitos contra el Medio Ambiente."
-    }
+        "tipo": "Ley",
+        "numero": "181-2009",
+        "titulo": "Ley General de Aguas",
+        "fecha": "2009-12-14",
+        "inst": "Congreso Nacional",
+        "cat": "Agua",
+        "resumen": "Establece los principios y regulaciones para la gestión del recurso hídrico.",
+    },
+    {
+        "tipo": "Decreto",
+        "numero": "130-2017",
+        "titulo": "Código Penal de Honduras (Título XVI)",
+        "fecha": "2019-05-10",
+        "inst": "Congreso Nacional",
+        "cat": "Penal",
+        "resumen": "Título XVI dedicado exclusivamente a los Delitos contra el Medio Ambiente.",
+    },
 ]
+
 
 def seed_db():
     conn = sqlite3.connect(DB_PATH)
@@ -139,10 +156,12 @@ def seed_db():
     print("\n🌱 Sembrando datos iniciales...")
 
     # 1. Instituciones
-    inst_map = {} # nombre -> id
+    inst_map = {}  # nombre -> id
     for nombre, siglas, tipo in [d for d in SEED_DATA if isinstance(d, tuple)]:
         try:
-            c.execute("INSERT OR IGNORE INTO instituciones (nombre, siglas, tipo) VALUES (?, ?, ?)", (nombre, siglas, tipo))
+            c.execute(
+                "INSERT OR IGNORE INTO instituciones (nombre, siglas, tipo) VALUES (?, ?, ?)", (nombre, siglas, tipo)
+            )
             # Obtener ID
             c.execute("SELECT id FROM instituciones WHERE nombre = ?", (nombre,))
             inst_map[nombre] = c.fetchone()[0]
@@ -153,10 +172,13 @@ def seed_db():
     for item in [d for d in SEED_DATA if isinstance(d, dict)]:
         try:
             inst_id = inst_map.get(item["inst"])
-            c.execute("""
+            c.execute(
+                """
                 INSERT INTO normas (tipo, numero, titulo, fecha_publicacion, institucion_id, categoria, resumen)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (item["tipo"], item["numero"], item["titulo"], item["fecha"], inst_id, item["cat"], item["resumen"]))
+            """,
+                (item["tipo"], item["numero"], item["titulo"], item["fecha"], inst_id, item["cat"], item["resumen"]),
+            )
             print(f"   ➕ Norma agregada: {item['titulo']}")
         except Exception as e:
             print(f"Error insertando norma {item['titulo']}: {e}")
@@ -164,6 +186,7 @@ def seed_db():
     conn.commit()
     conn.close()
     print("✅ Datos iniciales cargados.")
+
 
 if __name__ == "__main__":
     if init_db():

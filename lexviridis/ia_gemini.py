@@ -1,13 +1,4 @@
 """
-LEX VIRIDIS - Sistema de Investigación Legal Ambiental
-Copyright © 2026 Fiscalía Especial del Medio Ambiente (FEMA) - Honduras.
-Todos los derechos reservados.
-
-PROPRIETARY SOFTWARE - Unauthorized use prohibited
-SOFTWARE PROPIETARIO - Uso no autorizado prohibido
-
-Module: ia_gemini.py
-
 Módulo de integración con Google Gemini AI para LEX VIRIDIS.
 
 Este módulo reemplaza la IA local (Ollama) por una integración en la nube con Gemini,
@@ -20,11 +11,9 @@ import socket
 
 import google.generativeai as genai
 
-from .secure_config import secure_config
-from .license_check import requires_valid_license
-
 # Configurar logger
 logger = logging.getLogger(__name__)
+
 
 class PromptGenerator:
     """Generador de prompts especializado para el ámbito legal ambiental."""
@@ -64,7 +53,7 @@ class PromptGenerator:
         """
         Genera un prompt para analizar una consulta específica basada en leyes encontradas.
         """
-        contexto_str = "\n---\n".join(contexto_legal[:3]) # Usar los top 3 fragmentos
+        contexto_str = "\n---\n".join(contexto_legal[:3])  # Usar los top 3 fragmentos
 
         return f"""
         CONTEXTO LEGAL (Normativa Ambiental de Honduras - FEMA):
@@ -79,16 +68,12 @@ class PromptGenerator:
         Cita la norma específica (nombre del archivo o artículo) cuando hagas afirmaciones.
         """
 
+
 class GeminiClient:
     """Cliente wrapper para Google Gemini."""
 
     def __init__(self, api_key: str | None = None):
-        # Prioridad: 1) parámetro, 2) config cifrada, 3) env var
-        self.api_key = (
-            api_key
-            or secure_config.get_decrypted("gemini_api_key")
-            or os.getenv("GEMINI_API_KEY")
-        )
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self.http_client = None
         self.model = None
         self._setup()
@@ -103,12 +88,7 @@ class GeminiClient:
             genai.configure(api_key=self.api_key)
 
             # Lista de modelos candidatos en orden de preferencia
-            candidates = [
-                'gemini-1.5-flash',
-                'gemini-1.5-pro',
-                'gemini-pro',
-                'gemini-1.0-pro'
-            ]
+            candidates = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro", "gemini-1.0-pro"]
 
             self.model = None
 
@@ -118,8 +98,8 @@ class GeminiClient:
                 all_models = list(genai.list_models())
                 available = []
                 for m in all_models:
-                    if 'generateContent' in m.supported_generation_methods:
-                        name = m.name.replace('models/', '')
+                    if "generateContent" in m.supported_generation_methods:
+                        name = m.name.replace("models/", "")
                         available.append(name)
 
                 logger.info(f"Modelos disponibles: {available}")
@@ -133,18 +113,20 @@ class GeminiClient:
 
                 # 2. Si no, buscar cualquier 'gemini'
                 for m in available:
-                    if 'gemini' in m:
-                         logger.info(f"⚠️ Usando modelo alternativo: {m}")
-                         self.model = genai.GenerativeModel(m)
-                         return
+                    if "gemini" in m:
+                        logger.info(f"⚠️ Usando modelo alternativo: {m}")
+                        self.model = genai.GenerativeModel(m)
+                        return
 
                 # 3. Fallback ciego
-                logger.warning("No se encontraron modelos compatibles en la lista. Intentando 'gemini-1.5-flash' por defecto.")
-                self.model = genai.GenerativeModel('gemini-1.5-flash')
+                logger.warning(
+                    "No se encontraron modelos compatibles en la lista. Intentando 'gemini-1.5-flash' por defecto."
+                )
+                self.model = genai.GenerativeModel("gemini-1.5-flash")
 
             except Exception as e:
                 logger.error(f"Error listando modelos: {e}. Usando fallback 'gemini-pro'.")
-                self.model = genai.GenerativeModel('gemini-pro')
+                self.model = genai.GenerativeModel("gemini-pro")
 
         except Exception as e:
             logger.error(f"Error configurando Gemini: {e}")
@@ -159,7 +141,6 @@ class GeminiClient:
         except OSError:
             return False
 
-    @requires_valid_license
     def consultar(self, prompt: str) -> str:
         """
         Envía una consulta a Gemini.
@@ -190,8 +171,6 @@ class GeminiClient:
             return f"⚠️ Error detallado con Gemini: {error_str}"
 
     def set_api_key(self, key: str):
-        """Permite configurar la API key en tiempo de ejecución y la guarda cifrada."""
+        """Permite configurar la API key en tiempo de ejecución."""
         self.api_key = key
-        # Guardar cifrada para persistencia
-        secure_config.set_encrypted("gemini_api_key", key)
         self._setup()

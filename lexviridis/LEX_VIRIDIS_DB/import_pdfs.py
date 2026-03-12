@@ -1,4 +1,3 @@
-
 import logging
 import re
 import sqlite3
@@ -11,7 +10,8 @@ BASE_DIR = Path(r"c:\Users\frard\OneDrive\LEX_VIRIDIS_APP")
 PDF_DIR = BASE_DIR / "COMPENDIO LEYES FEMA"
 DB_PATH = BASE_DIR / "LEX_VIRIDIS_DB" / "legislacion_ambiental.db"
 
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+
 
 class PDFImporter:
     def __init__(self, db_path, pdf_dir):
@@ -31,11 +31,12 @@ class PDFImporter:
 
     def clean_text(self, text):
         """Limpia el texto extraído de saltos de línea innecesarios y espacios."""
-        if not text: return ""
+        if not text:
+            return ""
         # Unir líneas rotas por guiones
-        text = re.sub(r'-\n', '', text)
+        text = re.sub(r"-\n", "", text)
         # Reemplazar múltiples saltos de línea y espacios por uno solo
-        text = re.sub(r'\s+', ' ', text).strip()
+        text = re.sub(r"\s+", " ", text).strip()
         return text
 
     def extract_metadata_from_filename(self, filename):
@@ -59,13 +60,17 @@ class PDFImporter:
         elif "reglamento" in lower_name:
             tipo = "Reglamento"
 
-        if "forestal" in lower_name: categoria = "Forestal"
-        elif "agua" in lower_name: categoria = "Agua"
-        elif "penal" in lower_name: categoria = "Penal"
-        elif "mina" in lower_name: categoria = "Minería"
+        if "forestal" in lower_name:
+            categoria = "Forestal"
+        elif "agua" in lower_name:
+            categoria = "Agua"
+        elif "penal" in lower_name:
+            categoria = "Penal"
+        elif "mina" in lower_name:
+            categoria = "Minería"
 
         # Intentar extraer número (ej: 123-2020)
-        num_match = re.search(r'(\d+-\d+)', filename)
+        num_match = re.search(r"(\d+-\d+)", filename)
         if num_match:
             numero = num_match.group(1)
 
@@ -82,13 +87,13 @@ class PDFImporter:
         # Captura 1: Etiqueta (Artículo, Art.)
         # Captura 2: Número (1, 32-A, Primero)
         # Captura 3: Separador (.-, :, etc, opcional)
-        pattern = r'(?:ART[ÍI]CULO|Art\.)\s*((?:\d+(?:-[A-Za-z])?)|(?:PRIMERO|SEGUNDO|TERCERO|CUARTO|QUINTO|SEXTO|SEPTIMO|OCTAVO|NOVENO|DECIMO))\s*[\.\:\-]*'
+        pattern = r"(?:ART[ÍI]CULO|Art\.)\s*((?:\d+(?:-[A-Za-z])?)|(?:PRIMERO|SEGUNDO|TERCERO|CUARTO|QUINTO|SEXTO|SEPTIMO|OCTAVO|NOVENO|DECIMO))\s*[\.\:\-]*"
 
         matches = list(re.finditer(pattern, full_text, re.IGNORECASE))
 
         if not matches:
-             # Fallback simple si no encuentra estructura clara
-             return []
+            # Fallback simple si no encuentra estructura clara
+            return []
 
         for i in range(len(matches)):
             start_idx = matches[i].end()
@@ -96,7 +101,7 @@ class PDFImporter:
 
             # El contenido va hasta el inicio del siguiente match o el final del texto
             if i < len(matches) - 1:
-                end_idx = matches[i+1].start()
+                end_idx = matches[i + 1].start()
             else:
                 end_idx = len(full_text)
 
@@ -138,15 +143,21 @@ class PDFImporter:
                 norma_id = res[0]
                 logging.info(f"   ℹ️ Actualizando norma existente (ID: {norma_id})")
                 self.cursor.execute("DELETE FROM articulos WHERE norma_id = ?", (norma_id,))
-                self.cursor.execute("""
+                self.cursor.execute(
+                    """
                     UPDATE normas SET texto_completo = ?, archivo_pdf = ?
                     WHERE id = ?
-                """, (self.clean_text(full_text), str(pdf_path), norma_id))
+                """,
+                    (self.clean_text(full_text), str(pdf_path), norma_id),
+                )
             else:
-                self.cursor.execute("""
+                self.cursor.execute(
+                    """
                     INSERT INTO normas (tipo, numero, titulo, categoria, texto_completo, archivo_pdf, estado)
                     VALUES (?, ?, ?, ?, ?, ?, 'VIGENTE')
-                """, (tipo, numero, titulo, categoria, self.clean_text(full_text), str(pdf_path)))
+                """,
+                    (tipo, numero, titulo, categoria, self.clean_text(full_text), str(pdf_path)),
+                )
                 norma_id = self.cursor.lastrowid
                 logging.info(f"   ✅ Nueva norma insertada (ID: {norma_id})")
 
@@ -156,12 +167,17 @@ class PDFImporter:
             if articles:
                 logging.info(f"   📝 Encontrados {len(articles)} artículos.")
                 for num, content in articles:
-                    self.cursor.execute("""
+                    self.cursor.execute(
+                        """
                         INSERT INTO articulos (norma_id, numero_articulo, contenido)
                         VALUES (?, ?, ?)
-                    """, (norma_id, num, content))
+                    """,
+                        (norma_id, num, content),
+                    )
             else:
-                logging.warning("   ⚠️ No se detectaron artículos estructurados. Se confía en FTS sobre el texto completo.")
+                logging.warning(
+                    "   ⚠️ No se detectaron artículos estructurados. Se confía en FTS sobre el texto completo."
+                )
 
         except Exception as e:
             logging.error(f"❌ Error procesando {filename}: {e}")
@@ -183,6 +199,7 @@ class PDFImporter:
 
         self.close_db()
         logging.info("\n✨ Importación completada.")
+
 
 if __name__ == "__main__":
     importer = PDFImporter(DB_PATH, PDF_DIR)

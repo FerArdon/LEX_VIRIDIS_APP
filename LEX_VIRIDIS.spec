@@ -8,7 +8,8 @@ import os
 from pathlib import Path
 
 # Rutas base
-BASE_DIR = Path(r"C:\LEX_VIRIDIS_APP")
+# Utilizar dinámicamente el directorio actual para soportar ejecución en cualquier ubicación
+BASE_DIR = Path(os.path.abspath(os.getcwd()))
 ASSETS_DIR = BASE_DIR / "assets"
 DATA_DIR = BASE_DIR / "data"
 DB_DIR = BASE_DIR / "LEX_VIRIDIS_DB"
@@ -28,8 +29,6 @@ datas = [
     (str(BASE_DIR / "config.py"), '.'),
     # Traducciones i18n
     (str(BASE_DIR / "lexviridis" / "i18n"), os.path.join('lexviridis', 'i18n')),
-    # Documentación y Manual
-    (str(BASE_DIR / "docs"), 'docs'),
 ]
 
 # Incluir icons.json de Flet (requerido para ft.Icons.* en modo frozen)
@@ -87,13 +86,8 @@ hiddenimports = [
     'lexviridis.citations',
     'lexviridis.study_system',
     'lexviridis.license_ui',
-    'lexviridis.help_ui',
     'lexviridis.pdf_exporter',
-    'lexviridis.repositories',
-    'lexviridis.repositories.casos_repository',
-    'lexviridis.views.casos',
-    'lexviridis.views.caso_detail',
-    'lexviridis.app.dependencies',
+    'lexviridis.pdf_exporter',
     'flet_desktop',
     'flet_desktop.app',
 ]
@@ -107,7 +101,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['matplotlib', 'numpy', 'pandas', 'scipy'],
+    excludes=['matplotlib', 'numpy', 'pandas', 'scipy', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'tkinter'],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
@@ -138,7 +132,7 @@ exe = EXE(
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,  # CONSOLA DESHABILITADA PARA PRODUCCIÓN
+    console=True,  # Habilitar consola para debugging
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

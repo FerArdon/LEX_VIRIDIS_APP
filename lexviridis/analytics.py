@@ -1,4 +1,3 @@
-
 import json
 from enum import Enum
 
@@ -13,6 +12,7 @@ class EventType(Enum):
     ERROR_OCCURRED = "error_occurred"
     SEARCH_NO_RESULTS = "search_no_results"
 
+
 class AnalyticsTracker:
     """Rastreador de eventos de usuario."""
 
@@ -23,20 +23,24 @@ class AnalyticsTracker:
         """Registra un evento en la base de datos."""
         conn = self.db_manager.get_connection()
         try:
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT INTO analytics_events (event_type, properties, user_id, session_id)
                 VALUES (?, ?, ?, ?)
-            """, (event_type.value, json.dumps(properties or {}), user_id, session_id))
+            """,
+                (event_type.value, json.dumps(properties or {}), user_id, session_id),
+            )
             conn.commit()
         finally:
             conn.close()
 
     def track_search(self, query: str, results_count: int, user_id: int = None):
-        self.track_event(EventType.SEARCH_EXECUTED, {
-            'query': query,
-            'results_count': results_count,
-            'has_results': results_count > 0
-        }, user_id)
+        self.track_event(
+            EventType.SEARCH_EXECUTED,
+            {"query": query, "results_count": results_count, "has_results": results_count > 0},
+            user_id,
+        )
+
 
 class AnalyticsReporter:
     """Genera reportes y métricas de uso."""
@@ -51,14 +55,18 @@ class AnalyticsReporter:
             metrics = {}
 
             # Búsquedas totales
-            cursor.execute("SELECT COUNT(*) FROM analytics_events WHERE event_type = ? AND timestamp BETWEEN ? AND ?",
-                         (EventType.SEARCH_EXECUTED.value, start_date, end_date))
-            metrics['total_searches'] = cursor.fetchone()[0]
+            cursor.execute(
+                "SELECT COUNT(*) FROM analytics_events WHERE event_type = ? AND timestamp BETWEEN ? AND ?",
+                (EventType.SEARCH_EXECUTED.value, start_date, end_date),
+            )
+            metrics["total_searches"] = cursor.fetchone()[0]
 
             # Usuarios únicos
-            cursor.execute("SELECT COUNT(DISTINCT user_id) FROM analytics_events WHERE timestamp BETWEEN ? AND ?",
-                         (start_date, end_date))
-            metrics['active_users'] = cursor.fetchone()[0]
+            cursor.execute(
+                "SELECT COUNT(DISTINCT user_id) FROM analytics_events WHERE timestamp BETWEEN ? AND ?",
+                (start_date, end_date),
+            )
+            metrics["active_users"] = cursor.fetchone()[0]
 
             return metrics
         finally:
@@ -69,15 +77,19 @@ class AnalyticsReporter:
         try:
             cursor = conn.cursor()
             # Simplificado para demo
-            cursor.execute("SELECT COUNT(*) FROM analytics_events WHERE event_type = ?", (EventType.SEARCH_EXECUTED.value,))
+            cursor.execute(
+                "SELECT COUNT(*) FROM analytics_events WHERE event_type = ?", (EventType.SEARCH_EXECUTED.value,)
+            )
             searches = cursor.fetchone()[0]
-            cursor.execute("SELECT COUNT(*) FROM analytics_events WHERE event_type = ?", (EventType.SEARCH_RESULT_CLICKED.value,))
+            cursor.execute(
+                "SELECT COUNT(*) FROM analytics_events WHERE event_type = ?", (EventType.SEARCH_RESULT_CLICKED.value,)
+            )
             clicks = cursor.fetchone()[0]
 
             return {
-                'searches': searches,
-                'clicks': clicks,
-                'conversion': (clicks/searches*100) if searches > 0 else 0
+                "searches": searches,
+                "clicks": clicks,
+                "conversion": (clicks / searches * 100) if searches > 0 else 0,
             }
         finally:
             conn.close()
@@ -96,7 +108,7 @@ class AnalyticsReporter:
                 GROUP BY day, hour
             """)
             data = cursor.fetchall()
-            heatmap = [[0]*24 for _ in range(7)]
+            heatmap = [[0] * 24 for _ in range(7)]
             for day, hour, count in data:
                 heatmap[day][hour] = count
             return heatmap

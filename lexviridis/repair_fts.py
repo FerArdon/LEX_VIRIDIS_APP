@@ -1,4 +1,5 @@
 """Reconstruir índice FTS5 - Método Agresivo"""
+
 import shutil
 import sqlite3
 from pathlib import Path

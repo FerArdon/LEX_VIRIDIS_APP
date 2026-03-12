@@ -1,5 +1,3 @@
-
-
 file_path = r"c:\Users\frard\OneDrive\LEX_VIRIDIS_APP\lexviridis\ui_v2.py"
 
 with open(file_path, encoding="utf-8") as f:

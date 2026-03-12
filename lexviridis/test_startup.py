@@ -1,4 +1,3 @@
-
 """
 Test de Diagnóstico - LEX VIRIDIS
 Detecta dónde se congela la app
@@ -27,6 +26,7 @@ try:
 except Exception as e:
     print(f"❌ ERROR importando search_engine: {e}")
     import traceback
+
     traceback.print_exc()
     sys.exit(1)
 
@@ -59,7 +59,7 @@ try:
     for table in tables:
         print(f"   - {table}")
 
-    required_tables = ['normas', 'articulos']
+    required_tables = ["normas", "articulos"]
     missing = [t for t in required_tables if t not in tables]
 
     if missing:
@@ -89,4 +89,5 @@ except sqlite3.OperationalError as e:
 except Exception as e:
     print(f"❌ ERROR INESPERADO: {e}")
     import traceback
+
     traceback.print_exc()

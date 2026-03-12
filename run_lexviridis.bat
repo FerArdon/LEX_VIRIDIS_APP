@@ -1,4 +1,4 @@
 @echo off
 cd /d "%~dp0"
-python run_modern_ui.py
+python launch_lexviridis.py
 pause

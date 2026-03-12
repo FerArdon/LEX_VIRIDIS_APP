@@ -25,6 +25,7 @@ def find_inno_setup():
 
     return None
 
+
 def check_prerequisites():
     """Verifica que todos los archivos necesarios estén presentes."""
 
@@ -36,7 +37,7 @@ def check_prerequisites():
         "LICENSE.txt",
         "README_INSTALACION.txt",
         "INSTRUCCIONES_USO.txt",
-        "assets/lux_viridis_2.ico.ico"
+        "assets/lux_viridis_2.ico.ico",
     ]
 
     missing_files = []
@@ -57,12 +58,14 @@ def check_prerequisites():
     print("✅ Todos los archivos necesarios están presentes")
     return True
 
+
 def create_installer_directory():
     """Crea el directorio para el instalador."""
     installer_dir = Path("installer")
     installer_dir.mkdir(exist_ok=True)
     print(f"📁 Directorio del instalador: {installer_dir.absolute()}")
     return installer_dir
+
 
 def create_readme_md():
     """Crea un archivo README.md si no existe."""
@@ -104,10 +107,11 @@ Para soporte técnico, consulte la documentación incluida o visite www.lexvirid
 ---
 Copyright (C) 2025 LEX VIRIDIS Development Team
 """
-        readme_path.write_text(readme_content, encoding='utf-8')
+        readme_path.write_text(readme_content, encoding="utf-8")
         print("✅ README.md creado")
     else:
         print("✅ README.md ya existe")
+
 
 def build_installer():
     """Construye el instalador usando Inno Setup."""
@@ -142,10 +146,9 @@ def build_installer():
 
     try:
         # Ejecutar Inno Setup Compiler
-        result = subprocess.run([
-            str(inno_setup_path),
-            str(script_path)
-        ], capture_output=True, text=True, cwd=os.getcwd())
+        result = subprocess.run(
+            [str(inno_setup_path), str(script_path)], capture_output=True, text=True, cwd=os.getcwd()
+        )
 
         if result.returncode == 0:
             print("\n✅ ¡INSTALADOR CREADO EXITOSAMENTE!")
@@ -181,6 +184,7 @@ def build_installer():
         print(f"❌ Error ejecutando Inno Setup: {e}")
         return False
 
+
 def show_instructions():
     """Muestra instrucciones para distribuir el instalador."""
 
@@ -215,6 +219,7 @@ def show_instructions():
     print("3. Preparar canal de distribución")
     print("4. Configurar sistema de actualizaciones")
 
+
 def main():
     """Función principal."""
 
@@ -234,6 +239,7 @@ def main():
         print("Revise los errores arriba para más detalles")
 
     return success
+
 
 if __name__ == "__main__":
     success = main()

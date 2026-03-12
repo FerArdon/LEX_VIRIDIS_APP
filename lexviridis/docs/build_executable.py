@@ -34,23 +34,21 @@ def create_executable():
     # Configuración de PyInstaller
     pyinstaller_args = [
         "pyinstaller",
-        "--onefile",                    # Crear un solo archivo ejecutable
-        "--windowed",                   # Sin ventana de consola
-        f"--icon={icon_file}",          # Icono personalizado
-        "--name=LEX_VIRIDIS",           # Nombre del ejecutable
-        "--distpath=dist",              # Directorio de salida
-        "--workpath=build",             # Directorio de trabajo temporal
-        "--specpath=.",                 # Directorio para el archivo .spec
-        "--clean",                      # Limpiar cache antes de construir
-        "--noconfirm",                  # No pedir confirmación
-
+        "--onefile",  # Crear un solo archivo ejecutable
+        "--windowed",  # Sin ventana de consola
+        f"--icon={icon_file}",  # Icono personalizado
+        "--name=LEX_VIRIDIS",  # Nombre del ejecutable
+        "--distpath=dist",  # Directorio de salida
+        "--workpath=build",  # Directorio de trabajo temporal
+        "--specpath=.",  # Directorio para el archivo .spec
+        "--clean",  # Limpiar cache antes de construir
+        "--noconfirm",  # No pedir confirmación
         # Incluir directorios de datos
         "--add-data=assets;assets",
         "--add-data=lexviridis;lexviridis",
         "--add-data=COMPENDIO LEYES FEMA;COMPENDIO LEYES FEMA",
         "--add-data=cache;cache",
         "--add-data=data;data",
-
         # Módulos ocultos que PyInstaller podría no detectar
         "--hidden-import=tkinter",
         "--hidden-import=tkinter.ttk",
@@ -63,9 +61,8 @@ def create_executable():
         "--hidden-import=tempfile",
         "--hidden-import=shutil",
         "--hidden-import=sys",
-
         # Script principal
-        str(main_script)
+        str(main_script),
     ]
 
     print("\n📦 Ejecutando PyInstaller...")
@@ -74,12 +71,7 @@ def create_executable():
 
     try:
         # Ejecutar PyInstaller
-        result = subprocess.run(
-            pyinstaller_args,
-            capture_output=True,
-            text=True,
-            cwd=os.getcwd()
-        )
+        result = subprocess.run(pyinstaller_args, capture_output=True, text=True, cwd=os.getcwd())
 
         if result.returncode == 0:
             print("\n✅ ¡EJECUTABLE CREADO EXITOSAMENTE!")
@@ -109,6 +101,7 @@ def create_executable():
         print(f"❌ Error ejecutando PyInstaller: {e}")
         return False
 
+
 def create_desktop_shortcut(exe_path):
     """Crea un acceso directo en el escritorio (Windows)"""
     try:
@@ -118,7 +111,7 @@ def create_desktop_shortcut(exe_path):
         desktop = winshell.desktop()
         shortcut_path = os.path.join(desktop, "LEX VIRIDIS.lnk")
 
-        shell = Dispatch('WScript.Shell')
+        shell = Dispatch("WScript.Shell")
         shortcut = shell.CreateShortCut(shortcut_path)
         shortcut.Targetpath = str(exe_path.absolute())
         shortcut.WorkingDirectory = str(exe_path.parent.absolute())
@@ -132,6 +125,7 @@ def create_desktop_shortcut(exe_path):
         print("⚠️  Para crear acceso directo, instala: pip install winshell pywin32")
     except Exception as e:
         print(f"⚠️  No se pudo crear acceso directo: {e}")
+
 
 def main():
     """Función principal"""
@@ -158,6 +152,7 @@ def main():
         print("Revisa los errores arriba para más detalles")
 
     return success
+
 
 if __name__ == "__main__":
     success = main()

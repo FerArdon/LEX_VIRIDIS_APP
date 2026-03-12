@@ -14,10 +14,10 @@ try:
 
     # Pares identificados: (ID_PLACEHOLDER_A_BORRAR, ID_REAL_A_RENOMBRAR)
     pairs = [
-        (1, 5),   # Ley General del Ambiente
-        (2, 7),   # Ley Forestal
-        (3, 6),   # Ley General de Aguas
-        (4, 157)  # Código Penal
+        (1, 5),  # Ley General del Ambiente
+        (2, 7),  # Ley Forestal
+        (3, 6),  # Ley General de Aguas
+        (4, 157),  # Código Penal
     ]
 
     print("\nIniciando fusión...")

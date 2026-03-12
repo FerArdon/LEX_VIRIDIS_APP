@@ -19,16 +19,19 @@ from lexviridis.ui_v2 import LexViridisApp
 
 print("DEBUG: ui_v2 imported successfully.")
 
+
 def main(page: ft.Page):
     print("STEP 5: Inside Flet main.")
     try:
         print("STEP 6: Initializing LexViridisApp...")
-        LexViridisApp(page)
+        app = LexViridisApp(page)
         print("STEP 7: App initialized.")
     except Exception as e:
         print(f"CRITICAL ERROR: {e}")
         import traceback
+
         traceback.print_exc()
+
 
 if __name__ == "__main__":
     print("STEP 8: Starting ft.app...")

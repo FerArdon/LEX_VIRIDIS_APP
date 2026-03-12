@@ -1,13 +1,10 @@
 """Reset de estadísticas del Dashboard"""
+
 import sqlite3
 from pathlib import Path
 
 # Buscar en ambas rutas posibles
-db_paths = [
-    Path("data/lex_viridis.db"),
-    Path("lexviridis.db"),
-    Path("LEX_VIRIDIS_DB/legislacion_ambiental.db")
-]
+db_paths = [Path("data/lex_viridis.db"), Path("lexviridis.db"), Path("LEX_VIRIDIS_DB/legislacion_ambiental.db")]
 
 for db_path in db_paths:
     if db_path.exists():
@@ -21,7 +18,7 @@ for db_path in db_paths:
         print(f"Tablas: {tables[:10]}...")  # Solo primeras 10
 
         # Limpiar tablas de stats
-        stats_keywords = ['historial', 'busqueda', 'visto', 'analytics', 'activity', 'view', 'search', 'log']
+        stats_keywords = ["historial", "busqueda", "visto", "analytics", "activity", "view", "search", "log"]
         for table in tables:
             table_lower = table.lower()
             if any(kw in table_lower for kw in stats_keywords):

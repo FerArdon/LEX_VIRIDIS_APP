@@ -1,4 +1,3 @@
-
 """
 🧹 LEX VIRIDIS - Script de Limpieza y Reorganización
 Ejecutar desde la raíz del proyecto.
@@ -28,10 +27,8 @@ ARCHIVOS_ELIMINAR = [
     "diag_324.py",
     "fix_art324.py",
     "test_busqueda.py",
-
     # Duplicados de requirements
     "requirements_updated.txt",
-
     # Archivos de instalación extraños en lexviridis/
     "lexviridis/InstallationLog.txt",
     "lexviridis/components.xml",
@@ -43,24 +40,24 @@ ARCHIVOS_ELIMINAR = [
     "lexviridis/gpt4all-32.png",
     "lexviridis/gpt4all-48.png",
     "lexviridis/gpt4all.ico",
-
     # Visor duplicado
     "lexviridis/pdf_viewer.py",  # Usar solo pdf_viewer_fixed.py
 ]
 
 # === CARPETAS A ELIMINAR ===
 CARPETAS_ELIMINAR = [
-    "lexviridis/bin",              # Binarios de gpt4all (enorme)
-    "lexviridis/lib",              # Librerías de gpt4all
+    "lexviridis/bin",  # Binarios de gpt4all (enorme)
+    "lexviridis/lib",  # Librerías de gpt4all
     "lexviridis/installerResources",
-    "lexviridis/Licenses",         # Licencias de gpt4all
-    "build",                       # Build artifacts
-    "dist",                        # Distribution artifacts
-    "cache",                       # Cache
-    "installer",                   # Instalador viejo
-    "backups",                     # Backups viejos
-    "temp_pdfs",                   # PDFs temporales
+    "lexviridis/Licenses",  # Licencias de gpt4all
+    "build",  # Build artifacts
+    "dist",  # Distribution artifacts
+    "cache",  # Cache
+    "installer",  # Instalador viejo
+    "backups",  # Backups viejos
+    "temp_pdfs",  # PDFs temporales
 ]
+
 
 def limpiar_pycache():
     """Elimina todos los __pycache__ y .pyc"""
@@ -78,6 +75,7 @@ def limpiar_pycache():
                 print(f"   ⚠️ No se pudo eliminar {path}: {e}")
     print(f"   ✅ Eliminados {count} items de cache")
 
+
 def limpiar_archivos_especificos():
     """Elimina archivos específicos innecesarios"""
     print("\n🗑️ Eliminando archivos innecesarios...")
@@ -89,6 +87,7 @@ def limpiar_archivos_especificos():
                 print(f"   ✅ Eliminado: {archivo}")
             except Exception as e:
                 print(f"   ⚠️ Error con {archivo}: {e}")
+
 
 def limpiar_carpetas():
     """Elimina carpetas innecesarias"""
@@ -102,6 +101,7 @@ def limpiar_carpetas():
             except Exception as e:
                 print(f"   ⚠️ Error con {carpeta}: {e}")
 
+
 def limpiar_logs_viejos():
     """Elimina logs con más de 7 días"""
     print("\n🗑️ Limpiando logs viejos (>7 días)...")
@@ -114,6 +114,7 @@ def limpiar_logs_viejos():
                 log.unlink()
                 count += 1
         print(f"   ✅ Eliminados {count} logs viejos")
+
 
 def crear_gitignore():
     """Crea un .gitignore apropiado"""
@@ -164,8 +165,9 @@ COMPENDIO LEYES FEMA/
 """
 
     gitignore_path = BASE_DIR / ".gitignore"
-    gitignore_path.write_text(gitignore_content, encoding='utf-8')
+    gitignore_path.write_text(gitignore_content, encoding="utf-8")
     print("   ✅ .gitignore creado")
+
 
 def mostrar_resumen():
     """Muestra resumen final"""
@@ -182,10 +184,11 @@ def mostrar_resumen():
 
     print("\n   📁 Estructura actual:")
     for item in sorted(BASE_DIR.iterdir()):
-        if item.name.startswith('.'):
+        if item.name.startswith("."):
             continue
         tipo = "📁" if item.is_dir() else "📄"
         print(f"      {tipo} {item.name}")
+
 
 if __name__ == "__main__":
     print("=" * 60)

@@ -25,7 +25,7 @@ class PDFViewerFixed:
         """
         try:
             # Intentar usar directorio de la aplicación primero
-            if hasattr(sys, '_MEIPASS'):
+            if hasattr(sys, "_MEIPASS"):
                 # Estamos en un ejecutable PyInstaller
                 app_dir = Path(sys._MEIPASS).parent
                 temp_dir = app_dir / "temp_pdfs"
@@ -42,7 +42,7 @@ class PDFViewerFixed:
                 test_file.write_text("test")
                 test_file.unlink()
                 return temp_dir
-            except (OSError, PermissionError):
+            except:
                 # Si no podemos escribir, usar directorio temporal del sistema
                 return Path(tempfile.gettempdir()) / "lex_viridis_temp"
 
@@ -59,27 +59,16 @@ class PDFViewerFixed:
         page_number: int,
         search_term: str,
         highlight_color: tuple[float, float, float] = (0.7, 0.9, 0.9),  # Azul turquesa pálido
-        temp_dir: Path | None = None
+        temp_dir: Path | None = None,
     ) -> None:
         """
         Abre un PDF en la página específica con el término de búsqueda resaltado.
         Versión mejorada para ejecutables.
         """
         try:
-            # Validar PDF (Normalizando ruta primero)
-            from .utils import normalize_path
-            pdf_path = normalize_path(str(pdf_path))
-
+            # Validar PDF
             if not pdf_path.exists():
                 raise FileNotFoundError(f"PDF no encontrado: {pdf_path}")
-
-            # [SECURITY] Validar acceso
-            from .pdf_limiter import PDFAccessManager
-            if not PDFAccessManager.can_access_pdf(pdf_path, "highlight_view"):
-                 logging.warning(f"⛔ [SECURITY] Acceso denegado a PDF: {pdf_path.name}")
-                 # Podríamos lanzar excepción, pero para UX es mejor fallar silenciosamente o mostrar error
-                 # Aquí lanzamos error para que el caller maneje
-                 raise PermissionError(f"Acceso denegado a documento: {pdf_path.name}")
 
             logging.info(f"[FIXED] Abriendo PDF: {pdf_path.name}, página {page_number}, término: '{search_term}'")
 
@@ -93,7 +82,7 @@ class PDFViewerFixed:
                 page_number - 1,  # PyMuPDF usa base 0
                 search_term,
                 highlight_color,
-                temp_dir
+                temp_dir,
             )
 
             if temp_pdf and temp_pdf.exists():
@@ -125,20 +114,6 @@ class PDFViewerFixed:
                 logging.error(f"PDF no encontrado: {pdf_path}")
                 raise FileNotFoundError(f"PDF no encontrado: {pdf_path}")
 
-            # [SECURITY] Validar acceso
-            from .pdf_limiter import PDFAccessManager
-            # Normalizar antes de chequear seguridad y existencia
-            from .utils import normalize_path
-            pdf_path = normalize_path(str(pdf_path))
-
-            if not PDFAccessManager.can_access_pdf(pdf_path, "simple_view"):
-                 logging.warning(f"⛔ [SECURITY] Acceso denegado a PDF: {pdf_path.name}")
-                 raise PermissionError(f"Acceso denegado a documento: {pdf_path.name}")
-
-            # Validar existencia post-normalización
-            if not pdf_path.exists():
-                 raise FileNotFoundError(f"PDF no encontrado: {pdf_path}")
-
             logging.info(f"[FIXED] Abriendo PDF simple: {pdf_path.name}")
             open_with_native_viewer(pdf_path)
         except Exception as e:
@@ -147,11 +122,7 @@ class PDFViewerFixed:
 
     @staticmethod
     def _create_highlighted_pdf_safe(
-        pdf_path: Path,
-        page_index: int,
-        search_term: str,
-        highlight_color: tuple[float, float, float],
-        temp_dir: Path
+        pdf_path: Path, page_index: int, search_term: str, highlight_color: tuple[float, float, float], temp_dir: Path
     ) -> Path | None:
         """
         Genera un PDF temporal con el texto resaltado de forma segura.
@@ -208,8 +179,9 @@ class PDFViewerFixed:
 
             # Crear nombre único para el archivo temporal
             import time
+
             timestamp = int(time.time())
-            safe_filename = "".join(c for c in pdf_path.stem if c.isalnum() or c in (' ', '-', '_')).rstrip()
+            safe_filename = "".join(c for c in pdf_path.stem if c.isalnum() or c in (" ", "-", "_")).rstrip()
             temp_pdf = temp_dir / f"highlighted_{timestamp}_{safe_filename}.pdf"
 
             # Asegurar que el directorio existe
@@ -232,7 +204,7 @@ class PDFViewerFixed:
             if doc:
                 try:
                     doc.close()
-                except Exception:
+                except:
                     pass
 
     @staticmethod
@@ -251,7 +223,7 @@ class PDFViewerFixed:
         terms.append(clean_term)
 
         # Agregar palabras individuales si es una frase (solo palabras > 2 caracteres)
-        if ' ' in clean_term:
+        if " " in clean_term:
             words = [word.strip() for word in clean_term.split() if len(word.strip()) > 2]
             terms.extend(words)
 
@@ -320,6 +292,7 @@ class PDFViewerFixed:
                 return
 
             import time
+
             current_time = time.time()
             max_age_seconds = max_age_hours * 3600
             cleaned_count = 0

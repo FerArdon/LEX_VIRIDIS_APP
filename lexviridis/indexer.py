@@ -23,11 +23,11 @@ class Indexer:
 
         if not force_rebuild and config.INDEX_FILE.exists():
             try:
-                with open(config.INDEX_FILE, 'rb') as f:
+                with open(config.INDEX_FILE, "rb") as f:
                     data = pickle.load(f)
-                if data.get('version') == config.database.index_version:
-                    self.text_index = data.get('index', {})
-                    last_modified = data.get('last_modified', {})
+                if data.get("version") == config.database.index_version:
+                    self.text_index = data.get("index", {})
+                    last_modified = data.get("last_modified", {})
                     should_reindex = self._needs_update(last_modified)
                     if not should_reindex:
                         self.index_ready = True
@@ -78,7 +78,9 @@ class Indexer:
                                     text = doc[page_num].get_text("text")
                                 except RuntimeError as re:
                                     if "unknown colorspace" in str(re).lower():
-                                        logging.warning(f"Colorespace desconocido en página {page_num} de {pdf_path.name}, página omitida.")
+                                        logging.warning(
+                                            f"Colorespace desconocido en página {page_num} de {pdf_path.name}, página omitida."
+                                        )
                                         continue
                                     else:
                                         raise
@@ -99,16 +101,17 @@ class Indexer:
     def _save_index(self):
         try:
             config.INDEX_FILE.parent.mkdir(parents=True, exist_ok=True)
-            with open(config.INDEX_FILE, 'wb') as f:
-                pickle.dump({
-                    'version': config.database.index_version,
-                    'index': self.text_index,
-                    'last_modified': {
-                        path: Path(path).stat().st_mtime
-                        for path in self.text_index
-                        if Path(path).exists()
-                    }
-                }, f)
+            with open(config.INDEX_FILE, "wb") as f:
+                pickle.dump(
+                    {
+                        "version": config.database.index_version,
+                        "index": self.text_index,
+                        "last_modified": {
+                            path: Path(path).stat().st_mtime for path in self.text_index if Path(path).exists()
+                        },
+                    },
+                    f,
+                )
             logging.info("Índice guardado correctamente.")
         except Exception as e:
             logging.error(f"No se pudo guardar el índice: {e}")

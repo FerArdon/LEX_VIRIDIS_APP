@@ -1,4 +1,3 @@
-
 import json
 from datetime import datetime
 
@@ -10,6 +9,7 @@ class NotificationType:
     RECORDATORIO = "recordatorio"
     SISTEMA = "sistema"
 
+
 class NotificationManager:
     def __init__(self, db_manager):
         self.db_manager = db_manager
@@ -20,10 +20,13 @@ class NotificationManager:
         try:
             data_str = json.dumps(data) if data else None
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO notificaciones (tipo, titulo, mensaje, data, accion_url)
                 VALUES (?, ?, ?, ?, ?)
-            """, (tipo, titulo, mensaje, data_str, url))
+            """,
+                (tipo, titulo, mensaje, data_str, url),
+            )
             notif_id = cursor.lastrowid
             conn.commit()
 
@@ -36,7 +39,7 @@ class NotificationManager:
                 "data": data,
                 "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
                 "leida": False,
-                "url": url
+                "url": url,
             }
             for listener in self.listeners:
                 listener(notif)

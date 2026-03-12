@@ -5,6 +5,7 @@ import traceback
 # Agregar directorio actual al path
 sys.path.append(os.getcwd())
 
+
 def main():
     print("Iniciando LEX VIRIDIS V3...")
 
@@ -23,12 +24,13 @@ def main():
         print("Asegúrate de estar en el entorno virtual (.venv)")
         input("Presiona ENTER para salir...")
     except Exception:
-        print("\n" + "="*50)
+        print("\n" + "=" * 50)
         print("ERROR FATAL")
-        print("="*50)
+        print("=" * 50)
         traceback.print_exc()
-        print("="*50)
+        print("=" * 50)
         input("Presiona ENTER para salir...")
+
 
 if __name__ == "__main__":
     main()

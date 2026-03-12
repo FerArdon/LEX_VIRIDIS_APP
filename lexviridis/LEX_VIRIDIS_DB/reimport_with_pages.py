@@ -1,4 +1,3 @@
-
 """
 Script de Re-Importación con Páginas Correctas
 LEX VIRIDIS - Corrige el problema de "Página 1"
@@ -11,11 +10,12 @@ from pathlib import Path
 
 import fitz  # PyMuPDF
 
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 BASE_DIR = Path(r"c:\Users\frard\OneDrive\LEX_VIRIDIS_APP")
 PDF_DIR = BASE_DIR / "COMPENDIO LEYES FEMA"
 DB_PATH = BASE_DIR / "LEX_VIRIDIS_DB" / "legislacion_ambiental.db"
+
 
 def add_page_column():
     """Añade la columna 'pagina' a la tabla articulos si no existe."""
@@ -26,7 +26,7 @@ def add_page_column():
     cursor.execute("PRAGMA table_info(articulos)")
     columns = [col[1] for col in cursor.fetchall()]
 
-    if 'pagina' not in columns:
+    if "pagina" not in columns:
         logging.info("➕ Agregando columna 'pagina' a tabla articulos...")
         cursor.execute("ALTER TABLE articulos ADD COLUMN pagina INTEGER DEFAULT 1")
         conn.commit()
@@ -35,6 +35,7 @@ def add_page_column():
         logging.info("ℹ️ Columna 'pagina' ya existe.")
 
     conn.close()
+
 
 def reimport_with_pages():
     """Re-importa artículos guardando el número de página correcto."""
@@ -58,14 +59,16 @@ def reimport_with_pages():
             logging.info(f"📄 {filename}")
 
             # Obtener norma_id correspondiente
-            cursor.execute("SELECT id FROM normas WHERE archivo_pdf LIKE ?", (f'%{filename}%',))
+            cursor.execute("SELECT id FROM normas WHERE archivo_pdf LIKE ?", (f"%{filename}%",))
             result = cursor.fetchone()
 
             if not result:
                 # Insertar nueva norma si no existe
                 tipo = "Decreto" if "decreto" in filename.lower() else "Ley"
-                cursor.execute("INSERT INTO normas (tipo, titulo, archivo_pdf) VALUES (?, ?, ?)",
-                              (tipo, filename.replace('.pdf', ''), str(pdf_path)))
+                cursor.execute(
+                    "INSERT INTO normas (tipo, titulo, archivo_pdf) VALUES (?, ?, ?)",
+                    (tipo, filename.replace(".pdf", ""), str(pdf_path)),
+                )
                 norma_id = cursor.lastrowid
             else:
                 norma_id = result[0]
@@ -82,19 +85,26 @@ def reimport_with_pages():
 
                 # Buscar artículos en esta página específica
                 # Patrón: "Artículo 123" o "Art. 123" o "ARTÍCULO 123"
-                pattern = r'(?:ART[ÍI]CULO|Art\.?)\s*(\d+(?:-[A-Za-z])?)'
+                pattern = r"(?:ART[ÍI]CULO|Art\.?)\s*(\d+(?:-[A-Za-z])?)"
                 matches = re.findall(pattern, text, re.IGNORECASE)
 
                 for art_num in matches:
                     # Extraer un snippet de contexto (100 chars después del match)
-                    match_obj = re.search(rf'(?:ART[ÍI]CULO|Art\.?)\s*{re.escape(art_num)}[^\n]*(.{{0,200}})', text, re.IGNORECASE | re.DOTALL)
+                    match_obj = re.search(
+                        rf"(?:ART[ÍI]CULO|Art\.?)\s*{re.escape(art_num)}[^\n]*(.{{0,200}})",
+                        text,
+                        re.IGNORECASE | re.DOTALL,
+                    )
                     contenido = match_obj.group(1).strip() if match_obj else "..."
 
                     # Insertar artículo CON número de página real (page_num + 1 porque es 0-indexed)
-                    cursor.execute("""
+                    cursor.execute(
+                        """
                         INSERT INTO articulos (norma_id, numero_articulo, contenido, pagina)
                         VALUES (?, ?, ?, ?)
-                    """, (norma_id, art_num.upper(), contenido, page_num + 1))
+                    """,
+                        (norma_id, art_num.upper(), contenido, page_num + 1),
+                    )
 
                     total_articulos += 1
 
@@ -120,6 +130,7 @@ def reimport_with_pages():
     logging.info("\n✨ Importación completada:")
     logging.info(f"   - Total artículos: {total_articulos}")
     logging.info("   - Páginas correctas: SÍ")
+
 
 if __name__ == "__main__":
     add_page_column()

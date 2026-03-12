@@ -1,4 +1,3 @@
-
 import re
 
 
@@ -13,6 +12,7 @@ class LegalAIAssistant:
     def answer_question(self, question: str) -> dict:
         """Responde una consulta legal usando contexto de la base de datos."""
         import logging
+
         logger = logging.getLogger(__name__)
         logger.info(f"IA: Procesando pregunta: {question}")
 
@@ -25,7 +25,7 @@ class LegalAIAssistant:
         context = ""
         for doc in context_docs:
             context += f"DOCUMENTO: {doc['file']}\n"
-            context += f"CONTENIDO: {doc['context']}\n" # En una impl real obtendríamos el texto completo
+            context += f"CONTENIDO: {doc['context']}\n"  # En una impl real obtendríamos el texto completo
             context += "---\n"
 
         # 3. Incluir historial (últimos 3 mensajes)
@@ -69,7 +69,7 @@ RESPUESTA:
             "answer": response_text,
             "sources": context_docs,
             "citations": citations,
-            "followups": self._extract_followups(response_text)
+            "followups": self._extract_followups(response_text),
         }
 
     def _extract_followups(self, text: str) -> list[str]:

@@ -32,17 +32,17 @@ echo.
 echo Compilando instalador con Inno Setup...
 %ISCC% installer.iss
 
-if exist "installer\LEX_VIRIDIS_Setup_v3.0.exe" (
+if exist "installer\LEX_VIRIDIS_Setup_v3.1.1_2026.exe" (
     echo.
     echo ============================================
     echo    EXITO! Instalador generado en:
-    echo    installer\LEX_VIRIDIS_Setup_v3.0.exe
+    echo    installer\LEX_VIRIDIS_Setup_v3.1.1_2026.exe
     echo ============================================
-    
+
     echo.
     echo Tamanio del instalador:
-    for %%A in (installer\LEX_VIRIDIS_Setup_v3.0.exe) do echo    %%~zA bytes
-    
+    for %%A in (installer\LEX_VIRIDIS_Setup_v3.1.1_2026.exe) do echo    %%~zA bytes
+
     explorer installer
 ) else (
     echo.

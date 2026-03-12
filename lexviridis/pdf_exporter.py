@@ -1,4 +1,3 @@
-
 """
 LEX VIRIDIS - Exportador de PDFs Profesionales
 Genera documentos legales con formato institucional.
@@ -29,9 +28,9 @@ class PDFExporter:
 
     # Tamaños de página disponibles
     PAGE_SIZES = {
-        'carta': letter,
-        'legal': legal,
-        'a4': A4,
+        "carta": letter,
+        "legal": legal,
+        "a4": A4,
     }
 
     def __init__(self, output_dir: Path = None):
@@ -44,100 +43,116 @@ class PDFExporter:
         self.styles = getSampleStyleSheet()
 
         # Título principal
-        self.styles.add(ParagraphStyle(
-            name='LexTitle',
-            parent=self.styles['Heading1'],
-            fontSize=24,
-            textColor=VERDE_PRIMARIO,
-            alignment=TA_CENTER,
-            spaceAfter=6,
-            fontName='Helvetica-Bold',
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="LexTitle",
+                parent=self.styles["Heading1"],
+                fontSize=24,
+                textColor=VERDE_PRIMARIO,
+                alignment=TA_CENTER,
+                spaceAfter=6,
+                fontName="Helvetica-Bold",
+            )
+        )
 
         # Subtítulo
-        self.styles.add(ParagraphStyle(
-            name='LexSubtitle',
-            parent=self.styles['Normal'],
-            fontSize=14,
-            textColor=GRIS_TEXTO,
-            alignment=TA_CENTER,
-            spaceAfter=20,
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="LexSubtitle",
+                parent=self.styles["Normal"],
+                fontSize=14,
+                textColor=GRIS_TEXTO,
+                alignment=TA_CENTER,
+                spaceAfter=20,
+            )
+        )
 
         # Nombre de norma
-        self.styles.add(ParagraphStyle(
-            name='NormaTitulo',
-            parent=self.styles['Heading1'],
-            fontSize=16,
-            textColor=VERDE_PRIMARIO,
-            alignment=TA_LEFT,
-            spaceBefore=20,
-            spaceAfter=10,
-            fontName='Helvetica-Bold',
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="NormaTitulo",
+                parent=self.styles["Heading1"],
+                fontSize=16,
+                textColor=VERDE_PRIMARIO,
+                alignment=TA_LEFT,
+                spaceBefore=20,
+                spaceAfter=10,
+                fontName="Helvetica-Bold",
+            )
+        )
 
         # Número de artículo
-        self.styles.add(ParagraphStyle(
-            name='ArticuloNumero',
-            parent=self.styles['Heading2'],
-            fontSize=12,
-            textColor=DORADO,
-            alignment=TA_LEFT,
-            spaceBefore=15,
-            spaceAfter=6,
-            fontName='Helvetica-Bold',
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="ArticuloNumero",
+                parent=self.styles["Heading2"],
+                fontSize=12,
+                textColor=DORADO,
+                alignment=TA_LEFT,
+                spaceBefore=15,
+                spaceAfter=6,
+                fontName="Helvetica-Bold",
+            )
+        )
 
         # Contenido de artículo
-        self.styles.add(ParagraphStyle(
-            name='ArticuloContenido',
-            parent=self.styles['Normal'],
-            fontSize=11,
-            textColor=GRIS_TEXTO,
-            alignment=TA_JUSTIFY,
-            spaceAfter=10,
-            leading=14,
-            firstLineIndent=20,
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="ArticuloContenido",
+                parent=self.styles["Normal"],
+                fontSize=11,
+                textColor=GRIS_TEXTO,
+                alignment=TA_JUSTIFY,
+                spaceAfter=10,
+                leading=14,
+                firstLineIndent=20,
+            )
+        )
 
         # Pie de página
-        self.styles.add(ParagraphStyle(
-            name='Footer',
-            parent=self.styles['Normal'],
-            fontSize=9,
-            textColor=GRIS_CLARO,
-            alignment=TA_CENTER,
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="Footer",
+                parent=self.styles["Normal"],
+                fontSize=9,
+                textColor=GRIS_CLARO,
+                alignment=TA_CENTER,
+            )
+        )
 
         # Fecha
-        self.styles.add(ParagraphStyle(
-            name='Fecha',
-            parent=self.styles['Normal'],
-            fontSize=10,
-            textColor=GRIS_CLARO,
-            alignment=TA_CENTER,
-            spaceAfter=30,
-        ))
+        self.styles.add(
+            ParagraphStyle(
+                name="Fecha",
+                parent=self.styles["Normal"],
+                fontSize=10,
+                textColor=GRIS_CLARO,
+                alignment=TA_CENTER,
+                spaceAfter=30,
+            )
+        )
 
     def _create_header(self, story: list, titulo: str = "Compendio Legal Ambiental"):
         """Crea el encabezado del documento."""
         # Logo (texto estilizado)
-        story.append(Paragraph("🌿 LEX VIRIDIS", self.styles['LexTitle']))
-        story.append(Paragraph(titulo.upper(), self.styles['LexSubtitle']))
+        story.append(Paragraph("🌿 LEX VIRIDIS", self.styles["LexTitle"]))
+        story.append(Paragraph(titulo.upper(), self.styles["LexSubtitle"]))
 
         # Línea decorativa
-        story.append(HRFlowable(
-            width="80%",
-            thickness=2,
-            color=VERDE_PRIMARIO,
-            spaceBefore=5,
-            spaceAfter=5,
-            hAlign='CENTER',
-        ))
+        story.append(
+            HRFlowable(
+                width="80%",
+                thickness=2,
+                color=VERDE_PRIMARIO,
+                spaceBefore=5,
+                spaceAfter=5,
+                hAlign="CENTER",
+            )
+        )
 
         # Fecha de generación
         fecha = datetime.now().strftime("%d de %B de %Y, %H:%M")
-        story.append(Paragraph(f"Documento generado el {fecha}", self.styles['Fecha']))
+        story.append(Paragraph(f"Documento generado el {fecha}", self.styles["Fecha"]))
 
     def _add_footer(self, canvas, doc):
         """Añade pie de página a cada hoja."""
@@ -146,18 +161,18 @@ class PDFExporter:
         # Línea
         canvas.setStrokeColor(GRIS_CLARO)
         canvas.setLineWidth(0.5)
-        canvas.line(inch, 0.65*inch, doc.pagesize[0] - inch, 0.65*inch)
+        canvas.line(inch, 0.65 * inch, doc.pagesize[0] - inch, 0.65 * inch)
 
         # Texto del pie
         canvas.setFillColor(GRIS_CLARO)
-        canvas.setFont('Helvetica', 9)
+        canvas.setFont("Helvetica", 9)
 
         # Página
         page_text = f"Página {doc.page}"
-        canvas.drawString(inch, 0.45*inch, page_text)
+        canvas.drawString(inch, 0.45 * inch, page_text)
 
         # LEX VIRIDIS
-        canvas.drawRightString(doc.pagesize[0] - inch, 0.45*inch, "LEX VIRIDIS Pro")
+        canvas.drawRightString(doc.pagesize[0] - inch, 0.45 * inch, "LEX VIRIDIS Pro")
 
         canvas.restoreState()
 
@@ -166,7 +181,7 @@ class PDFExporter:
         articulos: list[dict],
         filename: str = None,
         titulo: str = "Resultados de Búsqueda",
-        page_size: str = 'carta',
+        page_size: str = "carta",
         include_index: bool = False,
     ) -> Path:
         """
@@ -197,9 +212,9 @@ class PDFExporter:
         doc = SimpleDocTemplate(
             str(output_path),
             pagesize=pagesize,
-            rightMargin=0.75*inch,
-            leftMargin=0.75*inch,
-            topMargin=0.75*inch,
+            rightMargin=0.75 * inch,
+            leftMargin=0.75 * inch,
+            topMargin=0.75 * inch,
             bottomMargin=inch,
         )
 
@@ -211,52 +226,51 @@ class PDFExporter:
         # Resumen
         normas_unicas = set()
         for art in articulos:
-            norma = art.get('norma_titulo') or art.get('file', 'Desconocido')
+            norma = art.get("norma_titulo") or art.get("file", "Desconocido")
             normas_unicas.add(norma)
 
         resumen = f"<b>Total:</b> {len(articulos)} artículo(s) de {len(normas_unicas)} norma(s)"
-        story.append(Paragraph(resumen, self.styles['Normal']))
+        story.append(Paragraph(resumen, self.styles["Normal"]))
         story.append(Spacer(1, 20))
 
         # Índice opcional
         if include_index:
-            story.append(Paragraph("<b>ÍNDICE</b>", self.styles['NormaTitulo']))
+            story.append(Paragraph("<b>ÍNDICE</b>", self.styles["NormaTitulo"]))
             for i, art in enumerate(articulos, 1):
-                numero = art.get('numero') or art.get('numero_articulo', '?')
-                norma = art.get('norma_titulo') or Path(art.get('file', '')).stem
-                story.append(Paragraph(
-                    f"{i}. Artículo {numero} - {norma[:50]}...",
-                    self.styles['Normal']
-                ))
+                numero = art.get("numero") or art.get("numero_articulo", "?")
+                norma = art.get("norma_titulo") or Path(art.get("file", "")).stem
+                story.append(Paragraph(f"{i}. Artículo {numero} - {norma[:50]}...", self.styles["Normal"]))
             story.append(PageBreak())
 
         # Contenido - Agrupar por norma
         norma_actual = None
         for art in articulos:
-            norma = art.get('norma_titulo') or art.get('file', 'Documento')
+            norma = art.get("norma_titulo") or art.get("file", "Documento")
             if isinstance(norma, Path):
                 norma = norma.stem
 
             # Nueva sección de norma
             if norma != norma_actual:
                 norma_actual = norma
-                story.append(Paragraph(norma, self.styles['NormaTitulo']))
-                story.append(HRFlowable(
-                    width="100%",
-                    thickness=1,
-                    color=VERDE_CLARO,
-                    spaceAfter=10,
-                ))
+                story.append(Paragraph(norma, self.styles["NormaTitulo"]))
+                story.append(
+                    HRFlowable(
+                        width="100%",
+                        thickness=1,
+                        color=VERDE_CLARO,
+                        spaceAfter=10,
+                    )
+                )
 
             # Artículo
-            numero = art.get('numero') or art.get('numero_articulo', '')
-            contenido = art.get('contenido', art.get('context', ''))
+            numero = art.get("numero") or art.get("numero_articulo", "")
+            contenido = art.get("contenido", art.get("context", ""))
 
-            story.append(Paragraph(f"Artículo {numero}", self.styles['ArticuloNumero']))
+            story.append(Paragraph(f"Artículo {numero}", self.styles["ArticuloNumero"]))
 
             # Limpiar contenido para ReportLab
             contenido_limpio = self._clean_text(contenido)
-            story.append(Paragraph(contenido_limpio, self.styles['ArticuloContenido']))
+            story.append(Paragraph(contenido_limpio, self.styles["ArticuloContenido"]))
 
         # Construir PDF
         doc.build(
@@ -282,11 +296,13 @@ class PDFExporter:
         # Convertir formato de resultados de búsqueda a artículos
         articulos = []
         for res in results:
-            articulos.append({
-                'numero': res.get('context', '').split(':')[0].replace('Art. ', '').strip(),
-                'contenido': res.get('context', ''),
-                'norma_titulo': Path(res.get('file', '')).stem,
-            })
+            articulos.append(
+                {
+                    "numero": res.get("context", "").split(":")[0].replace("Art. ", "").strip(),
+                    "contenido": res.get("context", ""),
+                    "norma_titulo": Path(res.get("file", "")).stem,
+                }
+            )
 
         return self.export_articulos(
             articulos,
@@ -318,25 +334,31 @@ class PDFExporter:
             raise ValueError(f"Norma ID {norma_id} no encontrada")
 
         # Obtener artículos
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT numero_articulo, contenido
             FROM articulos
             WHERE norma_id = ?
             ORDER BY id
-        """, (norma_id,))
+        """,
+            (norma_id,),
+        )
 
-        articulos = [{
-            'numero': row['numero_articulo'],
-            'contenido': row['contenido'],
-            'norma_titulo': norma['titulo'],
-        } for row in cursor.fetchall()]
+        articulos = [
+            {
+                "numero": row["numero_articulo"],
+                "contenido": row["contenido"],
+                "norma_titulo": norma["titulo"],
+            }
+            for row in cursor.fetchall()
+        ]
 
         conn.close()
 
         return self.export_articulos(
             articulos,
             filename=filename,
-            titulo=norma['titulo'],
+            titulo=norma["titulo"],
             include_index=len(articulos) > 10,
         )
 
@@ -346,12 +368,12 @@ class PDFExporter:
             return ""
 
         # Escapar caracteres especiales de XML
-        text = text.replace('&', '&amp;')
-        text = text.replace('<', '&lt;')
-        text = text.replace('>', '&gt;')
+        text = text.replace("&", "&amp;")
+        text = text.replace("<", "&lt;")
+        text = text.replace(">", "&gt;")
 
         # Remover caracteres problemáticos
-        text = text.replace('\x00', '')
+        text = text.replace("\x00", "")
 
         return text
 
@@ -373,11 +395,11 @@ def exportar_a_pdf(
         import platform
         import subprocess
 
-        if platform.system() == 'Windows':
+        if platform.system() == "Windows":
             os.startfile(str(output_path))
-        elif platform.system() == 'Darwin':
-            subprocess.run(['open', str(output_path)])
+        elif platform.system() == "Darwin":
+            subprocess.run(["open", str(output_path)])
         else:
-            subprocess.run(['xdg-open', str(output_path)])
+            subprocess.run(["xdg-open", str(output_path)])
 
     return output_path

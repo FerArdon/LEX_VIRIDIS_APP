@@ -1,4 +1,3 @@
-
 """
 LEX VIRIDIS - Gestor de Tutorial y Onboarding
 Maneja la lógica de primera ejecución y el overlay informativo.
@@ -47,7 +46,7 @@ class TutorialManager:
                 "title": "¡Todo listo! 🚀",
                 "message": "Explora la legislación ambiental de Honduras con la herramienta más avanzada. ¿Empezamos?",
                 "icon": ft.Icons.ROCKET_LAUNCH,
-            }
+            },
         ]
 
     def is_first_run(self) -> bool:
@@ -57,7 +56,7 @@ class TutorialManager:
             with open(self.config_path) as f:
                 config = json.load(f)
                 return not config.get("tutorial_completed", False)
-        except (json.JSONDecodeError, OSError, KeyError):
+        except:
             return True
 
     def mark_completed(self):
@@ -83,9 +82,9 @@ class TutorialManager:
 
         def update_ui():
             step = self.steps[self.current_step]
-            icon_container.content = ft.Icon(step['icon'], size=80, color=ft.Colors.GREEN_700)
-            title_text.value = step['title']
-            message_text.value = step['message']
+            icon_container.content = ft.Icon(step["icon"], size=80, color=ft.Colors.GREEN_700)
+            title_text.value = step["title"]
+            message_text.value = step["message"]
             progress_text.value = f"Paso {self.current_step + 1} de {len(self.steps)}"
             btn_next.text = "Entendido" if self.current_step < len(self.steps) - 1 else "¡Empezar!"
             self.page.update()
@@ -99,15 +98,19 @@ class TutorialManager:
         dialog = ft.AlertDialog(
             modal=True,
             content=ft.Container(
-                content=ft.Column([
-                    icon_container,
-                    ft.Container(height=10),
-                    title_text,
-                    ft.Container(height=10),
-                    message_text,
-                    ft.Container(height=20),
-                    ft.Row([progress_text, btn_next], alignment="spaceBetween")
-                ], horizontal_alignment="center", tight=True),
+                content=ft.Column(
+                    [
+                        icon_container,
+                        ft.Container(height=10),
+                        title_text,
+                        ft.Container(height=10),
+                        message_text,
+                        ft.Container(height=20),
+                        ft.Row([progress_text, btn_next], alignment="spaceBetween"),
+                    ],
+                    horizontal_alignment="center",
+                    tight=True,
+                ),
                 width=400,
                 padding=20,
             ),
