@@ -70,6 +70,9 @@ Source: "LEX_VIRIDIS_DB\legislacion_ambiental.db"; DestDir: "{app}\LEX_VIRIDIS_D
 ; Sistema de licencias (scripts de generación - opcional para admin)
 Source: "LEX_VIRIDIS_LICENCIA\*"; DestDir: "{app}\LEX_VIRIDIS_LICENCIA"; Flags: ignoreversion
 
+; PDFs - Compendio de Leyes FEMA (188 documentos)
+Source: "COMPENDIO LEYES FEMA\*"; DestDir: "{app}\COMPENDIO LEYES FEMA"; Flags: ignoreversion recursesubdirs createallsubdirs
+
 ; Documentación
 Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion

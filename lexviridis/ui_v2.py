@@ -1705,6 +1705,22 @@ class LexViridisApp:
                             path_obj = c
                             break
 
+                else:
+                    # Ruta absoluta de otra máquina (ej: OneDrive del dev) → buscar solo por nombre
+                    import sys as _sys
+
+                    clean_name = path_obj.name
+                    candidates = [
+                        app_config.PDF_DIR / clean_name,
+                        Path(_sys.executable).parent / "COMPENDIO LEYES FEMA" / clean_name,
+                        Path(_sys.executable).parent / "COMPENDIO_LEYES_FEMA" / clean_name,
+                        Path.cwd() / "COMPENDIO LEYES FEMA" / clean_name,
+                    ]
+                    for c in candidates:
+                        if c.exists():
+                            path_obj = c
+                            break
+
             if not path_obj.exists():
                 # Si falla, mostrar la ruta exacta que está fallando para diagnosticar
                 error_msg = f"⚠️ No se encontró: {path_obj.name}"
