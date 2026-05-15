@@ -1,0 +1,24 @@
+# --- GUI & UX (Windows 11 Style) ---
+customtkinter>=5.2.0
+packaging>=23.0
+
+# --- Procesamiento de Imágenes (Iconos y Assets) ---
+Pillow>=10.0.0
+
+# --- Lógica de Negocio y Datos ---
+# SQLite3 viene integrado en la librería estándar de Python
+
+# --- Procesamiento de Documentos (PDF) ---
+PyMuPDF>=1.22.0
+
+# --- Exportación de Reportes ---
+fpdf2>=2.7.0
+pandas>=2.0.0
+openpyxl>=3.1.0
+
+# --- Inteligencia Artificial ---
+google-generativeai>=0.3.0
+openai>=1.0.0
+
+# --- Seguridad y Encriptación ---
+cryptography>=41.0.0

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.venvScriptspython.exe -c \"from lexviridis.config import config; print\\(''config OK:'', config.BASE_DIR\\); print\\(''DB:'', config.BASE_DIR / ''LEX_VIRIDIS_DB'' / ''legislacion_ambiental.db''\\); print\\(''Assets:'', config.BASE_DIR / ''assets''\\)\")",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(\"C:\\\\Users\\\\frard\\\\OneDrive\\\\LEX_VIRIDIS_APP\\\\.venv\\\\Scripts\\\\python.exe\" -c \"from lexviridis.config import config; print\\(''config OK:'', config.BASE_DIR\\); print\\(''Assets:'', config.RESOURCE_DIR\\)\")",
+      "Bash(cmd.exe:*)",
+      "Bash(cmd /c:*)",
+      "Bash(SHELL=cmd.exe cmd.exe:*)",
+      "Bash(BASH_ENV=\"\" HOME=\"\" C:/Users/frard/OneDrive/LEX_VIRIDIS_APP/.venv/Scripts/python.exe C:/Users/frard/OneDrive/LEX_VIRIDIS_APP/_test_imports.py)",
+      "Bash(C:/Users/frard/OneDrive/LEX_VIRIDIS_APP/.venv/Scripts/python.exe:*)",
+      "Bash(\"C:/Users/frard/OneDrive/LEX_VIRIDIS_APP/dist/LEX_VIRIDIS.exe\")"
+    ]
+  }
+}

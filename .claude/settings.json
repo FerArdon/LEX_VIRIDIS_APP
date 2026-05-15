@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"from PIL import Image; img=Image.open\\('assets/LEXVIRIDIS_WHITE_BG.bmp'\\); print\\('BMP size:', img.size, 'mode:', img.mode\\)\")",
+      "Bash(/e/LEX_VIRIDIS_APP/lexviridis/.venv/Scripts/python.exe -c \"import customtkinter; import os; print\\(os.path.dirname\\(customtkinter.__file__\\)\\)\")",
+      "Bash(/e/LEX_VIRIDIS_APP/lexviridis/.venv/Scripts/python.exe -m pip list)"
+    ]
+  }
+}

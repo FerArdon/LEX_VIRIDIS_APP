@@ -1,0 +1,60 @@
+{
+    "app": {
+        "name": "LEX VIRIDIS",
+        "subtitle": "Compendio Legal Ambiental de Honduras"
+    },
+    "nav": {
+        "dashboard": "Dashboard",
+        "search": "Buscar",
+        "ai_assistant": "Asistente IA",
+        "favorites": "Favoritos",
+        "library": "Biblioteca",
+        "study": "Estudio",
+        "settings": "Ajustes"
+    },
+    "search": {
+        "placeholder": "Buscar en normativa ambiental...",
+        "button": "Buscar",
+        "no_results": "No se encontraron resultados para '{query}'",
+        "results_count": "{count} resultados encontrados",
+        "recent": "Resultados para:",
+        "tips": [
+            "Ley Forestal",
+            "Licencia Ambiental",
+            "Áreas Protegidas"
+        ]
+    },
+    "favorites": {
+        "title": "Favoritos",
+        "add": "Agregar a Favoritos",
+        "remove": "Quitar de Favoritos",
+        "empty": "No tienes favoritos aún",
+        "added": "Agregado a favoritos"
+    },
+    "export": {
+        "pdf": "Exportar a PDF",
+        "word": "Exportar a Word",
+        "success": "Exportado exitosamente",
+        "error": "Error al exportar"
+    },
+    "common": {
+        "close": "Cerrar",
+        "save": "Guardar",
+        "cancel": "Cancelar",
+        "delete": "Eliminar",
+        "edit": "Editar",
+        "loading": "Cargando...",
+        "error": "Error",
+        "success": "Éxito",
+        "welcome": "Bienvenido",
+        "user": "Usuario"
+    },
+    "settings": {
+        "title": "Ajustes del Sistema",
+        "ui_themes": "Interfaz y Temas",
+        "database": "Base de Datos y Backups",
+        "language": "Idioma",
+        "cloud": "Sincronización en la Nube",
+        "accessibility": "Accesibilidad"
+    }
+}

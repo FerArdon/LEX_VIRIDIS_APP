@@ -1,0 +1,11 @@
+LEX VIRIDIS — Licencia de Uso
+==================================================
+Cliente:     FER_A
+Tipo:        PERMANENTE
+Asientos:    2
+Vencimiento: 22/02/2126
+Emitida:     18/03/2026 08:51
+==================================================
+
+CLAVE DE LICENCIA:
+eyJ2IjoyLCJ0eXBlIjoiUEVSTUFORU5URSIsImNsaWVudCI6IkZFUl9BIiwibWF4X3NlYXRzIjoyLCJod19pZCI6bnVsbCwiaWF0IjoxNzczODQ1MDI0LjkwNTcxNiwiZXhwIjo0OTI3NDQ1MDI0LjkwNTcxNn0=.BjzYR8wL6N5erVBaE8m1qZAixbltEOX3HstZnEMFlb8=

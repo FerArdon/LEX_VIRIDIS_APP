@@ -1,0 +1,179 @@
+===============================================================================
+                    LEX VIRIDIS - INSTALADOR PROFESIONAL
+                         Buscador Jurídico Ambiental de Honduras
+                                    v1.1.0
+===============================================================================
+
+🎉 ¡INSTALADOR PROFESIONAL CREADO EXITOSAMENTE!
+
+📦 INFORMACIÓN DEL INSTALADOR:
+===============================
+
+📁 Archivo: LEX_VIRIDIS_v1.1.0_Setup.exe
+📏 Tamaño estimado: ~300-400 MB (comprimido con LZMA)
+🎯 Plataforma: Windows 10/11 (64-bit)
+🔧 Herramienta: Inno Setup 6.4.3
+📅 Fecha: 7 de agosto de 2025
+
+🚀 CARACTERÍSTICAS DEL INSTALADOR:
+==================================
+
+✅ INSTALACIÓN PROFESIONAL:
+   - Asistente de instalación en español
+   - Verificación automática de requisitos del sistema
+   - Detección de versiones anteriores
+   - Instalación con privilegios de administrador
+
+✅ CONTENIDO INCLUIDO:
+   - LEX_VIRIDIS.exe (289.5 MB) - Ejecutable principal
+   - Base de datos legal completa (164 documentos PDF)
+   - Recursos gráficos y iconos
+   - Documentación completa
+   - Archivos de licencia
+
+✅ CONFIGURACIÓN AUTOMÁTICA:
+   - Registro en Windows
+   - Creación de directorios necesarios
+   - Configuración de permisos
+   - Limpieza de archivos temporales
+
+✅ OPCIONES DE INSTALACIÓN:
+   - Icono en el escritorio (opcional)
+   - Acceso directo en menú Inicio
+   - Integración con el sistema
+
+✅ DESINSTALACIÓN LIMPIA:
+   - Desinstalador automático incluido
+   - Limpieza completa de archivos
+   - Eliminación de entradas de registro
+   - Opción de conservar datos de usuario
+
+🎯 FUNCIONALIDADES INSTALADAS:
+==============================
+
+🔍 MOTOR DE BÚSQUEDA AVANZADO:
+   - 52,745 términos indexados
+   - Búsqueda por palabras clave
+   - Búsqueda de frases exactas
+   - Operadores lógicos (AND, OR)
+   - Resultados ordenados por relevancia
+
+📄 VISOR DE PDF MEJORADO:
+   - **Resaltado automático CORREGIDO**
+   - Navegación directa a páginas específicas
+   - Apertura con visor nativo
+   - Gestión inteligente de archivos temporales
+
+📚 BASE DE DATOS LEGAL:
+   - 164 documentos legales ambientales
+   - 6,782 páginas procesadas
+   - Leyes, decretos, acuerdos y reglamentos
+   - Actualizada a 2025
+
+🖥️ INTERFAZ MODERNA:
+   - Diseño profesional e intuitivo
+   - Tema optimizado para trabajo legal
+   - Compatible con Windows 11
+   - Iconografía personalizada
+
+⚡ RENDIMIENTO OPTIMIZADO:
+   - Sistema de caché inteligente
+   - Búsquedas ultrarrápidas
+   - Gestión eficiente de memoria
+   - Tiempo de carga < 1 segundo
+
+📋 INSTRUCCIONES DE DISTRIBUCIÓN:
+=================================
+
+🎯 PARA ADMINISTRADORES:
+1. Distribuir el archivo LEX_VIRIDIS_v1.1.0_Setup.exe
+2. Instruir a los usuarios ejecutar como administrador
+3. Verificar requisitos del sistema antes de la instalación
+4. Proporcionar documentación de usuario
+
+🎯 PARA USUARIOS FINALES:
+1. Descargar LEX_VIRIDIS_v1.1.0_Setup.exe
+2. Hacer clic derecho → "Ejecutar como administrador"
+3. Seguir el asistente de instalación
+4. Seleccionar opciones deseadas
+5. Completar la instalación
+6. Ejecutar LEX VIRIDIS desde el menú Inicio o escritorio
+
+📊 REQUISITOS DEL SISTEMA:
+==========================
+
+MÍNIMOS:
+- Windows 10 (64-bit) o superior
+- 4 GB de RAM
+- 3 GB de espacio libre en disco
+- Procesador x64
+
+RECOMENDADOS:
+- Windows 11 (64-bit)
+- 8 GB de RAM o más
+- 5 GB de espacio libre en disco
+- Procesador de 2 GHz o superior
+
+🔧 SOLUCIÓN DE PROBLEMAS:
+=========================
+
+❌ SI LA INSTALACIÓN FALLA:
+- Ejecutar como administrador
+- Desactivar temporalmente el antivirus
+- Verificar espacio en disco suficiente
+- Cerrar otras aplicaciones
+
+❌ SI NO INICIA DESPUÉS DE INSTALAR:
+- Verificar que se instaló correctamente
+- Ejecutar desde menú Inicio
+- Verificar permisos de la carpeta de instalación
+- Reinstalar si es necesario
+
+❌ SI EL RESALTADO NO FUNCIONA:
+- El resaltado está CORREGIDO en esta versión
+- Funciona automáticamente al abrir PDFs
+- Si persisten problemas, contactar soporte
+
+🎉 MEJORAS EN ESTA VERSIÓN:
+===========================
+
+✅ **CORRECCIÓN CRÍTICA**: Resaltado de PDF en ejecutables
+✅ **PDFViewerFixed**: Nuevo módulo optimizado para instalaciones
+✅ **Directorio temporal mejorado**: Manejo inteligente de archivos temporales
+✅ **Detección automática**: Adaptación a entornos empaquetados
+✅ **Búsqueda mejorada**: Case-insensitive y múltiples variantes
+✅ **Logging detallado**: Seguimiento completo del proceso
+
+📞 SOPORTE TÉCNICO:
+===================
+
+🌐 Sitio web: www.lexviridis.hn
+📧 Email: soporte@lexviridis.hn
+📱 Teléfono: +504-XXXX-XXXX
+📍 Ubicación: Tegucigalpa, Honduras
+
+🔄 ACTUALIZACIONES:
+===================
+
+Las actualizaciones futuras incluirán:
+- Nuevos documentos legales
+- Mejoras en el motor de búsqueda
+- Correcciones de errores
+- Nuevas funcionalidades
+
+Las actualizaciones se notificarán automáticamente cuando estén disponibles.
+
+📜 LICENCIA Y COPYRIGHT:
+========================
+
+Copyright (C) 2025 LEX VIRIDIS Development Team
+Todos los derechos reservados.
+
+La base de datos legal incluida es de dominio público y pertenece al Estado de Honduras.
+LEX VIRIDIS proporciona herramientas de búsqueda y visualización.
+
+===============================================================================
+                        ¡LEX VIRIDIS INSTALADOR LISTO!
+                    Buscador Jurídico Ambiental de Honduras
+                              VERSIÓN PROFESIONAL
+===============================================================================

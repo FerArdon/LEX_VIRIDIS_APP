@@ -1,0 +1,41 @@
+LEX VIRIDIS - LICENCIA DE SOFTWARE
+==================================
+
+Copyright (C) 2025 LEX VIRIDIS Development Team
+
+LICENCIA DE USO PARA LEX VIRIDIS v1.1.0
+Buscador Jurídico Ambiental de Honduras
+
+TÉRMINOS Y CONDICIONES DE USO:
+
+1. CONCESIÓN DE LICENCIA
+   Se concede permiso para usar, copiar y distribuir este software 
+   para fines educativos, de investigación y profesionales relacionados 
+   con el derecho ambiental en Honduras.
+
+2. RESTRICCIONES
+   - No se permite la venta comercial del software sin autorización expresa
+   - No se permite la modificación del código fuente sin permiso
+   - No se permite el uso para fines ilegales o no éticos
+
+3. EXENCIÓN DE RESPONSABILIDAD
+   Este software se proporciona "tal como está", sin garantías de ningún tipo.
+   Los desarrolladores no se hacen responsables por daños derivados del uso
+   de este software.
+
+4. BASE DE DATOS LEGAL
+   La base de datos de leyes ambientales incluida es de dominio público
+   y pertenece al Estado de Honduras. LEX VIRIDIS solo proporciona
+   herramientas de búsqueda y visualización.
+
+5. SOPORTE TÉCNICO
+   El soporte técnico se proporciona de manera voluntaria y sin garantías
+   de tiempo de respuesta.
+
+6. ACTUALIZACIONES
+   Las actualizaciones del software pueden estar disponibles sin costo
+   adicional, pero no están garantizadas.
+
+Para más información, contacte al equipo de desarrollo de LEX VIRIDIS.
+
+HONDURAS, 2025

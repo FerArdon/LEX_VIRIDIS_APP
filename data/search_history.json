@@ -1,0 +1,35 @@
+[
+  {
+    "terms": [
+      "rondas"
+    ],
+    "timestamp": "2025-08-04T11:11:19.548633"
+  },
+  {
+    "terms": [
+      "codigos"
+    ],
+    "timestamp": "2025-08-06T18:21:38.843517"
+  },
+  {
+    "terms": [
+      "Fuego"
+    ],
+    "timestamp": "2025-08-06T18:31:29.449109"
+  },
+  {
+    "terms": [
+      "TECNICO",
+      "FORESTAL"
+    ],
+    "timestamp": "2025-08-06T18:51:00.387972"
+  },
+  {
+    "terms": [
+      "CONTAMINACION",
+      "DE",
+      "AGUA"
+    ],
+    "timestamp": "2025-08-06T18:54:10.564988"
+  }
+]
