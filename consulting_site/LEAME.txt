@@ -1,0 +1,32 @@
+INSTRUCCIONES PARA VER LA PÁGINA WEB – SEDCAF
+==============================================
+
+ESTRUCTURA DE ARCHIVOS:
+  consulting_site/
+  ├── index.html               ← Archivo principal (abrir este)
+  ├── LEAME.txt                ← Este archivo
+  └── assets/
+      ├── css/styles.css       ← Estilos
+      ├── js/script.js         ← Interactividad
+      └── img/                 ← IMÁGENES (colocar aquí los archivos)
+          ├── sedcaf_logo.png          ← Logo SEDCAF (verde con engranajes)
+          ├── fernando_casual.jpg      ← Foto sonriente (sección Sobre Mí)
+          ├── fernando_formal.jpg      ← Foto formal (opcional)
+          └── tapir.jpg                ← Foto del tapir (banda central)
+
+CÓMO VER LA PÁGINA:
+  1. Copie la carpeta completa "consulting_site" a su computadora.
+  2. Coloque sus fotos en la carpeta "assets/img/" con los nombres indicados.
+  3. Abra "index.html" con doble clic en su navegador (Chrome, Edge, etc.).
+
+IMÁGENES REQUERIDAS:
+  - sedcaf_logo.png      → El logo con la planta y engranajes
+  - fernando_casual.jpg  → Su foto sonriente (va en sección "Sobre Mí")
+  - tapir.jpg            → Foto del tapir en el bosque (banda divisoria)
+
+PARA PUBLICAR EN INTERNET:
+  Necesita un servicio de Hosting y un Dominio (ej. www.sedcaf.com).
+  Suba todos los archivos de la carpeta "consulting_site" tal como están.
+
+CONTACTO DEL DESARROLLADOR:
+  Proyecto generado y administrado con Claude Code.
