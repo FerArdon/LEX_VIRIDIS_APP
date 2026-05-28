@@ -437,6 +437,7 @@ ul { list-style: none; }
     position: relative;
     height: 320px;
     overflow: hidden;
+    background: linear-gradient(135deg, var(--green-dark) 0%, var(--green-mid) 100%);
 }
 
 .nature-img {
@@ -444,6 +445,7 @@ ul { list-style: none; }
     height: 100%;
     object-fit: cover;
     object-position: center 40%;
+    display: block;
 }
 
 .nature-overlay {
