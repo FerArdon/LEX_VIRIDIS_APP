@@ -23,7 +23,7 @@ ENV/
 # LEX VIRIDIS Específico
 temp_pdfs/
 cache/
-logs/*.log
+logs/
 *.bak
 *~
 
@@ -36,8 +36,40 @@ desktop.ini
 *.pem
 *.key
 
-# Base de datos (opcional, quitar si quieres versionar)
-# LEX_VIRIDIS_DB/*.db
+# Bases de datos y backups
+*.db
+**/LEX_VIRIDIS_DB/backups/
+backups/
+
+# Logs y diagnósticos
+*.log
+error_log*.txt
+startup_log*.txt
+crash_log.txt
+test_output.txt
+test_run.log
+flet_dir.txt
+
+# Artefactos de build / empaquetado
+build/
+dist/
+installer/
+*.spec
+*.exe
+
+# Node / frontend
+node_modules/
+
+# Modelos pesados (no versionar, LFS no configurado)
+*.gguf
+
+# Exports generados en runtime
+exports/
 
 # Documentos PDF (muy grandes para Git)
 COMPENDIO LEYES FEMA/
+COMPENDIO_LEYES_FEMA/
+
+# Sync / temporales de OneDrive-Drive
+.tmp.drivedownload/
+.tmp.driveupload/
