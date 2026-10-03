@@ -2394,7 +2394,7 @@ class LexViridisApp:
                         ft.Row(
                             [
                                 ft.TextButton(
-                                    f"• {Path(s['file']).name} (Art. {s.get('numero_articulo', s.get('id', '?'))})",
+                                    f"• {Path(s['file']).name} ({SearchEngine._etiqueta_articulo(s.get('numero_articulo', s.get('id', '?')))})",
                                     on_click=lambda e, res=s: self._show_article_detail(res),
                                 )
                                 for s in result["sources"][:3]

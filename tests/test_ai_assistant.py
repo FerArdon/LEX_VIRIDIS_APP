@@ -79,3 +79,27 @@ def test_cita_respaldada_no_genera_aviso(  # noqa: D103
     motor, ia = MotorFalso({1: ART_172}), IAFalsa("Ver [Art. 172, Ley Forestal].")
     r = LegalAIAssistant(motor, ia).answer_question("multa tala ilegal")
     assert "Verifica" not in r["answer"]
+
+
+def test_el_mismo_articulo_en_varios_documentos_ocupa_un_solo_cupo():
+    copia = {
+        **ART_172,
+        "id": 2,
+        "norma_titulo": "Ley Organica del COLPROFORH",
+        "contenido": "ARTÍCULO 172.- " + ART_172["contenido"].lower(),
+    }
+    otro = {**ART_172, "id": 3, "numero_articulo": "166", "contenido": "Multas desde un mes de salario minimo."}
+    motor, ia = MotorFalso({1: ART_172, 2: copia, 3: otro}), IAFalsa()
+    r = LegalAIAssistant(motor, ia).answer_question("multa tala ilegal")
+    assert [s["numero_articulo"] for s in r["sources"]] == ["172", "166"]
+    assert r["sources"][0]["also_in"] == ["Ley Organica del COLPROFORH"]
+
+
+def test_articulo_pegado_dentro_del_bloque_no_se_marca_como_dudoso():
+    bloque = {
+        **ART_172,
+        "contenido": ART_172["contenido"] + " ARTÍCULO 173.- TRANSPORTE ILEGAL. Pena de cuatro a siete anos.",
+    }
+    ia = IAFalsa("El transporte ilegal se castiga [Art. 173, Ley Forestal].")
+    r = LegalAIAssistant(MotorFalso({1: bloque}), ia).answer_question("transporte ilegal")
+    assert "Verifica" not in r["answer"]

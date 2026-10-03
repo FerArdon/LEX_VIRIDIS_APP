@@ -1,5 +1,6 @@
 import logging
 import re
+import unicodedata
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +79,14 @@ SIN_FUENTES = (
 )
 
 
+def _huella(texto: str) -> str:
+    """Identifica un articulo copiado en varios documentos (ignora acentos, mayusculas y el encabezado 'ARTICULO N')."""
+    t = unicodedata.normalize("NFD", str(texto).lower())
+    t = "".join(c for c in t if unicodedata.category(c) != "Mn")
+    t = re.sub(r"^\s*articulo\s*\d+[\w-]*\s*[.\-:]*\s*", "", t)
+    return re.sub(r"[^a-z0-9]+", " ", t).strip()[:100]
+
+
 def _etiqueta(numero) -> str:
     numero = str(numero or "").strip()
     return f"Art. {numero}" if numero[:1].isdigit() else (numero or "Art.")
@@ -99,20 +108,29 @@ class LegalAIAssistant:
 
     def _recuperar_fuentes(self, pregunta: str) -> list[dict]:
         """Busca en el compendio y devuelve los articulos COMPLETOS (no solo un fragmento)."""
-        resultado = self.engine.search_safe(self._consulta_de_busqueda(pregunta), page_size=MAX_FUENTES)
+        # Se piden mas candidatos de los necesarios: el mismo articulo suele repetirse en varios documentos
+        resultado = self.engine.search_safe(self._consulta_de_busqueda(pregunta), page_size=MAX_FUENTES * 4)
         fuentes = []
+        huellas: dict[str, dict] = {}
         for doc in resultado.results:
+            if len(fuentes) >= MAX_FUENTES:
+                break
             articulo = self.engine.get_article_by_id(doc["id"]) if doc.get("id") else None
             if articulo and articulo.get("contenido"):
+                huella = _huella(articulo["contenido"])
+                if huella in huellas:  # copia de un articulo ya incluido: no ocupa cupo
+                    huellas[huella]["also_in"].append(articulo["norma_titulo"])
+                    continue
                 # Se conserva el formato de resultado de busqueda (la interfaz lo usa) y se agrega el texto completo
-                fuentes.append(
-                    {
-                        **doc,
-                        "contenido_completo": articulo["contenido"],
-                        "norma_titulo": articulo["norma_titulo"],
-                        "numero_articulo": articulo["numero_articulo"],
-                    }
-                )
+                fuente = {
+                    **doc,
+                    "contenido_completo": articulo["contenido"],
+                    "norma_titulo": articulo["norma_titulo"],
+                    "numero_articulo": articulo["numero_articulo"],
+                    "also_in": [],
+                }
+                huellas[huella] = fuente
+                fuentes.append(fuente)
         return fuentes
 
     @staticmethod
@@ -130,6 +148,10 @@ class LegalAIAssistant:
     def _citas_no_verificadas(citas: list[str], fuentes: list[dict]) -> list[str]:
         """Citas del tipo [Art. 168, ...] cuyo numero de articulo no aparece en ninguna fuente."""
         presentes = {str(f["numero_articulo"]).strip().upper() for f in fuentes}
+        # Un bloque puede traer varios articulos seguidos (p. ej. el 172 con el 173 pegado): tambien cuentan
+        for f in fuentes:
+            for n in re.findall(r"ART[ÍI]CULO\s*(\d+(?:-[A-Za-z])?)", str(f["contenido_completo"]), re.IGNORECASE):
+                presentes.add(n.upper())
         dudosas = []
         for cita in citas:
             m = re.search(r"Art(?:\.|ículo)?\s*(\d+(?:\s*-\s*[A-Za-z])?)", cita, re.IGNORECASE)
