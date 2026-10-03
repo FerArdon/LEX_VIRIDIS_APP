@@ -91,3 +91,36 @@ def test_aplicar_es_idempotente():
     antes = ft.Tabs
     lexviridis.flet_compat.aplicar()
     assert ft.Tabs is antes
+
+
+def test_envio_desde_hilo_despierta_el_bucle():
+    """Un mensaje enviado desde un hilo debe entregarse sin esperar otro evento del bucle."""
+    import asyncio
+    import threading
+    import time
+
+    from flet.messaging.flet_socket_server import FletSocketServer
+    from flet.messaging.protocol import ClientAction, ClientMessage
+
+    loop = asyncio.new_event_loop()
+    hilo_bucle = threading.Thread(target=loop.run_forever, daemon=True)
+    hilo_bucle.start()
+    try:
+        servidor = FletSocketServer.__new__(FletSocketServer)
+        servidor.loop = loop
+        cola = asyncio.Queue()
+        servidor._FletSocketServer__send_queue = cola
+
+        async def esperar():
+            return await asyncio.wait_for(cola.get(), timeout=2)
+
+        futuro = asyncio.run_coroutine_threadsafe(esperar(), loop)
+        inicio = time.monotonic()
+        threading.Thread(
+            target=servidor.send_message,
+            args=(ClientMessage(ClientAction.PATCH_CONTROL, {"x": 1}),),
+        ).start()
+        assert futuro.result(timeout=3)
+        assert time.monotonic() - inicio < 0.5, "el bucle no se desperto al enviar desde un hilo"
+    finally:
+        loop.call_soon_threadsafe(loop.stop)

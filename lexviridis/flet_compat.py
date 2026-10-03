@@ -312,12 +312,49 @@ def _patch_charts() -> None:
             setattr(ft, nombre, getattr(fch, nombre))
 
 
+# --------------------------------------------------------------------------- #
+# Actualizaciones de la interfaz desde hilos
+# --------------------------------------------------------------------------- #
+def _patch_thread_safe_updates() -> None:
+    """Hace que ``page.update()`` llamado desde un hilo llegue de inmediato al cliente.
+
+    Flet 0.82 encola los mensajes con ``asyncio.Queue.put_nowait``, que no es seguro entre hilos y no
+    despierta el bucle: los cambios hechos desde un ``threading.Thread`` (splash -> login, resultados de
+    busqueda...) quedaban en cola hasta que el usuario hacia clic o maximizaba la ventana.
+    """
+    import asyncio
+
+    try:
+        from flet.messaging.flet_socket_server import FletSocketServer
+    except ImportError:
+        log.warning("FletSocketServer no disponible: las actualizaciones desde hilos podrian retrasarse")
+        return
+    if getattr(FletSocketServer, "_compat_patched", False):
+        return
+
+    original = FletSocketServer.send_message
+
+    def send_message(self, message):
+        try:
+            en_el_bucle = asyncio.get_running_loop() is self.loop
+        except RuntimeError:  # sin bucle en este hilo: es un hilo de trabajo
+            en_el_bucle = False
+        if en_el_bucle:
+            original(self, message)
+        else:
+            self.loop.call_soon_threadsafe(original, self, message)
+
+    FletSocketServer.send_message = send_message
+    FletSocketServer._compat_patched = True
+
+
 def aplicar() -> None:
     """Activa la compatibilidad (idempotente)."""
     global _APPLIED
     if _APPLIED:
         return
     _APPLIED = True
+    _patch_thread_safe_updates()
     _patch_page()
     _patch_file_picker()
     _patch_renames()

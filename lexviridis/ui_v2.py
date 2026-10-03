@@ -316,16 +316,28 @@ class LexViridisApp:
             logging.error(traceback.format_exc())
             self._show_error(f"{type(e).__name__}: {str(e)}")
 
+    def _centrar_ventana(self):
+        """Centra la ventana (en Flet 0.82 `window.center()` es una corrutina)."""
+
+        async def centrar():
+            await self.page.window.center()
+
+        try:
+            self.page.run_task(centrar)
+        except Exception as e:
+            logging.warning(f"No se pudo centrar la ventana: {e}")
+
     def _show_login_ui(self):
         """Pantalla de inicio de sesión."""
-        self.page.clean()
-
-        # Ventana más pequeña para login
+        # Ventana más pequeña para login. Primero se cambia la ventana y se deja asentar; si se reemplaza el
+        # contenido a la vez, Flet no repinta y el splash queda congelado hasta que el usuario hace clic.
         self.page.window.maximized = False
         self.page.window.width = 450
         self.page.window.height = 600
-        self.page.window.center()
         self.page.update()
+        self._centrar_ventana()
+        time.sleep(0.4)
+        self.page.clean()
 
         user_field = ft.TextField(label="Usuario", prefix_icon=ft.Icons.PERSON, width=300)
         pass_field = ft.TextField(
@@ -574,10 +586,10 @@ class LexViridisApp:
         """Muestra la interfaz principal."""
         # Restaurar modo maximizado (Forzar update inmediato)
         self.page.window.maximized = True
-        self.page.update()
-
         self.page.window.min_width = 900
         self.page.window.min_height = 650
+        self.page.update()
+        time.sleep(0.4)  # dejar que la ventana termine de maximizarse antes de cambiar el contenido
 
         self.page.controls.clear()
         self._build_layout()
@@ -1901,8 +1913,10 @@ class LexViridisApp:
                             ft.ElevatedButton(
                                 "Bibliografía",
                                 icon=ft.Icons.BOOKMARK_ADD,
-                                on_click=lambda _: self.bibliography.add_entry(doc)
-                                or self.page.show_snack_bar(ft.SnackBar(ft.Text("Agregado a tu bibliografía"))),
+                                on_click=lambda _: (
+                                    self.bibliography.add_entry(doc)
+                                    or self.page.show_snack_bar(ft.SnackBar(ft.Text("Agregado a tu bibliografía")))
+                                ),
                             ),
                         ]
                     ),
@@ -3475,17 +3489,21 @@ class LexViridisApp:
                                                 ft.ElevatedButton(
                                                     "Limpiar Historial de Búsqueda",
                                                     icon=ft.Icons.DELETE_SWEEP,
-                                                    on_click=lambda _: self.engine.clear_history("busquedas")
-                                                    or self.page.show_snack_bar(
-                                                        ft.SnackBar(ft.Text("Historial de búsqueda limpiado"))
+                                                    on_click=lambda _: (
+                                                        self.engine.clear_history("busquedas")
+                                                        or self.page.show_snack_bar(
+                                                            ft.SnackBar(ft.Text("Historial de búsqueda limpiado"))
+                                                        )
                                                     ),
                                                 ),
                                                 ft.ElevatedButton(
                                                     "Limpiar Todo el Historial",
                                                     icon=ft.Icons.AUTO_DELETE,
-                                                    on_click=lambda _: self.engine.clear_history("todo")
-                                                    or self.page.show_snack_bar(
-                                                        ft.SnackBar(ft.Text("Todo el historial ha sido eliminado"))
+                                                    on_click=lambda _: (
+                                                        self.engine.clear_history("todo")
+                                                        or self.page.show_snack_bar(
+                                                            ft.SnackBar(ft.Text("Todo el historial ha sido eliminado"))
+                                                        )
                                                     ),
                                                 ),
                                             ]
