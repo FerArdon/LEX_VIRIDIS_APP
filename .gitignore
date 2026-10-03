@@ -73,3 +73,13 @@ COMPENDIO_LEYES_FEMA/
 # Sync / temporales de OneDrive-Drive
 .tmp.drivedownload/
 .tmp.driveupload/
+
+# Datos de usuario en tiempo de ejecucion (indice, cache, historial, cuentas) - NO versionar
+/data/
+lexviridis/data/
+
+# Herramienta local de administracion (toca hashes de usuarios) - NO versionar
+RECUPERAR_ACCESO.py
+
+# Residuos de comandos fallidos
+_ul
