@@ -11,6 +11,7 @@ import datetime
 import hashlib
 import hmac
 import json
+import os
 import uuid
 from pathlib import Path
 
@@ -27,8 +28,25 @@ class LicenseManager:
     Con soporte para múltiples activaciones (multi-seat).
     """
 
-    # En producción, esta clave debe estar ofuscada o compilada seguramente
-    _SECRET_KEY = b"LEX_VIRIDIS_SECRET_KEY_2026_FER_ARDON"
+    # La clave de firma NO vive en este archivo: el repositorio es publico.
+    # Se obtiene (en este orden) de:
+    #   1) variable de entorno LEXVIRIDIS_LICENSE_SECRET
+    #   2) modulo local NO versionado `lexviridis_license_secret` (atributo SECRET)
+    # Sin clave el sistema falla cerrado: no genera ni valida licencias.
+    @classmethod
+    def _secret(cls) -> bytes:
+        env = os.environ.get("LEXVIRIDIS_LICENSE_SECRET")
+        if env:
+            return env.encode()
+        try:
+            import lexviridis_license_secret as _s
+        except ImportError:
+            raise RuntimeError(
+                "Clave de firma de licencias no disponible "
+                "(falta lexviridis_license_secret.py o LEXVIRIDIS_LICENSE_SECRET)."
+            ) from None
+        secret = _s.SECRET
+        return secret if isinstance(secret, bytes) else str(secret).encode()
 
     LICENSE_TYPES = {
         "PRUEBA": 15,  # 15 días
@@ -81,7 +99,7 @@ class LicenseManager:
         payload_b64 = base64.urlsafe_b64encode(payload_str.encode()).decode()
 
         # Firmar
-        signature = hmac.new(cls._SECRET_KEY, payload_str.encode(), hashlib.sha256).digest()
+        signature = hmac.new(cls._secret(), payload_str.encode(), hashlib.sha256).digest()
         signature_b64 = base64.urlsafe_b64encode(signature).decode()
 
         # Licencia = Payload.Firma
@@ -100,7 +118,7 @@ class LicenseManager:
             signature = base64.urlsafe_b64decode(signature_b64)
 
             # Verificar Firma
-            expected_signature = hmac.new(cls._SECRET_KEY, payload_str.encode(), hashlib.sha256).digest()
+            expected_signature = hmac.new(cls._secret(), payload_str.encode(), hashlib.sha256).digest()
             if not hmac.compare_digest(signature, expected_signature):
                 return {"valid": False, "error": "Licencia inválida o manipulada."}
 
@@ -147,6 +165,8 @@ class LicenseManager:
                 "seats_used": len(cls._load_activations(license_key)) if check_hardware else 0,
             }
 
+        except RuntimeError as re_:
+            return {"valid": False, "error": str(re_)}
         except ValueError as ve:
             return {"valid": False, "error": str(ve)}
         except Exception:

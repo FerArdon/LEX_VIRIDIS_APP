@@ -83,3 +83,7 @@ RECUPERAR_ACCESO.py
 
 # Residuos de comandos fallidos
 _ul
+
+# Clave de firma de licencias y licencia suelta (NUNCA versionar)
+/lexviridis_license_secret.py
+/license.dat

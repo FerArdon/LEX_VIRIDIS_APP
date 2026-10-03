@@ -15,6 +15,11 @@ DATA_DIR = BASE_DIR / "data"
 DB_DIR = BASE_DIR / "LEX_VIRIDIS_DB"
 LICENSE_DIR = BASE_DIR / "LEX_VIRIDIS_LICENCIA"
 
+# La clave de firma de licencias NO esta en el repositorio. Sin ella la app compilada
+# no podria validar ninguna licencia: abortar en vez de producir un .exe inservible.
+if not (BASE_DIR / "lexviridis_license_secret.py").exists():
+    raise SystemExit("Falta lexviridis_license_secret.py en la raiz (clave de licencias, no versionada). Copiela de la carpeta privada del generador antes de compilar.")
+
 block_cipher = None
 
 # Archivos de datos a incluir
@@ -91,6 +96,7 @@ hiddenimports = [
     'flet_desktop',
     'flet_desktop.app',
     'flet_charts',
+    'lexviridis_license_secret',
 ]
 
 a = Analysis(
