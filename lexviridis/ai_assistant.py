@@ -100,6 +100,28 @@ def _huella(texto: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", t).strip()[:100]
 
 
+def _huella_larga(texto: str, largo: int = 300) -> str:
+    """Como _huella pero sobre mas texto: distingue el articulo original de su reforma (cambian las cifras)."""
+    t = unicodedata.normalize("NFD", str(texto).lower())
+    t = "".join(c for c in t if unicodedata.category(c) != "Mn")
+    t = re.sub(r"^\s*art(?:iculo|\.)?\s*\d+[\w-]*\s*(?:\([^)]*\))?\s*[.\-:‐-―]*\s*", "", t)
+    return re.sub(r"[^a-z0-9]+", " ", t).strip()[:largo]
+
+
+def _encabezado(contenido: str) -> str:
+    """Titulo del articulo ("INCENDIO FORESTAL") si el texto lo trae; vacio si no."""
+    t = re.sub(r"^\s*ART[ÍI]CULO\s*\d+[\w-]*\s*[.\-:‐-―]*\s*", "", str(contenido), flags=re.IGNORECASE)
+    titulo = t.split(".")[0].strip()
+    palabras = titulo.split()
+    if not palabras or len(palabras) > 6 or "," in titulo:
+        return ""
+    return titulo if all(p[0].isupper() for p in palabras if len(p) > 3) else ""
+
+
+def _es_reforma(titulo: str) -> bool:
+    return bool(re.search(r"reform|\bref\b|\(ref\.|adiciona|deroga", str(titulo), re.IGNORECASE))
+
+
 def _etiqueta(numero) -> str:
     numero = str(numero or "").strip()
     return f"Art. {numero}" if numero[:1].isdigit() else (numero or "Art.")
@@ -155,7 +177,18 @@ class LegalAIAssistant:
             if articulo and articulo.get("contenido"):
                 huella = _huella(articulo["contenido"])
                 if huella in huellas:  # copia de un articulo ya incluido: no ocupa cupo
-                    huellas[huella]["also_in"].append(articulo["norma_titulo"])
+                    previa = huellas[huella]
+                    if (previa.get("page") or 1) <= 1 < (doc.get("page") or 1):
+                        # La copia con pagina real sirve mejor para citar (las importadas de otra base traen pag. 1)
+                        previa.update(
+                            doc,
+                            contenido_completo=articulo["contenido"],
+                            norma_titulo=articulo["norma_titulo"],
+                            numero_articulo=articulo["numero_articulo"],
+                            also_in=previa["also_in"] + [previa["norma_titulo"]],
+                        )
+                    else:
+                        previa["also_in"].append(articulo["norma_titulo"])
                     continue
                 # Se conserva el formato de resultado de busqueda (la interfaz lo usa) y se agrega el texto completo
                 fuente = {
@@ -167,15 +200,59 @@ class LegalAIAssistant:
                 }
                 huellas[huella] = fuente
                 fuentes.append(fuente)
-        return fuentes
+        return self._agregar_reformas(fuentes)
+
+    def _agregar_reformas(self, fuentes: list[dict]) -> list[dict]:
+        """Junto a cada articulo, el decreto que lo reformo (si existe): el texto original ya no rige."""
+        buscar = getattr(self.engine, "find_reforms", None)
+        if not buscar:
+            return fuentes
+        resultado = []
+        ya = {f["id"] for f in fuentes}
+        for f in fuentes:
+            resultado.append(f)
+            encabezado = _encabezado(f["contenido_completo"])
+            if not encabezado or _es_reforma(f["norma_titulo"]):
+                continue
+            try:
+                r = buscar(f["numero_articulo"], encabezado, f["norma_titulo"])
+            except Exception as e:  # una reforma que no se pudo buscar no debe tumbar la respuesta
+                logger.warning(f"IA: no se pudo buscar reformas de {f['numero_articulo']}: {e}")
+                continue
+            # Otra copia de la misma ley (p. ej. "...con reformas" ya incorporadas) no es una reforma: el texto no cambia
+            if r and _huella_larga(r["contenido"]) == _huella_larga(f["contenido_completo"]):
+                continue
+            if r and r["id"] in ya:
+                # El decreto ya llego por la busqueda como fuente suelta: se marca y se recorta desde el articulo
+                for otra in fuentes:
+                    if otra["id"] == r["id"] and not otra.get("reforma_de"):
+                        otra["contenido_completo"] = r["contenido"]
+                        otra["reforma_de"] = f"{_etiqueta(f['numero_articulo'])} de {f['norma_titulo']}"
+            elif r:
+                ya.add(r["id"])
+                resultado.append(
+                    {
+                        **f,
+                        "id": r["id"],
+                        "file": r.get("archivo_pdf") or f.get("file"),
+                        "page": r.get("pagina") or 1,
+                        "contenido_completo": r["contenido"],
+                        "norma_titulo": r["norma_titulo"],
+                        "numero_articulo": r["numero_articulo"],
+                        "also_in": [],
+                        "reforma_de": f"{_etiqueta(f['numero_articulo'])} de {f['norma_titulo']}",
+                    }
+                )
+        return resultado
 
     @staticmethod
     def _armar_contexto(fuentes: list[dict]) -> str:
         bloques = []
         for i, f in enumerate(fuentes, 1):
             texto = " ".join(str(f["contenido_completo"]).split())[:MAX_CHARS_POR_FUENTE]
+            marca = f" [REFORMA: modifica el {f['reforma_de']}]" if f.get("reforma_de") else ""
             bloques.append(
-                f"FUENTE {i}: {f['norma_titulo']} — {_etiqueta(f['numero_articulo'])} (pág. {f.get('page') or 1})\n"
+                f"FUENTE {i}{marca}: {f['norma_titulo']} — {_etiqueta(f['numero_articulo'])} (pág. {f.get('page') or 1})\n"
                 f"TEXTO: {texto}"
             )
         return "\n---\n".join(bloques)
@@ -228,9 +305,10 @@ INSTRUCCIONES:
 2. Cita únicamente artículos que aparezcan en las FUENTES, copiando número, norma y página tal como figuran en el encabezado de la fuente, ej: [Art. 166, Ley Forestal, pág. 40]. Un mismo número de artículo puede repetirse en leyes distintas dentro de un compendio: la página los distingue. Cita cada fuente una sola vez. Nunca inventes artículos, penas, montos ni plazos.
 3. Si las FUENTES no responden la pregunta, o solo en parte, dilo claramente e indica qué falta; no lo rellenes. Incluye plazos, montos y requisitos previos que las fuentes mencionen, aunque la pregunta no los pida expresamente.
    Ignora las fuentes que no tengan relación con la pregunta.
-4. Si dos fuentes parecen contradecirse (por ejemplo, distintas versiones o numeración de una misma ley), señálalo.
-5. Tono profesional, claro y pedagógico.
-6. Termina sugiriendo 2 preguntas de seguimiento.
+4. Si una FUENTE está marcada [REFORMA], su texto sustituye al del artículo que modifica: responde con la reforma, no con el texto anterior, menciona que el artículo fue reformado (norma y página) y, si la fuente indica fecha de entrada en vigencia, inclúyela.
+5. Si dos fuentes parecen contradecirse (por ejemplo, distintas versiones o numeración de una misma ley), señálalo.
+6. Tono profesional, claro y pedagógico.
+7. Termina sugiriendo 2 preguntas de seguimiento.
 
 RESPUESTA:
 """

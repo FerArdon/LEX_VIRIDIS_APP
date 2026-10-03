@@ -14,9 +14,17 @@ import logging
 import re
 import sqlite3
 import time
+import unicodedata
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+
+
+def _sin_acentos(texto: str) -> str:
+    """Minusculas y sin acentos, para comparar encabezados."""
+    t = unicodedata.normalize("NFD", str(texto).lower())
+    return "".join(c for c in t if unicodedata.category(c) != "Mn")
+
 
 # Configurar logger
 search_logger = logging.getLogger("lexviridis.search")
@@ -685,6 +693,51 @@ class SearchEngine:
             return None
         finally:
             conn.close()
+
+    def find_reforms(self, numero: str, encabezado: str, excluir_norma: str = "") -> dict | None:
+        """Busca el decreto que reforma el articulo `numero` (mismo numero y mismo encabezado).
+
+        Las leyes del compendio suelen traer el texto original; si un decreto posterior lo cambio (p. ej. el
+        Decreto 59-2024 sobre el Art. 327 del Codigo Penal) hay que aplicar la reforma. Devuelve el bloque con
+        mejor calidad de texto (descarta copias mal escaneadas) recortado desde el articulo, o None.
+        """
+        numero = str(numero or "").strip()
+        if not numero.isdigit() or not encabezado:
+            return None
+        primera = _sin_acentos(encabezado).split()[0]
+        patron = re.compile(rf"ART[ÍI]CULO\s*{numero}(?!\d|\s*-\s*[A-Za-z]\b)\s*[.\-‐:]*\s*", re.IGNORECASE)
+        conn = self.db_manager.get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT a.id, a.numero_articulo, a.contenido, a.pagina, n.titulo AS norma_titulo, n.archivo_pdf
+                FROM articulos a JOIN normas n ON a.norma_id = n.id
+                WHERE (lower(n.titulo) LIKE '%reform%' OR lower(n.titulo) LIKE '%ref art%'
+                       OR lower(n.titulo) LIKE '%(ref.%' OR lower(n.titulo) LIKE '% ref %'
+                       OR lower(n.titulo) LIKE '%adiciona%')
+                  AND (a.contenido LIKE ? OR a.contenido LIKE ?)
+                """,
+                (f"%ARTICULO {numero}%", f"%ARTÍCULO {numero}%"),
+            )
+            candidatos = [dict(r) for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
+        mejor, mejor_calidad = None, 0.0
+        for c in candidatos:
+            if c["norma_titulo"] == excluir_norma:
+                continue
+            m = patron.search(c["contenido"])
+            if not m:
+                continue
+            texto = c["contenido"][m.start() :]
+            if primera not in _sin_acentos(texto[m.end() - m.start() :][:80]):
+                continue  # mismo numero pero otro articulo (otra ley)
+            calidad = sum(ch.isalnum() or ch in " .,;:()“”\"'-" for ch in texto) / max(len(texto), 1)
+            if calidad > mejor_calidad:
+                mejor, mejor_calidad = {**c, "contenido": texto}, calidad
+        return mejor
 
     def clear_cache(self):
         """Limpia el caché de búsquedas."""
