@@ -177,7 +177,7 @@ class UIComponents:
                 _StateClass.DISABLED: Theme.TEXT_DISABLED,
             }
         return ft.ElevatedButton(
-            text=text,
+            content=text,
             icon=icon,
             on_click=on_click,
             disabled=disabled,
@@ -194,7 +194,7 @@ class UIComponents:
     @staticmethod
     def secondary_button(text: str, on_click=None, icon=None, **kwargs) -> ft.OutlinedButton:
         return ft.OutlinedButton(
-            text=text,
+            content=text,
             icon=icon,
             on_click=on_click,
             style=ft.ButtonStyle(
@@ -209,7 +209,7 @@ class UIComponents:
     @staticmethod
     def text_button(text: str, on_click=None, icon=None, **kwargs) -> ft.TextButton:
         return ft.TextButton(
-            text=text,
+            content=text,
             icon=icon,
             on_click=on_click,
             style=ft.ButtonStyle(

@@ -229,12 +229,12 @@ class LexViridisApp:
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=8,
             ),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment.CENTER,
             bgcolor="#FAFAFA",
             expand=True,
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,
-                end=ft.alignment.bottom_center,
+                begin=ft.Alignment.TOP_CENTER,
+                end=ft.Alignment.BOTTOM_CENTER,
                 colors=["#FAFAFA", "#F5F5F5"],
             ),
         )
@@ -400,7 +400,7 @@ class LexViridisApp:
             border=ft.border.all(1, Theme.BORDER),
         )
 
-        self.page.add(ft.Container(login_card, alignment=ft.alignment.center, expand=True))
+        self.page.add(ft.Container(login_card, alignment=ft.Alignment.CENTER, expand=True))
         self.page.update()
 
     def _show_change_username_dialog(self):
@@ -606,9 +606,9 @@ class LexViridisApp:
                 height=160,
                 bgcolor="#FFFFFF",
                 border_radius=80,
-                alignment=ft.alignment.center,
+                alignment=ft.Alignment.CENTER,
             ),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment.CENTER,
             padding=ft.padding.only(top=Spacing.MD, bottom=Spacing.MD),
             bgcolor=Theme.SURFACE,
         )
@@ -624,7 +624,7 @@ class LexViridisApp:
                 allow_multiple=False, allowed_extensions=["png", "jpg", "jpeg", "webp"]
             ),
             tooltip="Cambiar foto de perfil",
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment.CENTER,
         )
 
         sidebar_footer = ft.Container(
@@ -644,7 +644,7 @@ class LexViridisApp:
                 spacing=Spacing.XS,
             ),
             padding=ft.padding.only(bottom=Spacing.LG),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment.CENTER,
         )
 
         # Navegación lateral
@@ -901,7 +901,7 @@ class LexViridisApp:
                         ft.Container(
                             ft.PieChart(sections=pie_sections, sections_space=2, center_space_radius=80),
                             height=500,
-                            alignment=ft.alignment.center,
+                            alignment=ft.Alignment.CENTER,
                         ),
                     ]
                 )
@@ -1035,7 +1035,7 @@ class LexViridisApp:
                     spacing=4,
                 ),
                 expand=True,
-                alignment=ft.alignment.center,
+                alignment=ft.Alignment.CENTER,
                 on_click=lambda e, q=s["action"]: self._perform_search(q),
                 ink=True,
             )
@@ -1351,7 +1351,7 @@ class LexViridisApp:
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment.CENTER,
         )
 
         self.results_list = ft.ListView(
@@ -2124,7 +2124,7 @@ class LexViridisApp:
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment.CENTER,
             expand=True,
         )
 
@@ -2313,7 +2313,7 @@ class LexViridisApp:
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment.CENTER,
             expand=True,
         )
 
@@ -2902,7 +2902,7 @@ class LexViridisApp:
                             style=ft.ButtonStyle(color=Theme.ERROR),
                             on_click=self._confirm_delete_study_data,
                         ),
-                        alignment=ft.alignment.center_right,
+                        alignment=ft.Alignment.CENTER_RIGHT,
                     ),
                 ],
                 expand=True,
@@ -3072,7 +3072,7 @@ class LexViridisApp:
                         ],
                         horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                     ),
-                    alignment=ft.alignment.center,
+                    alignment=ft.Alignment.CENTER,
                     expand=True,
                 )
                 self.page.update()
@@ -3084,14 +3084,14 @@ class LexViridisApp:
             border=ft.border.all(2, Theme.PRIMARY),
             width=400,
             height=300,
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment.CENTER,
         )
         controls_row = ft.Row(alignment=ft.MainAxisAlignment.CENTER, spacing=Spacing.MD)
 
         self.content_area.content = ft.Column(
             [
                 ft.IconButton(ft.Icons.ARROW_BACK, on_click=lambda _: self._render_study_view()),
-                ft.Container(card_content, alignment=ft.alignment.center, expand=True),
+                ft.Container(card_content, alignment=ft.Alignment.CENTER, expand=True),
                 controls_row,
             ],
             expand=True,
