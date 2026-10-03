@@ -38,8 +38,8 @@ class CasosView(ft.Container):
             self._page = self.page
         # Registrar el FilePicker en el overlay de la página
         p = self._p
-        if p and self._dir_picker not in p.overlay:
-            p.overlay.append(self._dir_picker)
+        if p and self._dir_picker not in p.services:
+            p.services.append(self._dir_picker)
             p.update()
 
     @property

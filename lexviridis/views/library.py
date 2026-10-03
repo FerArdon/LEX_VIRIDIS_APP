@@ -9,13 +9,14 @@ class LibraryView(ft.Container):
     Library View Component.
     Displays the catalog of norms.
     """
+
     def __init__(self, library_repo: LibraryRepository, on_open_pdf: callable):
         super().__init__(expand=True)
         self.library_repo = library_repo
         self.on_open_pdf = on_open_pdf
         self.library_filter = "Todos"
-        self.view_mode = "detail" # list, grid, detail
-        self.search_query = ""    # búsqueda local dentro del catálogo
+        self.view_mode = "detail"  # list, grid, detail
+        self.search_query = ""  # búsqueda local dentro del catálogo
         self.page = None
         self._build_ui()
 
@@ -27,7 +28,7 @@ class LibraryView(ft.Container):
         hero = UIComponents.hero_header(
             "hero_library.png",
             "Biblioteca Digital",
-            "Explora el catálogo completo de la legislación ambiental hondureña"
+            "Explora el catálogo completo de la legislación ambiental hondureña",
         )
 
         # Toolbar & Filters
@@ -56,11 +57,14 @@ class LibraryView(ft.Container):
             on_click=self._clear_search,
         )
         search_bar = ft.Container(
-            content=ft.Row([
-                self._search_field,
-                self._clear_btn,
-                self._search_count,
-            ], spacing=Spacing.SM),
+            content=ft.Row(
+                [
+                    self._search_field,
+                    self._clear_btn,
+                    self._search_count,
+                ],
+                spacing=Spacing.SM,
+            ),
             padding=ft.padding.symmetric(vertical=Spacing.SM),
         )
 
@@ -69,45 +73,56 @@ class LibraryView(ft.Container):
         self._render_list()
 
         # Layout
-        self.content = ft.Column([
-            hero,
-            ft.Container(
-                 content=ft.Row([
-                    ft.Column([
-                        UIComponents.heading("Biblioteca Digital", level=1, color=Theme.PRIMARY),
-                        UIComponents.body_text("Catálogo Completo", secondary=True),
-                    ], expand=True),
-                    UIComponents.primary_button("Agregar PDF", icon="add", on_click=self._show_import_dialog),
-                ]),
-                padding=ft.padding.only(bottom=Spacing.SM),
-            ),
-            toolbar,
-            filters,
-            search_bar,
-            ft.Container(self.content_list, expand=True, padding=ft.padding.only(top=Spacing.SM))
-        ], expand=True)
+        self.content = ft.Column(
+            [
+                hero,
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Column(
+                                [
+                                    UIComponents.heading("Biblioteca Digital", level=1, color=Theme.PRIMARY),
+                                    UIComponents.body_text("Catálogo Completo", secondary=True),
+                                ],
+                                expand=True,
+                            ),
+                            UIComponents.primary_button("Agregar PDF", icon="add", on_click=self._show_import_dialog),
+                        ]
+                    ),
+                    padding=ft.padding.only(bottom=Spacing.SM),
+                ),
+                toolbar,
+                filters,
+                search_bar,
+                ft.Container(self.content_list, expand=True, padding=ft.padding.only(top=Spacing.SM)),
+            ],
+            expand=True,
+        )
 
     def _build_toolbar(self):
         return ft.Container(
-            content=ft.Row([
-                ft.TextButton("Nuevo", icon="add_circle_outline", style=ft.ButtonStyle(color="#CCCCCC")),
-                ft.VerticalDivider(width=1, color="#555555"),
-                ft.PopupMenuButton(
-                    icon="sort",
-                    items=[
-                        ft.PopupMenuItem(text="Nombre (A-Z)"),
-                        ft.PopupMenuItem(text="Nombre (Z-A)"),
-                    ]
-                ),
-                ft.PopupMenuButton(
-                    icon="view_list",
-                    items=[
-                        ft.PopupMenuItem(text="Lista compacta", on_click=lambda e: self._change_view_mode("list")),
-                        ft.PopupMenuItem(text="Tarjetas", on_click=lambda e: self._change_view_mode("grid")),
-                        ft.PopupMenuItem(text="Detalle", on_click=lambda e: self._change_view_mode("detail")),
-                    ]
-                ),
-            ], spacing=4),
+            content=ft.Row(
+                [
+                    ft.TextButton("Nuevo", icon="add_circle_outline", style=ft.ButtonStyle(color="#CCCCCC")),
+                    ft.VerticalDivider(width=1, color="#555555"),
+                    ft.PopupMenuButton(
+                        icon="sort",
+                        items=[
+                            ft.PopupMenuItem(text="Nombre (A-Z)"),
+                            ft.PopupMenuItem(text="Nombre (Z-A)"),
+                        ],
+                    ),
+                    ft.PopupMenuButton(
+                        icon="view_list",
+                        items=[
+                            ft.PopupMenuItem(text="Lista compacta", on_click=lambda e: self._change_view_mode("list")),
+                            ft.PopupMenuItem(text="Tarjetas", on_click=lambda e: self._change_view_mode("grid")),
+                            ft.PopupMenuItem(text="Detalle", on_click=lambda e: self._change_view_mode("detail")),
+                        ],
+                    ),
+                ],
+                spacing=4,
+            ),
             bgcolor="#2D2D2D",
             padding=ft.padding.symmetric(horizontal=Spacing.SM, vertical=4),
             border_radius=ft.border_radius.only(top_left=Radius.SM, top_right=Radius.SM),
@@ -160,16 +175,15 @@ class LibraryView(ft.Container):
         if self.search_query:
             q = self.search_query
             items_to_show = [
-                n for n in items_to_show
-                if q in n.get('titulo', '').lower()
-                or q in n.get('tipo', '').lower()
-                or q in n.get('numero', '').lower()
+                n
+                for n in items_to_show
+                if q in n.get("titulo", "").lower()
+                or q in n.get("tipo", "").lower()
+                or q in n.get("numero", "").lower()
             ]
             # Actualizar contador de resultados
             total = len(items_to_show)
-            self._search_count.value = (
-                f"{total} resultado{'s' if total != 1 else ''}" if total else "Sin resultados"
-            )
+            self._search_count.value = f"{total} resultado{'s' if total != 1 else ''}" if total else "Sin resultados"
             self._search_count.color = Theme.PRIMARY if total else Theme.ERROR
         else:
             self._search_count.value = ""
@@ -187,41 +201,69 @@ class LibraryView(ft.Container):
     def _render_detail_list(self, items):
         lv = ft.ListView(expand=True, spacing=Spacing.SM)
         for norma in items:
-            tipo = norma.get('tipo', '')
+            tipo = norma.get("tipo", "")
             icon = "description"
             color = Theme.TEXT_SECONDARY
 
-            if 'Decreto' in tipo:
-                icon = "gavel"; color = Theme.PRIMARY
-            elif 'Ley' in tipo:
-                icon = "balance"; color = Theme.SECONDARY
-            elif 'Acuerdo' in tipo:
-                icon = "assignment"; color = Theme.WARNING
+            if "Decreto" in tipo:
+                icon = "gavel"
+                color = Theme.PRIMARY
+            elif "Ley" in tipo:
+                icon = "balance"
+                color = Theme.SECONDARY
+            elif "Acuerdo" in tipo:
+                icon = "assignment"
+                color = Theme.WARNING
 
             card = ft.Container(
-                content=ft.Row([
-                    ft.Container(
-                        content=ft.Icon(icon, size=24, color=color),
-                        bgcolor=Colors.with_opacity(0.1, color),
-                        border_radius=Radius.SM,
-                        padding=Spacing.SM,
-                    ),
-                    ft.Container(width=Spacing.MD),
-                    ft.Column([
-                        ft.Text(norma.get('titulo', 'Sin título'), size=Typography.BODY, weight=Typography.MEDIUM, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS),
-                        ft.Row([
-                            ft.Text(tipo, size=Typography.CAPTION, color=Theme.ACCENT),
-                            ft.Text("•", size=Typography.CAPTION, color=Theme.TEXT_DISABLED),
-                            ft.Text(f"{norma.get('num_articulos', 0)} artículos", size=Typography.CAPTION, color=Theme.TEXT_SECONDARY),
-                        ], spacing=Spacing.SM),
-                    ], expand=True, spacing=Spacing.XXS),
-                    ft.IconButton("open_in_new", icon_color=Theme.PRIMARY,
-                                  tooltip="Abrir PDF",
-                                  on_click=lambda e, n=norma: self.on_open_pdf(n)),
-                    ft.IconButton("delete", icon_color=Theme.ERROR,
-                                  tooltip="Eliminar de la biblioteca",
-                                  on_click=lambda e, n=norma: self._confirmar_eliminar_norma(n)),
-                ]),
+                content=ft.Row(
+                    [
+                        ft.Container(
+                            content=ft.Icon(icon, size=24, color=color),
+                            bgcolor=Colors.with_opacity(0.1, color),
+                            border_radius=Radius.SM,
+                            padding=Spacing.SM,
+                        ),
+                        ft.Container(width=Spacing.MD),
+                        ft.Column(
+                            [
+                                ft.Text(
+                                    norma.get("titulo", "Sin título"),
+                                    size=Typography.BODY,
+                                    weight=Typography.MEDIUM,
+                                    max_lines=1,
+                                    overflow=ft.TextOverflow.ELLIPSIS,
+                                ),
+                                ft.Row(
+                                    [
+                                        ft.Text(tipo, size=Typography.CAPTION, color=Theme.ACCENT),
+                                        ft.Text("•", size=Typography.CAPTION, color=Theme.TEXT_DISABLED),
+                                        ft.Text(
+                                            f"{norma.get('num_articulos', 0)} artículos",
+                                            size=Typography.CAPTION,
+                                            color=Theme.TEXT_SECONDARY,
+                                        ),
+                                    ],
+                                    spacing=Spacing.SM,
+                                ),
+                            ],
+                            expand=True,
+                            spacing=Spacing.XXS,
+                        ),
+                        ft.IconButton(
+                            "open_in_new",
+                            icon_color=Theme.PRIMARY,
+                            tooltip="Abrir PDF",
+                            on_click=lambda e, n=norma: self.on_open_pdf(n),
+                        ),
+                        ft.IconButton(
+                            "delete",
+                            icon_color=Theme.ERROR,
+                            tooltip="Eliminar de la biblioteca",
+                            on_click=lambda e, n=norma: self._confirmar_eliminar_norma(n),
+                        ),
+                    ]
+                ),
                 bgcolor=Theme.SURFACE,
                 border_radius=Radius.MD,
                 padding=Spacing.MD,
@@ -232,18 +274,28 @@ class LibraryView(ft.Container):
         return lv
 
     def _render_grid_view(self, items):
-        grid = ft.GridView(expand=True, runs_count=5, max_extent=250, child_aspect_ratio=1.0, spacing=10, run_spacing=10)
+        grid = ft.GridView(
+            expand=True, runs_count=5, max_extent=250, child_aspect_ratio=1.0, spacing=10, run_spacing=10
+        )
         for norma in items:
             card = ft.Container(
-                content=ft.Column([
-                    ft.Icon("description", size=32, color=Theme.PRIMARY),
-                    ft.Text(norma.get('titulo', ''), size=12, weight="bold", max_lines=3, overflow=ft.TextOverflow.ELLIPSIS),
-                ]),
+                content=ft.Column(
+                    [
+                        ft.Icon("description", size=32, color=Theme.PRIMARY),
+                        ft.Text(
+                            norma.get("titulo", ""),
+                            size=12,
+                            weight="bold",
+                            max_lines=3,
+                            overflow=ft.TextOverflow.ELLIPSIS,
+                        ),
+                    ]
+                ),
                 bgcolor=Theme.SURFACE,
                 border=ft.border.all(1, Theme.BORDER),
                 border_radius=Radius.MD,
                 padding=Spacing.MD,
-                on_click=lambda e, n=norma: self.on_open_pdf(n)
+                on_click=lambda e, n=norma: self.on_open_pdf(n),
             )
             grid.controls.append(card)
         return grid
@@ -253,29 +305,31 @@ class LibraryView(ft.Container):
         for norma in items:
             tile = ft.ListTile(
                 leading=ft.Icon("article", size=20, color=Theme.PRIMARY),
-                title=ft.Text(norma.get('titulo', ''), size=12, max_lines=1),
-                on_click=lambda e, n=norma: self.on_open_pdf(n)
+                title=ft.Text(norma.get("titulo", ""), size=12, max_lines=1),
+                on_click=lambda e, n=norma: self.on_open_pdf(n),
             )
             lv.controls.append(tile)
         return lv
 
     def _confirmar_eliminar_norma(self, norma):
         """Muestra diálogo de confirmación y elimina la norma + FTS si se acepta."""
-        titulo = norma.get('titulo', 'Sin título')
-        norma_id = norma.get('id')
+        titulo = norma.get("titulo", "Sin título")
+        norma_id = norma.get("id")
 
         def _eliminar(e):
             try:
                 import sqlite3 as _sqlite3
+
                 from ..config import config
+
                 DB_PATH = config.BASE_DIR / "LEX_VIRIDIS_DB" / "legislacion_ambiental.db"
                 conn = _sqlite3.connect(str(DB_PATH))
-                cur  = conn.cursor()
+                cur = conn.cursor()
 
                 # 1. Eliminar del índice FTS
                 cur.execute(
-                    "DELETE FROM busqueda_fts WHERE articulo_id IN "
-                    "(SELECT id FROM articulos WHERE norma_id = ?)", (norma_id,)
+                    "DELETE FROM busqueda_fts WHERE articulo_id IN " "(SELECT id FROM articulos WHERE norma_id = ?)",
+                    (norma_id,),
                 )
                 # 2. Eliminar artículos
                 cur.execute("DELETE FROM articulos WHERE norma_id = ?", (norma_id,))
@@ -312,10 +366,12 @@ class LibraryView(ft.Container):
 
         dialog = ft.AlertDialog(
             modal=True,
-            title=ft.Row([
-                ft.Icon("warning", color=Theme.ERROR),
-                ft.Text("Eliminar documento", weight="bold"),
-            ]),
+            title=ft.Row(
+                [
+                    ft.Icon("warning", color=Theme.ERROR),
+                    ft.Text("Eliminar documento", weight="bold"),
+                ]
+            ),
             content=ft.Text(
                 f"¿Eliminar '{titulo}' de la biblioteca?\n\n"
                 "Esto borrará la norma, todos sus artículos y su índice de búsqueda.\n"
@@ -350,16 +406,16 @@ class LibraryView(ft.Container):
         page = None
 
         # Intentar desde el evento
-        if hasattr(e, 'page') and e.page:
+        if hasattr(e, "page") and e.page:
             page = e.page
         # Intentar desde el control
-        elif hasattr(e, 'control') and hasattr(e.control, 'page') and e.control.page:
+        elif hasattr(e, "control") and hasattr(e.control, "page") and e.control.page:
             page = e.control.page
         # Buscar en el árbol de padres
         else:
             current = self
-            while page is None and hasattr(current, 'parent') and current.parent:
-                if hasattr(current, 'page') and current.page:
+            while page is None and hasattr(current, "parent") and current.parent:
+                if hasattr(current, "page") and current.page:
                     page = current.page
                     break
                 current = current.parent
@@ -377,15 +433,11 @@ class LibraryView(ft.Container):
                 self._import_pdf(selected_file.path)
 
         file_picker = ft.FilePicker(on_result=on_file_selected)
-        self.page.overlay.append(file_picker)
+        self.page.services.append(file_picker)
         self.page.update()
 
         # Abrir diálogo de selección
-        file_picker.pick_files(
-            dialog_title="Seleccionar archivo PDF",
-            allowed_extensions=["pdf"],
-            allow_multiple=False
-        )
+        file_picker.pick_files(dialog_title="Seleccionar archivo PDF", allowed_extensions=["pdf"], allow_multiple=False)
 
     def _import_pdf(self, file_path: str):
         """
@@ -402,18 +454,24 @@ class LibraryView(ft.Container):
 
         # ── Diálogo de progreso ──────────────────────────────────────────
         progress_text = ft.Text("Iniciando...", size=13, color=Theme.TEXT_SECONDARY)
-        progress_bar  = ft.ProgressBar(width=380, color=Theme.PRIMARY, bgcolor=Theme.BORDER)
+        progress_bar = ft.ProgressBar(width=380, color=Theme.PRIMARY, bgcolor=Theme.BORDER)
         progress_dialog = ft.AlertDialog(
             modal=True,
-            title=ft.Row([
-                ft.Icon("upload_file", color=Theme.PRIMARY),
-                ft.Text("Importando PDF...", weight="bold"),
-            ]),
-            content=ft.Column([
-                progress_bar,
-                ft.Container(height=8),
-                progress_text,
-            ], tight=True, width=400),
+            title=ft.Row(
+                [
+                    ft.Icon("upload_file", color=Theme.PRIMARY),
+                    ft.Text("Importando PDF...", weight="bold"),
+                ]
+            ),
+            content=ft.Column(
+                [
+                    progress_bar,
+                    ft.Container(height=8),
+                    progress_text,
+                ],
+                tight=True,
+                width=400,
+            ),
         )
         if self.page:
             self.page.dialog = progress_dialog
@@ -440,39 +498,41 @@ class LibraryView(ft.Container):
             import re as _re
 
             # ── Estrategia 1: Artículos ──────────────────────────────────
-            pat1 = r'(?:ART[ÍI]CULO|ARTICULO|Art\.)\s*' \
-                   r'((?:\d+(?:-[A-Za-z])?)|(?:PRIMERO|SEGUNDO|TERCERO|CUARTO|QUINTO|SEXTO|SEPTIMO|OCTAVO|NOVENO|DECIMO))' \
-                   r'\s*[\.\:\-]?'
+            pat1 = (
+                r"(?:ART[ÍI]CULO|ARTICULO|Art\.)\s*"
+                r"((?:\d+(?:-[A-Za-z])?)|(?:PRIMERO|SEGUNDO|TERCERO|CUARTO|QUINTO|SEXTO|SEPTIMO|OCTAVO|NOVENO|DECIMO))"
+                r"\s*[\.\:\-]?"
+            )
             matches = list(_re.finditer(pat1, text, _re.IGNORECASE))
             if len(matches) >= 2:
                 result = []
                 for i, m in enumerate(matches):
-                    end = matches[i+1].start() if i < len(matches)-1 else len(text)
-                    c = clean_fn(text[m.end():end].strip())
+                    end = matches[i + 1].start() if i < len(matches) - 1 else len(text)
+                    c = clean_fn(text[m.end() : end].strip())
                     if c:
                         result.append((m.group(1).upper(), c))
                 return result
 
             # ── Estrategia 2: Secciones ──────────────────────────────────
-            pat2 = r'(?:SECCI[ÓO]N|Sección)\s+(\d+[\.\-]?\d*)\s*[\.\:\-]?'
+            pat2 = r"(?:SECCI[ÓO]N|Sección)\s+(\d+[\.\-]?\d*)\s*[\.\:\-]?"
             matches = list(_re.finditer(pat2, text, _re.IGNORECASE))
             if len(matches) >= 2:
                 result = []
                 for i, m in enumerate(matches):
-                    end = matches[i+1].start() if i < len(matches)-1 else len(text)
-                    c = clean_fn(text[m.end():end].strip())
+                    end = matches[i + 1].start() if i < len(matches) - 1 else len(text)
+                    c = clean_fn(text[m.end() : end].strip())
                     if c:
                         result.append((f"Sección {m.group(1)}", c))
                 return result
 
             # ── Estrategia 3: Capítulos ───────────────────────────────────
-            pat3 = r'(?:CAP[ÍI]TULO|CAPITULO)\s+([IVXLCDM\d]+)\s*[\.\:\-]?'
+            pat3 = r"(?:CAP[ÍI]TULO|CAPITULO)\s+([IVXLCDM\d]+)\s*[\.\:\-]?"
             matches = list(_re.finditer(pat3, text, _re.IGNORECASE))
             if len(matches) >= 2:
                 result = []
                 for i, m in enumerate(matches):
-                    end = matches[i+1].start() if i < len(matches)-1 else len(text)
-                    c = clean_fn(text[m.end():end].strip())
+                    end = matches[i + 1].start() if i < len(matches) - 1 else len(text)
+                    c = clean_fn(text[m.end() : end].strip())
                     if c:
                         result.append((f"Capítulo {m.group(1)}", c))
                 return result
@@ -480,28 +540,28 @@ class LibraryView(ft.Container):
             # ── Estrategia 4: Secciones numeradas "1. TITULO" ────────────
             # Cubre planes, informes, manuales: "1.\nINTRODUCCION"
             # Exige título de al menos 8 chars para evitar listas cortas
-            pat4 = r'(?m)^(\d{1,2})\.\s*\n?\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{7,60})$'
+            pat4 = r"(?m)^(\d{1,2})\.\s*\n?\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{7,60})$"
             matches = list(_re.finditer(pat4, text))
             # Solo usar si hay suficientes secciones reales (mínimo 5)
             if len(matches) >= 5:
                 result = []
                 for i, m in enumerate(matches):
-                    end = matches[i+1].start() if i < len(matches)-1 else len(text)
-                    c = clean_fn(text[m.end():end].strip())
+                    end = matches[i + 1].start() if i < len(matches) - 1 else len(text)
+                    c = clean_fn(text[m.end() : end].strip())
                     label = f"{m.group(1)}. {m.group(2).strip()}"
-                    if len(c) > 50:          # descartar secciones vacías o de lista
+                    if len(c) > 50:  # descartar secciones vacías o de lista
                         result.append((label, c))
                 if len(result) >= 3:
                     return result
 
             # ── Estrategia 5: Subsecciones "1.1 Titulo" ──────────────────
-            pat5 = r'(?m)^(\d+\.\d+)\s+([A-ZÁÉÍÓÚÑ][^\n]{3,80})$'
+            pat5 = r"(?m)^(\d+\.\d+)\s+([A-ZÁÉÍÓÚÑ][^\n]{3,80})$"
             matches = list(_re.finditer(pat5, text))
             if len(matches) >= 2:
                 result = []
                 for i, m in enumerate(matches):
-                    end = matches[i+1].start() if i < len(matches)-1 else len(text)
-                    c = clean_fn(text[m.end():end].strip())
+                    end = matches[i + 1].start() if i < len(matches) - 1 else len(text)
+                    c = clean_fn(text[m.end() : end].strip())
                     label = f"{m.group(1)} {m.group(2).strip()}"
                     if c:
                         result.append((label, c))
@@ -510,12 +570,12 @@ class LibraryView(ft.Container):
             # ── Estrategia 6 (Fallback): Párrafos naturales ──────────────
             # Divide por líneas en blanco dobles (estructura real del PDF).
             # Garantiza que cualquier documento sea buscable en FTS.
-            paragraphs = _re.split(r'\n\s*\n', text)
+            paragraphs = _re.split(r"\n\s*\n", text)
             blocks = []
             block_num = 1
             for para in paragraphs:
                 c = clean_fn(para.strip())
-                if len(c) > 80:   # ignorar párrafos muy cortos (cabeceras, números de página)
+                if len(c) > 80:  # ignorar párrafos muy cortos (cabeceras, números de página)
                     blocks.append((f"Párrafo {block_num}", c))
                     block_num += 1
             # Si aún así no hay nada, un único bloque con todo el texto
@@ -527,6 +587,7 @@ class LibraryView(ft.Container):
             try:
                 import re
                 import sqlite3 as _sqlite3
+
                 from ..config import config
 
                 DB_PATH = config.BASE_DIR / "LEX_VIRIDIS_DB" / "legislacion_ambiental.db"
@@ -535,6 +596,7 @@ class LibraryView(ft.Container):
                 _update("📄 Leyendo PDF...")
                 try:
                     import fitz  # PyMuPDF
+
                     doc = fitz.open(str(pdf_path))
                     full_text = ""
                     for pg in doc:
@@ -545,42 +607,55 @@ class LibraryView(ft.Container):
                     return
 
                 if not full_text.strip():
-                    _update("⚠️ El PDF no contiene texto seleccionable (imagen escaneada).\nNo se puede indexar sin OCR.")
+                    _update(
+                        "⚠️ El PDF no contiene texto seleccionable (imagen escaneada).\nNo se puede indexar sin OCR."
+                    )
                     if self.page:
-                        import time; time.sleep(3)
+                        import time
+
+                        time.sleep(3)
                         progress_dialog.open = False
                         self.page.update()
                     return
 
                 # ── 2. Limpiar texto ─────────────────────────────────────
                 def clean_text(t):
-                    t = re.sub(r'-\n', '', t)
-                    t = re.sub(r'\s+', ' ', t).strip()
+                    t = re.sub(r"-\n", "", t)
+                    t = re.sub(r"\s+", " ", t).strip()
                     return t
 
                 full_text_clean = clean_text(full_text)
 
                 # ── 3. Inferir metadatos del nombre del archivo ──────────
                 _update("🔍 Analizando metadatos...")
-                filename  = pdf_path.name
-                titulo    = filename.replace(".pdf", "").replace(".PDF", "")
-                tipo      = "Desconocido"
-                numero    = ""
+                filename = pdf_path.name
+                titulo = filename.replace(".pdf", "").replace(".PDF", "")
+                tipo = "Desconocido"
+                numero = ""
                 categoria = "General"
-                lower     = filename.lower()
+                lower = filename.lower()
 
-                if "decreto"    in lower: tipo = "Decreto"
-                elif "ley"      in lower: tipo = "Ley"
-                elif "acuerdo"  in lower: tipo = "Acuerdo"
-                elif "reglamento" in lower: tipo = "Reglamento"
+                if "decreto" in lower:
+                    tipo = "Decreto"
+                elif "ley" in lower:
+                    tipo = "Ley"
+                elif "acuerdo" in lower:
+                    tipo = "Acuerdo"
+                elif "reglamento" in lower:
+                    tipo = "Reglamento"
 
-                if "forestal"   in lower: categoria = "Forestal"
-                elif "agua"     in lower: categoria = "Agua"
-                elif "penal"    in lower: categoria = "Penal"
-                elif "mina"     in lower: categoria = "Minería"
-                elif "ambiente" in lower: categoria = "Ambiente"
+                if "forestal" in lower:
+                    categoria = "Forestal"
+                elif "agua" in lower:
+                    categoria = "Agua"
+                elif "penal" in lower:
+                    categoria = "Penal"
+                elif "mina" in lower:
+                    categoria = "Minería"
+                elif "ambiente" in lower:
+                    categoria = "Ambiente"
 
-                num_match = re.search(r'(\d+-\d+)', filename)
+                num_match = re.search(r"(\d+-\d+)", filename)
                 if num_match:
                     numero = num_match.group(1)
 
@@ -591,7 +666,7 @@ class LibraryView(ft.Container):
                 # ── 5. Insertar/actualizar en la BD ──────────────────────
                 _update(f"💾 Guardando norma ({len(articles)} artículos)...")
                 conn = _sqlite3.connect(str(DB_PATH))
-                cur  = conn.cursor()
+                cur = conn.cursor()
 
                 cur.execute("SELECT id FROM normas WHERE titulo = ?", (titulo,))
                 row = cur.fetchone()
@@ -601,19 +676,19 @@ class LibraryView(ft.Container):
                     cur.execute("DELETE FROM articulos WHERE norma_id = ?", (norma_id,))
                     cur.execute(
                         "UPDATE normas SET texto_completo=?, archivo_pdf=?, tipo=?, numero=?, categoria=? WHERE id=?",
-                        (full_text_clean, str(pdf_path), tipo, numero, categoria, norma_id)
+                        (full_text_clean, str(pdf_path), tipo, numero, categoria, norma_id),
                     )
                 else:
                     cur.execute(
                         "INSERT INTO normas (tipo, numero, titulo, categoria, texto_completo, archivo_pdf, estado) VALUES (?,?,?,?,?,?,'VIGENTE')",
-                        (tipo, numero, titulo, categoria, full_text_clean, str(pdf_path))
+                        (tipo, numero, titulo, categoria, full_text_clean, str(pdf_path)),
                     )
                     norma_id = cur.lastrowid
 
                 for art_num, content in articles:
                     cur.execute(
                         "INSERT INTO articulos (norma_id, numero_articulo, contenido) VALUES (?,?,?)",
-                        (norma_id, art_num, content)
+                        (norma_id, art_num, content),
                     )
 
                 conn.commit()
@@ -648,7 +723,7 @@ class LibraryView(ft.Container):
                     # Tabla existe — verificar que tiene las columnas correctas (sin tags)
                     cur.execute("SELECT sql FROM sqlite_master WHERE name='busqueda_fts'")
                     fts_sql = cur.fetchone()[0]
-                    if 'tags' in fts_sql:
+                    if "tags" in fts_sql:
                         # Migrar: reemplazar la tabla con una sin la columna tags
                         cur.execute("DROP TABLE IF EXISTS busqueda_fts")
                         cur.execute("""
@@ -673,17 +748,20 @@ class LibraryView(ft.Container):
                         cur.execute(
                             "DELETE FROM busqueda_fts WHERE articulo_id IN "
                             "(SELECT id FROM articulos WHERE norma_id=?)",
-                            (norma_id,)
+                            (norma_id,),
                         )
 
                 # Re-insertar los artículos de la norma recién importada
-                cur.execute("""
+                cur.execute(
+                    """
                     INSERT INTO busqueda_fts(titulo_norma, contenido_articulo, numero_articulo, articulo_id)
                     SELECT n.titulo, a.contenido, a.numero_articulo, a.id
                     FROM articulos a
                     JOIN normas n ON a.norma_id = n.id
                     WHERE n.id = ?
-                """, (norma_id,))
+                """,
+                    (norma_id,),
+                )
                 conn.commit()
                 conn.close()
 
@@ -709,10 +787,13 @@ class LibraryView(ft.Container):
 
             except Exception as ex:
                 import traceback
+
                 err = traceback.format_exc()
                 _update(f"❌ Error: {ex}")
                 if self.page:
-                    import time; time.sleep(2)
+                    import time
+
+                    time.sleep(2)
                     progress_dialog.open = False
                     self.page.update()
                     snackbar = ft.SnackBar(

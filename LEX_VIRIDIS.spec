@@ -90,6 +90,7 @@ hiddenimports = [
     'lexviridis.pdf_exporter',
     'flet_desktop',
     'flet_desktop.app',
+    'flet_charts',
 ]
 
 a = Analysis(

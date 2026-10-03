@@ -92,7 +92,7 @@ class LexViridisApp:
         # Configurar FilePicker para exportaciones
         self.file_picker = ft.FilePicker()
         self.file_picker.on_result = self._on_save_file_result
-        self.page.overlay.append(self.file_picker)
+        self.page.services.append(self.file_picker)
 
         # Iniciar maximizado
         self.page.window.maximized = True
@@ -104,12 +104,12 @@ class LexViridisApp:
         # Configurar FilePicker para foto de perfil
         self.photo_picker = ft.FilePicker()
         self.photo_picker.on_result = self._on_profile_photo_selected
-        self.page.overlay.append(self.photo_picker)
+        self.page.services.append(self.photo_picker)
 
         # Configurar FilePicker para exportación de IA (TXT)
         self.ai_export_picker = ft.FilePicker()
         self.ai_export_picker.on_result = self._on_ai_export_result
-        self.page.overlay.append(self.ai_export_picker)
+        self.page.services.append(self.ai_export_picker)
 
     def _check_license_and_start(self):
         """Muestra splash e inicia verificación en background."""
@@ -3104,7 +3104,7 @@ class LexViridisApp:
 
         # FilePicker para seleccionar PDFs
         pdf_picker = ft.FilePicker(on_result=lambda e: self._on_pdf_import_result(e))
-        self.page.overlay.append(pdf_picker)
+        self.page.services.append(pdf_picker)
         self.page.update()
 
         pdf_picker.pick_files(
