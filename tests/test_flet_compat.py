@@ -11,8 +11,28 @@ import lexviridis.flet_compat  # noqa: F401  (aplica los parches al importar)
 
 
 def test_page_recupera_api_antigua():
-    for nombre in ("show_snack_bar", "open", "close", "snack_bar", "dialog"):
+    for nombre in ("show_snack_bar", "open", "close", "snack_bar", "dialog", "set_clipboard"):
         assert hasattr(ft.Page, nombre), nombre
+
+
+def test_set_clipboard_usa_el_servicio_asincrono():
+    """Copiar texto (boton 'copiar' de la IA) fallaba: page.set_clipboard ya no existe en Flet 0.80+."""
+    import asyncio
+
+    copiado = []
+
+    class FalsoPortapapeles:
+        async def set(self, valor):
+            copiado.append(valor)
+
+    class FalsaPagina:
+        clipboard = FalsoPortapapeles()
+
+        def run_task(self, manejador, *args, **kwargs):
+            asyncio.run(manejador(*args, **kwargs))
+
+    ft.Page.set_clipboard(FalsaPagina(), "Art. 25: texto copiado")
+    assert copiado == ["Art. 25: texto copiado"]
 
 
 @pytest.mark.parametrize(

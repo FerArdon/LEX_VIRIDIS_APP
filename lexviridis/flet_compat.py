@@ -72,6 +72,16 @@ def _patch_page() -> None:
 
         return property(getter, setter)
 
+    def set_clipboard(self, value):
+        """API antigua ``page.set_clipboard(texto)``: ahora el portapapeles es un servicio asincrono."""
+
+        async def copiar():
+            await self.clipboard.set(value)
+
+        self.run_task(copiar)
+
+    if not hasattr(Page, "set_clipboard"):
+        Page.set_clipboard = set_clipboard
     if not hasattr(Page, "show_snack_bar"):
         Page.show_snack_bar = show_snack_bar
     if not hasattr(Page, "open"):

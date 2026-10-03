@@ -7,10 +7,7 @@ from pathlib import Path
 import pytest
 
 RAIZ = Path(__file__).resolve().parent.parent
-COPIAS = [
-    RAIZ / "LEX_VIRIDIS_LICENCIA" / "license_system.py",
-    RAIZ / "lexviridis" / "LEX_VIRIDIS_LICENCIA" / "license_system.py",
-]
+COPIAS = [RAIZ / "lexviridis" / "license_system.py"]
 
 
 def _cargar(ruta: Path):
@@ -20,7 +17,7 @@ def _cargar(ruta: Path):
     return mod.LicenseManager
 
 
-@pytest.fixture(params=COPIAS, ids=["raiz", "paquete"])
+@pytest.fixture(params=COPIAS, ids=["paquete"])
 def lm(request, tmp_path, monkeypatch):
     clase = _cargar(request.param)
     monkeypatch.setenv("LEXVIRIDIS_LICENSE_SECRET", "clave-de-prueba-A")
@@ -29,7 +26,7 @@ def lm(request, tmp_path, monkeypatch):
     return clase
 
 
-@pytest.mark.parametrize("ruta", COPIAS, ids=["raiz", "paquete"])
+@pytest.mark.parametrize("ruta", COPIAS, ids=["paquete"])
 def test_el_codigo_fuente_no_contiene_la_clave(ruta):
     texto = ruta.read_text(encoding="utf-8")
     assert "_SECRET_KEY" not in texto

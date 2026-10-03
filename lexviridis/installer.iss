@@ -67,9 +67,6 @@ Source: "assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs
 ; Base de datos
 Source: "LEX_VIRIDIS_DB\legislacion_ambiental.db"; DestDir: "{app}\LEX_VIRIDIS_DB"; Flags: ignoreversion
 
-; Sistema de licencias (scripts de generación - opcional para admin)
-Source: "LEX_VIRIDIS_LICENCIA\*"; DestDir: "{app}\LEX_VIRIDIS_LICENCIA"; Flags: ignoreversion
-
 ; Documentación
 Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion

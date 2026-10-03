@@ -28,7 +28,7 @@ LEX_VIRIDIS_APP/
 ├── 📁 LEX_VIRIDIS_DB/       # Base de datos SQLite
 │   └── legislacion_ambiental.db
 │
-├── 📁 LEX_VIRIDIS_LICENCIA/ # Sistema de licenciamiento
+├── 📄 lexviridis/license_system.py  # Sistema de licenciamiento (la clave de firma NO va en el repo)
 │
 ├── 📁 COMPENDIO LEYES FEMA/ # PDFs de normativa (185 documentos)
 │

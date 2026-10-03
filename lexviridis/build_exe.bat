@@ -33,17 +33,16 @@ if exist "dist\LEX_VIRIDIS.exe" (
     echo    EXITO! Ejecutable generado en:
     echo    dist\LEX_VIRIDIS.exe
     echo ============================================
-    
+
     REM Copiar assets necesarios
     echo Copiando recursos adicionales...
     xcopy /E /I /Y assets dist\assets >nul 2>&1
     xcopy /E /I /Y LEX_VIRIDIS_DB dist\LEX_VIRIDIS_DB >nul 2>&1
-    if exist "LEX_VIRIDIS_LICENCIA" xcopy /E /I /Y LEX_VIRIDIS_LICENCIA dist\LEX_VIRIDIS_LICENCIA >nul 2>&1
-    
+
     echo.
     echo Tamanio del ejecutable:
     for %%A in (dist\LEX_VIRIDIS.exe) do echo    %%~zA bytes
-    
+
     echo.
     echo Para crear el instalador, ejecute:
     echo    build_installer.bat

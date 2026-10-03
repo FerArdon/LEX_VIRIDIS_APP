@@ -143,3 +143,9 @@ def test_paginacion_no_repite_resultados(motor):
 
 def test_consulta_sin_palabras_utiles(motor):
     assert buscar(motor, "de la") == []
+
+
+def test_los_signos_de_pregunta_no_invalidan_la_busqueda(motor):
+    """Los botones sugeridos de la IA llevan '¿...?': antes devolvian cero resultados."""
+    r = motor.search_safe("¿aguas negras?")
+    assert r.status.value == "success" and r.results

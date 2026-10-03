@@ -7,10 +7,12 @@ SOFTWARE PROPIETARIO - Uso no autorizado prohibido
 
 Module: License Validator (Watchdog periódico)
 """
+
+import logging
 import threading
 import time
-import logging
-from .LEX_VIRIDIS_LICENCIA.license_system import LicenseManager
+
+from .license_system import LicenseManager
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +41,7 @@ class LicenseWatchdog:
         logger.info("LicenseWatchdog: Iniciado - validación cada %d segundos", self.interval)
         while self.running:
             time.sleep(self.interval)
-            
+
             try:
                 # 1. Verificar existencia de archivo
                 saved_license = LicenseManager.load_saved_license()
@@ -54,7 +56,7 @@ class LicenseWatchdog:
                     logging.warning(f"Watchdog: License invalid. {result.get('error')}")
                     self._trigger_invalid(result.get("error", "Licencia inválida."))
                     break
-                    
+
             except Exception as e:
                 logging.error(f"Watchdog error: {e}")
                 # En caso de error severo, asumimos compromiso (fail-safe)

@@ -11,6 +11,10 @@ parten en bloques de ~6000 caracteres; los PDF sin encabezados se indexan pagina
 
 Uso (genera una base nueva, no toca la original):
     python LEX_VIRIDIS_DB/reindex_full_text.py --out ruta/nueva.db
+    python LEX_VIRIDIS_DB/reindex_full_text.py --out ruta/nueva.db --rescatar-de otra_base.db
+
+--rescatar-de: incorpora el TEXTO de las normas que existen en otra base pero cuyo PDF ya no esta
+en la carpeta (el texto se parte en bloques de ~6000 caracteres; sus numeros de pagina no son fiables).
 """
 
 from __future__ import annotations
@@ -105,7 +109,52 @@ def extraer_articulos(ruta_pdf: Path) -> tuple[list[tuple[str, str, int]], int]:
     return resultado, sin_texto
 
 
-def reindexar(db_origen: Path, pdf_dir: Path, db_salida: Path) -> dict:
+def _nombre(ruta: str) -> str:
+    return Path(ruta.replace("\\", "/")).name.lower()
+
+
+def rescatar_textos(cur: sqlite3.Cursor, otra_db: Path, ya_indexados: set[str]) -> dict:
+    """Copia a la base nueva el texto de las normas de `otra_db` que no se indexaron desde un PDF."""
+    stats = {"normas_rescatadas": 0, "bloques_rescatados": 0}
+    con = sqlite3.connect(f"file:{otra_db}?mode=ro", uri=True)
+    existentes = {
+        _nombre(r): i for i, r in cur.execute("SELECT id, archivo_pdf FROM normas WHERE archivo_pdf IS NOT NULL")
+    }
+    normas = con.execute(
+        "SELECT id, tipo, numero, titulo, categoria, resumen, archivo_pdf, estado FROM normas WHERE archivo_pdf IS NOT NULL"
+    ).fetchall()
+    for nid_origen, tipo, numero, titulo, categoria, resumen, ruta, estado in normas:
+        nombre = _nombre(ruta)
+        if nombre in ya_indexados:
+            continue
+        filas = con.execute(
+            "SELECT numero_articulo, contenido, pagina FROM articulos WHERE norma_id = ? ORDER BY id", (nid_origen,)
+        ).fetchall()
+        if not filas:
+            continue
+        nid = existentes.get(nombre)
+        if nid is None:
+            cur.execute(
+                "INSERT INTO normas (tipo, numero, titulo, categoria, resumen, archivo_pdf, estado) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (tipo or "Ley", numero, titulo, categoria, resumen, ruta, estado or "VIGENTE"),
+            )
+            nid = cur.lastrowid
+            existentes[nombre] = nid
+            stats["normas_rescatadas"] += 1
+        for num_art, contenido, pagina in filas:
+            for _, bloque in partir(limpiar(contenido or "")):
+                if sum(c.isalpha() for c in bloque) < 20:
+                    continue
+                cur.execute(
+                    "INSERT INTO articulos (norma_id, numero_articulo, contenido, pagina) VALUES (?, ?, ?, ?)",
+                    (nid, num_art, bloque, pagina or 1),
+                )
+                stats["bloques_rescatados"] += 1
+    con.close()
+    return stats
+
+
+def reindexar(db_origen: Path, pdf_dir: Path, db_salida: Path, rescatar_de: Path | None = None) -> dict:
     if db_salida.exists():
         raise SystemExit(f"La salida ya existe: {db_salida}")
     db_salida.parent.mkdir(parents=True, exist_ok=True)
@@ -123,6 +172,7 @@ def reindexar(db_origen: Path, pdf_dir: Path, db_salida: Path) -> dict:
         por_nombre[Path(ruta.replace("\\", "/")).name.lower()] = nid
 
     stats = {"pdfs": 0, "normas_nuevas": 0, "articulos": 0, "pdfs_sin_texto": 0, "errores": 0}
+    indexados: set[str] = set()
     for pdf in sorted(pdf_dir.glob("*.pdf")):
         nid = por_nombre.get(pdf.name.lower())
         if nid is None:
@@ -144,6 +194,11 @@ def reindexar(db_origen: Path, pdf_dir: Path, db_salida: Path) -> dict:
             [(nid, numero, contenido, pagina) for numero, contenido, pagina in articulos],
         )
         stats["articulos"] += len(articulos)
+        if articulos:
+            indexados.add(pdf.name.lower())
+
+    if rescatar_de:
+        stats.update(rescatar_textos(cur, rescatar_de, indexados))
 
     cur.execute(
         """INSERT INTO busqueda_fts (titulo_norma, contenido_articulo, numero_articulo, articulo_id)
@@ -170,9 +225,10 @@ def main() -> None:
     ap.add_argument("--db", type=Path, default=DB_ORIGINAL, help="base de origen (se copia, no se modifica)")
     ap.add_argument("--pdf-dir", type=Path, default=RAIZ / "COMPENDIO LEYES FEMA")
     ap.add_argument("--out", type=Path, required=True, help="base nueva a generar")
+    ap.add_argument("--rescatar-de", type=Path, help="otra base de la que rescatar el texto de normas sin PDF")
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stdout)
-    stats = reindexar(args.db, args.pdf_dir, args.out)
+    stats = reindexar(args.db, args.pdf_dir, args.out, args.rescatar_de)
     logging.info("Listo: %s", stats)
 
 

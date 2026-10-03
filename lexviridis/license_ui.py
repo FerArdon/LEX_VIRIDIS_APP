@@ -8,43 +8,32 @@ import flet as ft
 Colors = getattr(ft, "Colors", getattr(ft, "colors", None))
 if Colors is None:
     raise ImportError("No se pudo cargar el módulo de colores de Flet.")
-import sys
 from pathlib import Path
 
-# Agregar path del sistema de licencias (compatible con .exe y desarrollo)
 try:
-    from .config import config as _license_config
-
-    _license_dir = str(_license_config.BASE_DIR / "LEX_VIRIDIS_LICENCIA")
-except Exception:
-    _license_dir = str(Path(__file__).parent.parent / "LEX_VIRIDIS_LICENCIA")
-
-sys.path.insert(0, _license_dir)
-
-try:
-    from license_system import LicenseManager
+    from .license_system import LicenseManager
 except ImportError:
-    # Fallback: si el módulo de licencias no está disponible (e.g. no empaquetado)
+    # Falla cerrado: sin el modulo de licencias NINGUNA licencia se da por valida.
     class LicenseManager:
         @staticmethod
-        def validate_license(key):
-            return {"valid": True, "client": "Usuario", "type": "DESARROLLO", "days_left": 999}
+        def validate_license(key, check_hardware=True):
+            return {"valid": False, "error": "Módulo de licencias no disponible."}
 
         @staticmethod
         def save_license(key):
-            pass
+            return False
 
         @staticmethod
         def load_saved_license():
-            return "dev-key"
+            return None
 
         @staticmethod
         def get_hardware_id():
-            return "dev"
+            return "desconocido"
 
         @staticmethod
         def generate_license(*a, **k):
-            return "dev-trial-key"
+            raise RuntimeError("Módulo de licencias no disponible.")
 
 
 from .design_system import Radius, Spacing, Theme

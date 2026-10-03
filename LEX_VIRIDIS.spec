@@ -13,7 +13,6 @@ BASE_DIR = Path(os.path.abspath(os.getcwd()))
 ASSETS_DIR = BASE_DIR / "assets"
 DATA_DIR = BASE_DIR / "data"
 DB_DIR = BASE_DIR / "LEX_VIRIDIS_DB"
-LICENSE_DIR = BASE_DIR / "LEX_VIRIDIS_LICENCIA"
 
 # La clave de firma de licencias NO esta en el repositorio. Sin ella la app compilada
 # no podria validar ninguna licencia: abortar en vez de producir un .exe inservible.
@@ -28,8 +27,6 @@ datas = [
     (str(ASSETS_DIR), 'assets'),
     # Base de datos
     (str(DB_DIR / "legislacion_ambiental.db"), 'LEX_VIRIDIS_DB'),
-    # Sistema de licencias
-    (str(LICENSE_DIR / "license_system.py"), 'LEX_VIRIDIS_LICENCIA'),
     # Archivos de configuración
     (str(BASE_DIR / "config.py"), '.'),
     # Traducciones i18n
@@ -91,6 +88,7 @@ hiddenimports = [
     'lexviridis.citations',
     'lexviridis.study_system',
     'lexviridis.license_ui',
+    'lexviridis.license_system',
     'lexviridis.pdf_exporter',
     'lexviridis.pdf_exporter',
     'flet_desktop',

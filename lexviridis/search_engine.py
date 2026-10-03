@@ -439,6 +439,10 @@ class SearchEngine:
         """Búsqueda segura con caché, validación y paginación."""
         start_time = time.perf_counter()
 
+        # Los signos de pregunta y exclamación son normales al escribir una pregunta: no son un error
+        if isinstance(query, str):
+            query = re.sub(r"[¿?¡!]+", " ", query).strip()
+
         # Registrar búsqueda en historial
         import threading
 
