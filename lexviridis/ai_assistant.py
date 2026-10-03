@@ -69,7 +69,19 @@ STOPWORDS = {
     "honduras",
 }
 
-MAX_FUENTES = 5
+# Si la pregunta es sobre multas, tambien se busca el regimen de multas y sanciones administrativas del mismo tema
+PALABRAS_MULTA = {"multa", "multas", "sancion", "sanción", "sanciones", "penalidad"}
+TEMAS = {
+    **dict.fromkeys(
+        ("tala", "talar", "madera", "bosque", "bosques", "forestal", "forestales", "aprovechamiento"), "forestal"
+    ),
+    **dict.fromkeys(("incendio", "incendios", "quema"), "forestal"),
+    **dict.fromkeys(("agua", "aguas", "vertido", "vertidos"), "aguas"),
+    **dict.fromkeys(("pesca", "acuicultura"), "pesca"),
+    **dict.fromkeys(("fauna", "caza", "vida", "silvestre"), "silvestre"),
+}
+
+MAX_FUENTES = 8
 MAX_CHARS_POR_FUENTE = 1800
 
 SIN_FUENTES = (
@@ -106,16 +118,39 @@ class LegalAIAssistant:
         palabras = [w for w in re.findall(r"\w+", pregunta.lower()) if len(w) > 2 and w not in STOPWORDS]
         return " ".join(palabras[:8]) or " ".join(re.findall(r"\w+", pregunta))
 
+    @classmethod
+    def _consultas(cls, pregunta: str) -> list[str]:
+        """La consulta completa y versiones con una palabra menos.
+
+        Pedir TODAS las palabras deja fuera articulos clave que no repiten alguna (p. ej. "multa tala ilegal"
+        no encuentra el articulo de multas administrativas porque no dice "ilegal").
+        """
+        completa = cls._consulta_de_busqueda(pregunta)
+        palabras = completa.split()
+        consultas = [completa]
+        if 3 <= len(palabras) <= 6:
+            consultas += [" ".join(palabras[:i] + palabras[i + 1 :]) for i in range(len(palabras))]
+        if PALABRAS_MULTA & set(palabras):
+            tema = next((TEMAS[p] for p in palabras if p in TEMAS), None)
+            if tema:
+                consultas.append(f"multas sanciones administrativas {tema}")
+        return list(dict.fromkeys(consultas))
+
     def _recuperar_fuentes(self, pregunta: str) -> list[dict]:
         """Busca en el compendio y devuelve los articulos COMPLETOS (no solo un fragmento)."""
-        # Se piden mas candidatos de los necesarios: el mismo articulo suele repetirse en varios documentos
-        resultado = self.engine.search_safe(self._consulta_de_busqueda(pregunta), page_size=MAX_FUENTES * 4)
+        # Una lista de candidatos por consulta; se reparten los cupos por turnos para que ninguna acapare
+        listas = [self.engine.search_safe(q, page_size=MAX_FUENTES * 3).results for q in self._consultas(pregunta)]
+        candidatos = [lista[i] for i in range(MAX_FUENTES * 3) for lista in listas if i < len(lista)]
         fuentes = []
         huellas: dict[str, dict] = {}
-        for doc in resultado.results:
+        ids_vistos: set = set()
+        for doc in candidatos:
             if len(fuentes) >= MAX_FUENTES:
                 break
-            articulo = self.engine.get_article_by_id(doc["id"]) if doc.get("id") else None
+            if not doc.get("id") or doc["id"] in ids_vistos:
+                continue
+            ids_vistos.add(doc["id"])
+            articulo = self.engine.get_article_by_id(doc["id"])
             if articulo and articulo.get("contenido"):
                 huella = _huella(articulo["contenido"])
                 if huella in huellas:  # copia de un articulo ya incluido: no ocupa cupo

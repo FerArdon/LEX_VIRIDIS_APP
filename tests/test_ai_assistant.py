@@ -47,7 +47,21 @@ def test_la_consulta_de_busqueda_quita_signos_y_palabras_de_relleno():
 def test_pregunta_con_signos_llega_al_motor_sin_ellos():
     motor, ia = MotorFalso({1: ART_172}), IAFalsa()
     LegalAIAssistant(motor, ia).answer_question("¿Cuál es la multa por tala ilegal?")
-    assert motor.consultas == ["multa tala ilegal"]
+    assert motor.consultas[0] == "multa tala ilegal"
+    assert not any("¿" in q or "?" in q for q in motor.consultas)
+
+
+def test_se_busca_tambien_con_una_palabra_menos():
+    q = LegalAIAssistant._consultas("¿Cuál es la multa por tala ilegal?")
+    assert q[0] == "multa tala ilegal"
+    assert {"tala ilegal", "multa ilegal", "multa tala"} <= set(q)
+
+
+def test_pregunta_de_multas_agrega_el_regimen_de_sanciones_del_tema():
+    assert "multas sanciones administrativas forestal" in LegalAIAssistant._consultas("multa por tala ilegal")
+    assert not any(
+        "sanciones administrativas" in x for x in LegalAIAssistant._consultas("requisitos licencia ambiental")
+    )
 
 
 def test_el_prompt_lleva_el_texto_completo_del_articulo():
