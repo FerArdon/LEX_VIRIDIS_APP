@@ -95,7 +95,8 @@ def _huella(texto: str) -> str:
     """Identifica un articulo copiado en varios documentos (ignora acentos, mayusculas y el encabezado 'ARTICULO N')."""
     t = unicodedata.normalize("NFD", str(texto).lower())
     t = "".join(c for c in t if unicodedata.category(c) != "Mn")
-    t = re.sub(r"^\s*articulo\s*\d+[\w-]*\s*[.\-:]*\s*", "", t)
+    # Quita "Art. 24.-", "Articulo 24", "Art. 24 (reformado por ...).-" y el guion tipografico
+    t = re.sub(r"^\s*art(?:iculo|\.)?\s*\d+[\w-]*\s*(?:\([^)]*\))?\s*[.\-:‐-―]*\s*", "", t)
     return re.sub(r"[^a-z0-9]+", " ", t).strip()[:100]
 
 
@@ -224,8 +225,9 @@ PREGUNTA: {question}
 
 INSTRUCCIONES:
 1. Responde exclusivamente con lo que dicen las FUENTES. No uses conocimiento propio para completar datos.
-2. Cita únicamente artículos que aparezcan en las FUENTES, copiando número y norma tal como figuran, ej: [Art. 166, Ley Forestal]. Nunca inventes artículos, penas, montos ni plazos.
-3. Si las FUENTES no responden la pregunta, o solo en parte, dilo claramente e indica qué falta; no lo rellenes.
+2. Cita únicamente artículos que aparezcan en las FUENTES, copiando número, norma y página tal como figuran en el encabezado de la fuente, ej: [Art. 166, Ley Forestal, pág. 40]. Un mismo número de artículo puede repetirse en leyes distintas dentro de un compendio: la página los distingue. Cita cada fuente una sola vez. Nunca inventes artículos, penas, montos ni plazos.
+3. Si las FUENTES no responden la pregunta, o solo en parte, dilo claramente e indica qué falta; no lo rellenes. Incluye plazos, montos y requisitos previos que las fuentes mencionen, aunque la pregunta no los pida expresamente.
+   Ignora las fuentes que no tengan relación con la pregunta.
 4. Si dos fuentes parecen contradecirse (por ejemplo, distintas versiones o numeración de una misma ley), señálalo.
 5. Tono profesional, claro y pedagógico.
 6. Termina sugiriendo 2 preguntas de seguimiento.

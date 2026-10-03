@@ -117,3 +117,15 @@ def test_articulo_pegado_dentro_del_bloque_no_se_marca_como_dudoso():
     ia = IAFalsa("El transporte ilegal se castiga [Art. 173, Ley Forestal].")
     r = LegalAIAssistant(MotorFalso({1: bloque}), ia).answer_question("transporte ilegal")
     assert "Verifica" not in r["answer"]
+
+
+def test_huella_iguala_copias_con_distinto_encabezado():
+    from lexviridis.ai_assistant import _huella
+
+    a = _huella("Art. 24.- Todo proyecto, obra o actividad debe tener licencia ambiental.")
+    b = _huella("Todo proyecto, obra o actividad debe tener licencia ambiental.")
+    c = _huella("Art. 24.‐ Todo proyecto, obra o actividad debe tener licencia ambiental.")
+    d = _huella(
+        "Art. 25 (reformado por Decreto 48-91).- Todo proyecto, obra o actividad debe tener licencia ambiental."
+    )
+    assert a == b == c == d
