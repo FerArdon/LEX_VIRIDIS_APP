@@ -111,7 +111,7 @@ class LicenseActivationScreen:
                             [
                                 ft.Text("¿No tiene licencia?", size=12, weight="bold"),
                                 ft.Text("Contacte a: soporte@lexviridis.hn", size=11, color=Theme.TEXT_SECONDARY),
-                                ft.Text("Tel: +504 XXXX-XXXX", size=11, color=Theme.TEXT_SECONDARY),
+                                ft.Text("Tel: +504 3352-7444", size=11, color=Theme.TEXT_SECONDARY),
                             ],
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                             spacing=2,
