@@ -380,6 +380,54 @@ class SearchEngine:
 
         return list(dict.fromkeys(expanded))
 
+    @staticmethod
+    def _etiqueta_articulo(numero) -> str:
+        """'Art. 177' para articulos numerados; 'Pág. 4' o 'Preámbulo' se muestran tal cual."""
+        numero = str(numero or "").strip()
+        return f"Art. {numero}" if numero[:1].isdigit() else (numero or "Art.")
+
+    @staticmethod
+    def _tokens(query: str) -> list[str]:
+        """Palabras utiles de la consulta (sin signos, de mas de 2 letras)."""
+        return [w for w in re.findall(r"\w+", query.lower()) if len(w) > 2]
+
+    def _synonym_group(self, word: str) -> list[str]:
+        """La palabra junto con sus sinonimos legales, si los tiene."""
+        norm = self._normalize_accents(word)
+        for syns in SINONIMOS.values():
+            if norm in [self._normalize_accents(x) for x in syns]:
+                return list(dict.fromkeys([word, *syns]))
+        return [word]
+
+    def _build_tiers(self, query: str) -> list[tuple[str, str, list[str]]]:
+        """Consultas FTS5 de la mas a la menos especifica: (etiqueta, consulta, terminos a resaltar).
+
+        Antes todo se unia con OR (palabras sueltas + sinonimos), asi que un sinonimo generico como
+        "hidrico" superaba a la frase exacta. Ahora la frase exacta va primero, luego todas las
+        palabras, luego cualquiera, y los sinonimos solo completan al final.
+        """
+        palabras = self._tokens(query)
+        if not palabras:
+            return []
+
+        def q(t: str) -> str:
+            return '"' + t.replace('"', '""') + '"'
+
+        grupos = [self._synonym_group(w) for w in palabras]
+        sinonimos = [t for g in grupos for t in g if t not in palabras]
+        niveles: list[tuple[str, str, list[str]]] = []
+        if len(palabras) > 1:
+            frase = " ".join(palabras)
+            niveles.append(("frase", q(frase), [frase, *palabras]))
+            todas = " AND ".join("(" + " OR ".join(q(t) for t in g) + ")" for g in grupos)
+            niveles.append(("todas", todas, [*palabras, *sinonimos]))
+            niveles.append(("alguna", " OR ".join(q(w) for w in palabras), palabras))
+        else:
+            niveles.append(("exacta", q(palabras[0]), palabras))
+        if sinonimos:
+            niveles.append(("sinonimos", " OR ".join(q(t) for t in [*palabras, *sinonimos]), [*palabras, *sinonimos]))
+        return niveles
+
     def search(self, query: str, operator: str = "OR", limit: int = DEFAULT_PAGE_SIZE, offset: int = 0) -> list[dict]:
         """Búsqueda simple (interfaz compatible)."""
         result = self.search_safe(query, operator, page=1, page_size=limit)
@@ -501,16 +549,15 @@ class SearchEngine:
         cursor = conn.cursor()
 
         try:
-            terms = self._expand_query_with_synonyms(query)
-            fts_terms = [f'"{t}"' for t in terms if len(t) > 2]
-
-            if not fts_terms:
+            niveles = self._build_tiers(query)
+            if not niveles:
                 return []
 
-            fts_query = " OR ".join(fts_terms)
             offset = (page - 1) * page_size
+            necesarios = offset + page_size
+            ids_vistos: set[int] = set()
+            por_huella: dict[str, dict] = {}
 
-            # Utilizar la función snippet de FTS5 para fragmentos contextuales reales
             sql = """
                 SELECT
                     f.articulo_id,
@@ -526,36 +573,50 @@ class SearchEngine:
                 JOIN normas n ON a.norma_id = n.id
                 WHERE busqueda_fts MATCH ?
                 ORDER BY f.rank
-                LIMIT ? OFFSET ?
+                LIMIT ?
             """
 
-            cursor.execute(sql, (fts_query, page_size, offset))
+            for etiqueta, fts_query, terminos in niveles:
+                if len(results) >= necesarios:
+                    break
+                cursor.execute(sql, (fts_query, necesarios * 3))
+                for row in cursor.fetchall():
+                    if len(results) >= necesarios:
+                        break
+                    if row["articulo_id"] in ids_vistos:
+                        continue
+                    ids_vistos.add(row["articulo_id"])
 
-            for row in cursor.fetchall():
-                # Convertir snippet de FTS (<b>...</b>) a Markdown (**...**) para Flet
-                snippet_md = str(row["fragmento"]).replace("<b>", "**").replace("</b>", "**")
+                    contenido = str(row["contenido_completo"])
+                    contenido_norm = self._normalize_accents(contenido)
+                    # El mismo articulo copiado en varios PDF se muestra una sola vez
+                    huella = f"{row['numero_articulo']}|{re.sub(r'[^a-z0-9]+', ' ', contenido_norm)[:300]}"
+                    if huella in por_huella:
+                        por_huella[huella]["also_in"].append(row["titulo_norma"])
+                        continue
 
-                # Calcular número de ocurrencias
-                matches_count = 0
-                contenido_lower = str(row["contenido_completo"]).lower()
-                for term in terms:
-                    if len(term) > 2:
-                        matches_count += contenido_lower.count(term.lower())
-
-                results.append(
-                    {
+                    # Convertir snippet de FTS (<b>...</b>) a Markdown (**...**) para Flet
+                    snippet_md = str(row["fragmento"]).replace("<b>", "**").replace("</b>", "**")
+                    norm_terminos = [(t, self._normalize_accents(t)) for t in terminos]
+                    presentes = [t for t, tn in norm_terminos if tn in contenido_norm]
+                    resultado = {
                         "id": row["articulo_id"],
                         "file": row["archivo_pdf"] or "Desconocido",
                         "page": row["pagina"] or 1,
                         "relevance": round(abs(row["rank"]) * 10, 1),
-                        "context": f"Art. {row['numero_articulo']}: {snippet_md}",
+                        "context": f"{self._etiqueta_articulo(row['numero_articulo'])}: {snippet_md}",
                         "term": query,
-                        "matches": matches_count,
-                        "is_high_relevance": abs(row["rank"]) < 5.0,  # Rank bajo en FTS5 significa más relevante
+                        "matches": sum(contenido_norm.count(tn) for _, tn in norm_terminos if len(tn) > 2),
+                        "is_high_relevance": etiqueta in ("frase", "exacta", "todas"),
+                        "tier": etiqueta,
+                        "highlight_terms": presentes or terminos,
+                        "also_in": [],
                     }
-                )
+                    por_huella[huella] = resultado
+                    results.append(resultado)
 
-            results.sort(key=lambda x: x["relevance"], reverse=True)
+            # El orden ya es el correcto: nivel de coincidencia y, dentro del nivel, el ranking de FTS5
+            results = results[offset:necesarios]
 
             # Fallback: Si FTS no encuentra nada, buscar directamente en normas.titulo
             if not results:

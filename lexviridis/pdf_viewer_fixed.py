@@ -57,7 +57,7 @@ class PDFViewerFixed:
     def highlight_and_open_pdf(
         pdf_path: Path,
         page_number: int,
-        search_term: str,
+        search_term: str | list[str],
         highlight_color: tuple[float, float, float] = (0.7, 0.9, 0.9),  # Azul turquesa pálido
         temp_dir: Path | None = None,
     ) -> None:
@@ -122,7 +122,11 @@ class PDFViewerFixed:
 
     @staticmethod
     def _create_highlighted_pdf_safe(
-        pdf_path: Path, page_index: int, search_term: str, highlight_color: tuple[float, float, float], temp_dir: Path
+        pdf_path: Path,
+        page_index: int,
+        search_term: str | list[str],
+        highlight_color: tuple[float, float, float],
+        temp_dir: Path,
     ) -> Path | None:
         """
         Genera un PDF temporal con el texto resaltado de forma segura.
@@ -141,14 +145,22 @@ class PDFViewerFixed:
                 logging.warning(f"[FIXED] Página {page_index + 1} fuera de rango. Total páginas: {doc.page_count}")
                 page_index = 0  # Usar primera página como fallback
 
-            # Buscar todas las instancias del término en la página
-            page = doc[page_index]
+            # Buscar todas las instancias del término en la página (y la siguiente: el artículo suele continuar)
+            paginas = [doc[page_index]]
+            if page_index + 1 < doc.page_count:
+                paginas.append(doc[page_index + 1])
 
             # Buscar término completo y palabras individuales
             search_terms = PDFViewerFixed._prepare_search_terms(search_term)
             total_highlights = 0
 
-            for term in search_terms:
+            # Que el visor abra el PDF directamente en la página del artículo
+            try:
+                doc.xref_set_key(doc.pdf_catalog(), "OpenAction", f"[{doc[page_index].xref} 0 R /Fit]")
+            except Exception as e:
+                logging.warning(f"[FIXED] No se pudo fijar la página de apertura: {e}")
+
+            for page, term in [(p, t) for p in paginas for t in search_terms]:
                 try:
                     # Buscar término (case insensitive)
                     text_instances = page.search_for(term, quads=True)
@@ -208,10 +220,22 @@ class PDFViewerFixed:
                     pass
 
     @staticmethod
-    def _prepare_search_terms(search_term: str) -> list[str]:
+    def _prepare_search_terms(search_term: str | list[str]) -> list[str]:
         """
         Prepara términos de búsqueda para resaltado mejorado.
+
+        Acepta una lista (los términos que realmente coincidieron, incluidos sinónimos) o un texto.
         """
+        if isinstance(search_term, (list, tuple)):
+            vistos: set[str] = set()
+            lista = []
+            for t in search_term:
+                t = str(t).strip()
+                if t and t.lower() not in vistos:
+                    vistos.add(t.lower())
+                    lista.append(t)
+            return lista
+
         terms = []
 
         # Limpiar término

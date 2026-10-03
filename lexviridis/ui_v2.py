@@ -1740,7 +1740,8 @@ class LexViridisApp:
             if pdf_path:  # Usamos path_obj corregido abajo
                 # Determinar página y query para resaltado
                 page = article.get("page", 1) or article.get("pagina", 1)
-                query = getattr(self, "current_query", "")
+                # Resaltar los términos que realmente coincidieron (incluye sinónimos), no solo lo escrito
+                query = article.get("highlight_terms") or getattr(self, "current_query", "")
                 is_norma = article.get("is_norma", False)
 
                 # Si es una norma completa (Novedades) o no hay query, abrir simple
